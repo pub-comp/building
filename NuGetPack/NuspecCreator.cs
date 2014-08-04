@@ -106,16 +106,16 @@ namespace PubComp.Building.NuGetPack
 
             var fileVersion = FileVersionInfo.GetVersionInfo(assemblyPath);
             var version = fileVersion.FileMajorPart + "." + fileVersion.FileMinorPart + "." + fileVersion.FileBuildPart;
-            if (fileVersion.FileVersion.Contains("-"))
+            if (fileVersion.ProductVersion.Contains("-"))
                 version += "-" + "PreRelease";
 
             var owner = fileVersion.CompanyName;
 
-            var shortSummary = fileVersion.FileDescription;
-            var longDescription = fileVersion.FileDescription;
+            var shortSummary = fileVersion.Comments;
+            var longDescription = fileVersion.Comments;
             var copyright = fileVersion.LegalCopyright;
             var releaseNotes = fileVersion.SpecialBuild;
-            var tags = fileVersion.InternalName;
+            var tags = fileVersion.FileDescription;
             var licenseUrl = fileVersion.LegalTrademarks;
             var projectUrl = fileVersion.LegalTrademarks;
 

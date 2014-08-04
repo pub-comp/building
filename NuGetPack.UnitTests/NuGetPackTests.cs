@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using System.Xml.XPath;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace PubComp.Building.NuGetPack.UnitTests
@@ -210,6 +211,77 @@ namespace PubComp.Building.NuGetPack.UnitTests
         }
 
         [TestMethod]
+        public void TestParseVersion()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(proj1Csproj, proj1Dll, isDebug);
+            
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/version").Value;
+
+            #if DEBUG
+                Assert.AreEqual("1.3.2-PreRelease", version);
+            #else
+                Assert.AreEqual("1.3.2", version);
+            #endif
+        }
+
+        [TestMethod]
+        public void TestParseName()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(proj1Csproj, proj1Dll, isDebug);
+
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/title").Value;
+
+            Assert.AreEqual("PubComp.Building.NuGetPack.UnitTests", version);
+        }
+
+        [TestMethod]
+        public void TestParseDescription()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(proj1Csproj, proj1Dll, isDebug);
+
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/description").Value;
+
+            Assert.AreEqual("Description goes here", version);
+        }
+
+        [TestMethod]
+        public void TestParseTags()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(proj1Csproj, proj1Dll, isDebug);
+
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/tags").Value;
+
+            Assert.AreEqual("Keywords, go, here", version);
+        }
+
+        [TestMethod]
+        public void TestParseProjectUrl()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(proj1Csproj, proj1Dll, isDebug);
+
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/projectUrl").Value;
+
+            Assert.AreEqual("https://pubcomp.codeplex.com/", version);
+        }
+
+        #region Command-line Tests
+
+        [TestMethod]
         public void TestParseArguments1()
         {
             string projPath, dllPath;
@@ -248,5 +320,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             Assert.AreEqual(@"C:\MyProj\MyProj\bin\Release\MyProj.dll", dllPath);
             Assert.AreEqual(false, isDebugOut);
         }
+
+        #endregion
     }
 }

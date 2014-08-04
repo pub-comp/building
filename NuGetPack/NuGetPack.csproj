@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>PubComp.Building.NuGetPack</RootNamespace>
-    <AssemblyName>PubComp.Building.NuGetPack</AssemblyName>
+    <AssemblyName>NuGetPack</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
