@@ -127,7 +127,7 @@ namespace PubComp.Building.NuGetPack
 
             var doc = CreateNuspec(
                 packageName, version, owner, shortSummary,
-                longDescription, releaseNotes, null, licenseUrl, projectUrl, copyright, tags, nuspecPath, projectPath,
+                longDescription, releaseNotes, licenseUrl, projectUrl, copyright, tags, nuspecPath, projectPath,
                 packagesFile, internalPackagesFile, isDebug);
 
             return doc;
@@ -140,7 +140,6 @@ namespace PubComp.Building.NuGetPack
             string shortSummary,
             string longDescription,
             string releaseNotes,
-            string iconUrl,
             string licenseUrl,
             string projectUrl,
             string copyright,
@@ -151,13 +150,15 @@ namespace PubComp.Building.NuGetPack
             string internalPackagesFile,
             bool isDebug)
         {
-            var nupsecFolder = Path.GetDirectoryName(nuspecPath);
-
-            if (string.IsNullOrEmpty(iconUrl))
-                iconUrl = @"https://nuget.org/Content/Images/packageDefaultIcon-50x50.png";
+            var nuspecFolder = Path.GetDirectoryName(nuspecPath);
 
             var dependencies = GetDependencies(new[] { packagesFile, internalPackagesFile });
-            var files = GetFiles(nupsecFolder, projectPath, isDebug);
+            var files = GetFiles(nuspecFolder, projectPath, isDebug);
+            
+            //var iconUrl = GetIcon(nuspecFolder, Path.GetDirectoryName(projectPath), projectPath);
+            
+            //if (string.IsNullOrEmpty(iconUrl))
+            var iconUrl = @"https://nuget.org/Content/Images/packageDefaultIcon-50x50.png";
 
             var doc = new XDocument(
                 new XElement("package",
@@ -254,9 +255,11 @@ namespace PubComp.Building.NuGetPack
             DebugOut(() => "nuspecToProject = " + nuspecToProject);
             DebugOut(() => "ProjectFolder = " + projectFolder);
 
-            var references = GetReferences(nuspecFolder, projectPath, projectFolder);
-
             var result = new List<XElement>();
+
+            result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath));
+
+            var references = GetReferences(nuspecFolder, projectPath, projectFolder);
 
             foreach (var reference in references)
             {
@@ -275,6 +278,56 @@ namespace PubComp.Building.NuGetPack
             }
 
             return result;
+        }
+
+        public IEnumerable<XElement> GetContentFiles(string nuspecFolder, string projectFolder, string projectPath)
+        {
+            DebugOut(() => string.Format("\r\n\r\nGetContentFiles({0}, {1})\r\n", projectFolder, projectPath));
+
+            var csProj = XDocument.Load(projectPath);
+
+            var xmlns = csProj.Root.GetDefaultNamespace();
+            var contentElements = csProj.Element(xmlns + "Project").Elements(xmlns + "ItemGroup").Elements(xmlns + "Content")
+                .Where(el => el.Attribute("Include") != null)
+                .Select(el =>
+                    new
+                    {
+                        src = el.Attribute("Include").Value,
+                        target = el.Elements(xmlns + "Link").Any()
+                            ? el.Elements(xmlns + "Link").First().Value
+                            : el.Attribute("Include").Value
+                    });
+
+            var relativeProjectFolder = AbsolutePathToRelativePath(projectFolder, nuspecFolder + "\\");
+
+            var sources = contentElements
+                .Select(s =>
+                    new XElement("file",
+                        new XAttribute("src", Path.Combine(relativeProjectFolder, s.src)),
+                        new XAttribute("target", Path.Combine(@"content\", s.target))))
+                .ToList();
+
+            return sources;
+        }
+
+        public string GetIcon(string nuspecFolder, string projectFolder, string projectPath)
+        {
+            var csProj = XDocument.Load(projectPath);
+
+            var xmlns = csProj.Root.GetDefaultNamespace();
+            var iconElements = csProj.Element(xmlns + "Project").Elements(xmlns + "PropertyGroup").Elements(xmlns + "ApplicationIcon");
+
+            if (!iconElements.Any())
+                return null;
+
+            var iconPath = iconElements.Select(i => i.Value).First();
+
+            if (new Uri(iconPath, UriKind.RelativeOrAbsolute).IsAbsoluteUri == false)
+            {
+                iconPath = AbsolutePathToRelativePath(iconPath, nuspecFolder + "\\");
+            }
+
+            return iconPath;
         }
 
         public IEnumerable<string> GetReferences(string nuspecFolder, string projectPath, string projectFolder)
