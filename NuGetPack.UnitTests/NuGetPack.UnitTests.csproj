@@ -58,6 +58,9 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="..\VersionInfo.cs">
+      <Link>Properties\VersionInfo.cs</Link>
+    </Compile>
     <Compile Include="LinqAssert.cs" />
     <Compile Include="TestResourceFinder.cs" />
     <Compile Include="NuGetPackTests.cs" />

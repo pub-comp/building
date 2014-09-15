@@ -49,6 +49,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\DemoVersionInfo.cs">
+      <Link>Properties\DemoVersionInfo.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -57,10 +60,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\Data.txt">
-      <Link>Data.txt</Link>
+      <Link>content\Data.txt</Link>
     </Content>
-    <Content Include="SubContent\Other.txt" />
-    <Content Include="Info.txt" />
+    <Content Include="content\SubContent\Other.txt" />
+    <Content Include="content\Info.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NuGetPack\NuGetPack.csproj">

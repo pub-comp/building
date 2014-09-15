@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.tfignore = .tfignore
 		Data.txt = Data.txt
+		DemoVersionInfo.cs = DemoVersionInfo.cs
+		VersionInfo.cs = VersionInfo.cs
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{B4BE82DD-B352-4CA3-B90C-491A62F3A51C}"

@@ -50,7 +50,7 @@ namespace PubComp.Building.NuGetPack
                 var startInfo = new ProcessStartInfo();
                 startInfo.UseShellExecute = false;
                 startInfo.FileName = nuGetExe;
-                startInfo.Arguments = "Pack " + nuspecPath;
+                startInfo.Arguments = "Pack -NoDefaultExcludes " + nuspecPath;
 
                 if (!startInfo.EnvironmentVariables.ContainsKey("EnableNuGetPackageRestore"))
                     startInfo.EnvironmentVariables.Add("EnableNuGetPackageRestore", "true");
@@ -296,7 +296,8 @@ namespace PubComp.Building.NuGetPack
                         target = el.Elements(xmlns + "Link").Any()
                             ? el.Elements(xmlns + "Link").First().Value
                             : el.Attribute("Include").Value
-                    });
+                    })
+                .Where(st => st.target.ToLower().StartsWith(@"content\"));
 
             var relativeProjectFolder = AbsolutePathToRelativePath(projectFolder, nuspecFolder + "\\");
 
@@ -304,7 +305,7 @@ namespace PubComp.Building.NuGetPack
                 .Select(s =>
                     new XElement("file",
                         new XAttribute("src", Path.Combine(relativeProjectFolder, s.src)),
-                        new XAttribute("target", Path.Combine(@"content\", s.target))))
+                        new XAttribute("target", Path.Combine(s.target))))
                 .ToList();
 
             return sources;

@@ -120,13 +120,13 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             LinqAssert.Any(results, el =>
                 el.Name == "file"
-                && el.Attribute("src").Value == @"..\..\Info.txt"
+                && el.Attribute("src").Value == @"..\..\content\Info.txt"
                     && el.Attribute("target").Value == @"content\Info.txt",
                 "Found: " + results.First());
 
             LinqAssert.Any(results, el =>
                 el.Name == "file"
-                && el.Attribute("src").Value == @"..\..\SubContent\Other.txt"
+                && el.Attribute("src").Value == @"..\..\content\SubContent\Other.txt"
                     && el.Attribute("target").Value == @"content\SubContent\Other.txt",
                 "Found: " + results.First());
         }
