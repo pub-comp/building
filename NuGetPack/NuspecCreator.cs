@@ -287,7 +287,7 @@ namespace PubComp.Building.NuGetPack
             var csProj = XDocument.Load(projectPath);
 
             var xmlns = csProj.Root.GetDefaultNamespace();
-            var contentElements = csProj.Element(xmlns + "Project").Elements(xmlns + "ItemGroup").Elements(xmlns + "Content")
+            var contentElements = csProj.Element(xmlns + "Project").Elements(xmlns + "ItemGroup").Elements()
                 .Where(el => el.Attribute("Include") != null)
                 .Select(el =>
                     new

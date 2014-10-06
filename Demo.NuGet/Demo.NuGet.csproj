@@ -62,7 +62,7 @@
     <Content Include="..\Data.txt">
       <Link>content\Data.txt</Link>
     </Content>
-    <Content Include="content\SubContent\Other.txt" />
+    <None Include="content\SubContent\Other.txt" />
     <Content Include="content\Info.txt" />
   </ItemGroup>
   <ItemGroup>
