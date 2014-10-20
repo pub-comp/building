@@ -76,6 +76,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             nuProj2Csproj = testSrcDir + @"\Demo.Package2.NuGet.csproj";
             nuProj2Dll = testBinDir + @"\PubComp.Building.Demo.Package2.NuGet.dll";
 
+
             TestResourceFinder.FindResources(testContext, "Building",
                 @"NuGetPack.UnitTests",
                 true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
