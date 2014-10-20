@@ -10,10 +10,19 @@ namespace PubComp.Building.NuGetPack.UnitTests
     public class NuGetPackTests
     {
         private static bool isLocal;
+
         private static string proj1Csproj;
         private static string proj1Dll;
         private static string proj2Csproj;
         private static string proj2Dll;
+        private static string proj3Csproj;
+        private static string proj3Dll;
+
+
+        private static string nuProj1Csproj;
+        private static string nuProj1Dll;
+        private static string nuProj2Csproj;
+        private static string nuProj2Dll;
 
 #if DEBUG
         private const bool isDebug = true;
@@ -28,21 +37,44 @@ namespace PubComp.Building.NuGetPack.UnitTests
         {
             string rootPath, testSrcDir, testBinDir, testRunDir;
 
+
             TestResourceFinder.FindResources(testContext, "Building",
-                @"Demo.NuGet",
+                @"Demo.Library1",
                 true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
 
-            proj1Csproj = testSrcDir + @"\Demo.NuGet.csproj";
-            proj1Dll = testBinDir + @"\PubComp.Building.Demo.NuGet.dll";
+            proj1Csproj = testSrcDir + @"\Demo.Library1.csproj";
+            proj1Dll = testBinDir + @"\PubComp.Building.Demo.Library1.dll";
 
             TestResourceFinder.FindResources(testContext, "Building",
-                @"NuGetPack",
+                @"Demo.Library2",
+                true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
+
+            proj2Csproj = testSrcDir + @"\Demo.Library2.csproj";
+            proj2Dll = testBinDir + @"\PubComp.Building.Demo.Library2.dll";
+
+            TestResourceFinder.FindResources(testContext, "Building",
+                @"Demo.Library3",
+                true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
+
+            proj3Csproj = testSrcDir + @"\Demo.Library3.csproj";
+            proj3Dll = testBinDir + @"\PubComp.Building.Demo.Library3.dll";
+
+
+            TestResourceFinder.FindResources(testContext, "Building",
+                @"Demo.Package1.NuGet",
+                true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
+
+            nuProj1Csproj = testSrcDir + @"\Demo.Package1.NuGet.csproj";
+            nuProj1Dll = testBinDir + @"\PubComp.Building.Demo.Package1.NuGet.dll";
+
+            TestResourceFinder.FindResources(testContext, "Building",
+                @"Demo.Package2.NuGet",
                 true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
 
             TestResourceFinder.CopyResources(testBinDir, testRunDir);
 
-            proj2Csproj = testSrcDir + @"\NuGetPack.csproj";
-            proj2Dll = testBinDir + @"\PubComp.Building.NuGetPack.dll";
+            nuProj2Csproj = testSrcDir + @"\Demo.Package2.NuGet.csproj";
+            nuProj2Dll = testBinDir + @"\PubComp.Building.Demo.Package2.NuGet.dll";
 
             TestResourceFinder.FindResources(testContext, "Building",
                 @"NuGetPack.UnitTests",
@@ -62,53 +94,44 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetDependenciesOuter()
         {
-            var packagesFile = Path.GetDirectoryName(proj1Csproj) + @"\packages.config";
+            var packagesFile = Path.GetDirectoryName(nuProj2Csproj) + @"\packages.config";
 
             var creator = new NuspecCreator();
             var results = creator.GetDependencies(new[] { packagesFile });
 
-            LinqAssert.Count(results, 3);
+            LinqAssert.Count(results, 2);
 
             LinqAssert.Any(results, obj =>
                 obj is XAttribute && ((XAttribute)obj).Name == "targetFramework" && ((XAttribute)obj).Value == "net45");
 
             LinqAssert.Any(results, obj =>
                 obj is XElement && ((XElement)obj).Name == "dependency"
-                    && ((XElement)obj).Attribute("id").Value == "Common.Logging.DV"
-                    && ((XElement)obj).Attribute("version").Value == "2.2.0");
-
-            LinqAssert.Any(results, obj =>
-                obj is XElement && ((XElement)obj).Name == "dependency"
                     && ((XElement)obj).Attribute("id").Value == "FakeItEasy"
-                    && ((XElement)obj).Attribute("version").Value == "1.22.0");
+                    && ((XElement)obj).Attribute("version").Value == "1.24.0");
         }
 
         [TestMethod]
         public void TestGetDependenciesInner()
         {
-            var packagesFile = Path.GetDirectoryName(proj1Csproj) + @"\packages.config";
+            var packagesFile = Path.GetDirectoryName(nuProj2Csproj) + @"\packages.config";
 
             var creator = new NuspecCreator();
             var results = creator.GetDependencies(packagesFile);
 
-            LinqAssert.Count(results, 2);
-
-            LinqAssert.Any(results, obj =>
-                obj is XElement && ((XElement)obj).Name == "dependency"
-                    && ((XElement)obj).Attribute("id").Value == "Common.Logging.DV"
-                    && ((XElement)obj).Attribute("version").Value == "2.2.0");
+            LinqAssert.Count(results, 1);
 
             LinqAssert.Any(results, obj =>
                 obj is XElement && ((XElement)obj).Name == "dependency"
                     && ((XElement)obj).Attribute("id").Value == "FakeItEasy"
-                    && ((XElement)obj).Attribute("version").Value == "1.22.0");
+                    && ((XElement)obj).Attribute("version").Value == "1.24.0");
         }
 
         [TestMethod]
         public void TestGetContentFiles()
         {
             var creator = new NuspecCreator();
-            var results = creator.GetContentFiles(Path.GetDirectoryName(proj1Dll), @"..\..", proj1Csproj);
+            var results = creator.GetContentFiles(
+                Path.GetDirectoryName(nuProj1Dll), @"..\..", nuProj1Csproj);
 
             LinqAssert.Count(results, 3);
 
@@ -135,9 +158,10 @@ namespace PubComp.Building.NuGetPack.UnitTests
         public void TestGetBinaryFiles()
         {
             var creator = new NuspecCreator();
-            var results = creator.GetBinaryFiles(Path.GetDirectoryName(proj2Dll), @"..\..", proj2Csproj, isDebug, Path.GetDirectoryName(proj2Dll));
+            var results = creator.GetBinaryFiles(
+                Path.GetDirectoryName(nuProj1Dll), @"..\..\..\Demo.Library3", proj3Csproj, isDebug, Path.GetDirectoryName(proj3Dll));
 
-            var path = isLocal ? @"..\..\bin\" : @"..\bin\";
+            var path = isLocal ? @"..\..\..\Demo.Library3\bin\" : @"..\..\Demo.Library3\bin\";
 
             if (isLocal)
             {
@@ -152,70 +176,62 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             LinqAssert.Any(results, el =>
                 el.Name == "file"
-                && el.Attribute("src").Value == path + @"NuGetPack.exe"
-                    && el.Attribute("target").Value == @"lib\net45\NuGetPack.exe",
-                "Expected: " + path + @"NuGetPack.exe " + ", Found: " + results.First());
+                && el.Attribute("src").Value == path + @"PubComp.Building.Demo.Library3.dll"
+                    && el.Attribute("target").Value == @"lib\net45\PubComp.Building.Demo.Library3.dll",
+                "Found: " + results.First());
 
             LinqAssert.Any(results, el =>
                 el.Name == "file"
-                && el.Attribute("src").Value == path + @"NuGetPack.pdb"
-                    && el.Attribute("target").Value == @"lib\net45\NuGetPack.pdb",
-                "Expected: " + path + @"NuGetPack.pdb " + ", Found: " + results.First());
+                && el.Attribute("src").Value == path + @"PubComp.Building.Demo.Library3.pdb"
+                    && el.Attribute("target").Value == @"lib\net45\PubComp.Building.Demo.Library3.pdb",
+                "Found: " + results.First());
         }
 
         [TestMethod]
         public void TestGetSourceFiles()
         {
             var creator = new NuspecCreator();
-            var results = creator.GetSourceFiles(Path.GetDirectoryName(proj2Dll), @"..\..", proj2Csproj);
+            var results = creator.GetSourceFiles(
+                Path.GetDirectoryName(nuProj1Dll), @"..\..\..\Demo.Library3", proj3Csproj);
 
-            LinqAssert.Count(results, 4);
+            LinqAssert.Count(results, 2);
 
             LinqAssert.Any(results, el =>
                 el.Name == "file"
-                && el.Attribute("src").Value == @"..\..\Properties\AssemblyInfo.cs"
-                    && el.Attribute("target").Value == @"src\NuGetPack\Properties\AssemblyInfo.cs",
+                && el.Attribute("src").Value == @"..\..\..\Demo.Library3\Properties\AssemblyInfo.cs"
+                    && el.Attribute("target").Value == @"src\Demo.Library3\Properties\AssemblyInfo.cs",
                 "Found: " + results.First());
 
             LinqAssert.Any(results, el =>
                 el.Name == "file"
-                && el.Attribute("src").Value == @"..\..\App.config"
-                    && el.Attribute("target").Value == @"src\NuGetPack\App.config",
-                "Found: " + results.First());
-
-            LinqAssert.Any(results, el =>
-                el.Name == "file"
-                && el.Attribute("src").Value == @"..\..\NuspecCreator.cs"
-                    && el.Attribute("target").Value == @"src\NuGetPack\NuspecCreator.cs",
-                "Found: " + results.First());
-
-            LinqAssert.Any(results, el =>
-                el.Name == "file"
-                && el.Attribute("src").Value == @"..\..\Program.cs"
-                    && el.Attribute("target").Value == @"src\NuGetPack\Program.cs",
+                && el.Attribute("src").Value == @"..\..\..\Demo.Library3\DemoClass3.cs"
+                    && el.Attribute("target").Value == @"src\Demo.Library3\DemoClass3.cs",
                 "Found: " + results.First());
         }
 
         [TestMethod]
         public void TestGetReferences()
         {
-            var nuspecFolder = Path.GetDirectoryName(proj1Dll);
-            var projFolder = Path.GetDirectoryName(proj1Csproj);
+            var nuspecFolder = Path.GetDirectoryName(nuProj1Dll);
+            var projFolder = Path.GetDirectoryName(nuProj1Csproj);
 
             var creator = new NuspecCreator();
-            var results = creator.GetReferences(nuspecFolder, proj1Csproj, projFolder);
+            var results = creator.GetReferences(
+                nuspecFolder, nuProj1Csproj, projFolder);
 
-            LinqAssert.Count(results, 1);
-            LinqAssert.Any(results, r => r == @"..\NuGetPack\NuGetPack.csproj");
+            LinqAssert.Count(results, 2);
+            LinqAssert.Any(results, r => r == @"..\Demo.Library1\Demo.Library1.csproj");
+            LinqAssert.Any(results, r => r == @"..\Demo.Library2\Demo.Library2.csproj");
         }
 
         [TestMethod]
         public void TestGetFiles()
         {
-            var nuspecFolder = Path.GetDirectoryName(proj1Dll);
+            var nuspecFolder = Path.GetDirectoryName(nuProj1Dll);
 
             var creator = new NuspecCreator();
-            var results = creator.GetFiles(nuspecFolder, proj1Csproj, isDebug);
+            var results = creator.GetFiles(
+                nuspecFolder, nuProj1Csproj, isDebug);
 
             Assert.AreNotEqual(0, results.Count());
 
@@ -226,7 +242,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         public void TestCreateNuspec()
         {
             var creator = new NuspecCreator();
-            var nuspec = creator.CreateNuspec(proj1Csproj, proj1Dll, isDebug);
+            var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebug);
             Assert.IsNotNull(nuspec);
         }
 
@@ -234,9 +250,9 @@ namespace PubComp.Building.NuGetPack.UnitTests
         public void TestCreatePackage()
         {
             var creator = new NuspecCreator();
-            creator.CreatePackage(proj1Csproj, proj1Dll, isDebug);
+            creator.CreatePackage(nuProj1Csproj, nuProj1Dll, isDebug);
 
-            var nuspecPath = Path.ChangeExtension(proj1Dll, ".nuspec");
+            var nuspecPath = Path.ChangeExtension(nuProj1Dll, ".nuspec");
 
             Assert.IsTrue(File.Exists(nuspecPath));
         }
@@ -245,7 +261,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         public void TestParseVersion()
         {
             var creator = new NuspecCreator();
-            var nuspec = creator.CreateNuspec(proj1Csproj, proj1Dll, isDebug);
+            var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebug);
             
             Assert.IsNotNull(nuspec);
 
@@ -262,20 +278,20 @@ namespace PubComp.Building.NuGetPack.UnitTests
         public void TestParseName()
         {
             var creator = new NuspecCreator();
-            var nuspec = creator.CreateNuspec(proj1Csproj, proj1Dll, isDebug);
+            var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebug);
 
             Assert.IsNotNull(nuspec);
 
             var version = nuspec.XPathSelectElement(@"/package/metadata/title").Value;
 
-            Assert.AreEqual("PubComp.Building.Demo", version);
+            Assert.AreEqual("PubComp.Building.Demo.Package1", version);
         }
 
         [TestMethod]
         public void TestParseDescription()
         {
             var creator = new NuspecCreator();
-            var nuspec = creator.CreateNuspec(proj1Csproj, proj1Dll, isDebug);
+            var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebug);
 
             Assert.IsNotNull(nuspec);
 
@@ -288,7 +304,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         public void TestParseTags()
         {
             var creator = new NuspecCreator();
-            var nuspec = creator.CreateNuspec(proj1Csproj, proj1Dll, isDebug);
+            var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebug);
 
             Assert.IsNotNull(nuspec);
 
@@ -301,7 +317,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         public void TestParseProjectUrl()
         {
             var creator = new NuspecCreator();
-            var nuspec = creator.CreateNuspec(proj1Csproj, proj1Dll, isDebug);
+            var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebug);
 
             Assert.IsNotNull(nuspec);
 

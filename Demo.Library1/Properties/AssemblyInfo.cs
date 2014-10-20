@@ -5,13 +5,13 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Keywords, go, here")]
-[assembly: AssemblyDescription("Description goes here")]
+[assembly: AssemblyTitle("Demo.Library1")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Public Components by Danny Varod")]
-[assembly: AssemblyProduct("PubComp.Building.Demo.NuGet")]
-[assembly: AssemblyCopyright("")]
-[assembly: AssemblyTrademark("https://pubcomp.codeplex.com/")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("Demo.Library1")]
+[assembly: AssemblyCopyright("Copyright ©  2014")]
+[assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("791381ce-3fb8-4251-a1e1-9ecbfab26ba5")]
+[assembly: Guid("e0ec4c26-16ee-416f-a992-af6102dfae20")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -32,4 +32,4 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.2.3.4")]
+[assembly: AssemblyVersion("1.0.0.0")]
