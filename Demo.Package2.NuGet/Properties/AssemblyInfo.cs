@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Keywords, go, here")]
 [assembly: AssemblyDescription("Description goes here")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Public Components by Danny Varod")]
 [assembly: AssemblyProduct("PubComp.Building.Demo.Package2")]
-[assembly: AssemblyCopyright("Copyright ©  2014")]
+[assembly: AssemblyCopyright("Copyright © 2014")]
 [assembly: AssemblyTrademark("https://pubcomp.codeplex.com/")]
 [assembly: AssemblyCulture("")]
 

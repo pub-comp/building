@@ -240,7 +240,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         }
 
         [TestMethod]
-        public void TestCreateNuspec()
+        public void TestCreateNuspec1()
         {
             var creator = new NuspecCreator();
             var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebug);
@@ -248,12 +248,23 @@ namespace PubComp.Building.NuGetPack.UnitTests
         }
 
         [TestMethod]
-        public void TestCreatePackage()
+        public void TestCreatePackage1()
         {
             var creator = new NuspecCreator();
             creator.CreatePackage(nuProj1Csproj, nuProj1Dll, isDebug);
 
             var nuspecPath = Path.ChangeExtension(nuProj1Dll, ".nuspec");
+
+            Assert.IsTrue(File.Exists(nuspecPath));
+        }
+
+        [TestMethod]
+        public void TestCreatePackage2()
+        {
+            var creator = new NuspecCreator();
+            creator.CreatePackage(nuProj2Csproj, nuProj2Dll, isDebug);
+
+            var nuspecPath = Path.ChangeExtension(nuProj2Dll, ".nuspec");
 
             Assert.IsTrue(File.Exists(nuspecPath));
         }
