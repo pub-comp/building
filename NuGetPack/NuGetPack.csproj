@@ -48,6 +48,8 @@
     <Compile Include="..\VersionInfo.cs">
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
+    <Compile Include="DependencyInfo.cs" />
+    <Compile Include="ElementType.cs" />
     <Compile Include="NuspecCreator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

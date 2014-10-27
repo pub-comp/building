@@ -152,8 +152,32 @@ namespace PubComp.Building.NuGetPack
         {
             var nuspecFolder = Path.GetDirectoryName(nuspecPath);
 
-            var dependencies = GetDependencies(new[] { packagesFile, internalPackagesFile });
-            var files = GetFiles(nuspecFolder, projectPath, isDebug);
+            XAttribute dependenciesAttribute;
+            var dependenciesInfo = GetDependencies(new[] { packagesFile, internalPackagesFile }, out dependenciesAttribute);
+            var elements = GetElements(nuspecFolder, projectPath, isDebug);
+
+            var dependencies = new XElement("group");
+            dependencies.Add(dependenciesAttribute);
+
+            var d1 = dependenciesInfo.Where(el => el.ElementType == ElementType.NuGetDependency).Select(el => el.Element).ToList();
+            var d2 = elements.Where(el => el.ElementType == ElementType.NuGetDependency).Select(el => el.Element).ToList();
+
+            foreach (var d in d1)
+            {
+                if (!dependencies.Elements().Any(el => el.ToString() == d.ToString()))
+                    dependencies.Add(d);
+            }
+
+            foreach (var d in d2)
+            {
+                if (!dependencies.Elements().Any(el => el.ToString() == d.ToString()))
+                    dependencies.Add(d);
+            }
+
+            var files = elements.Where(el =>
+                el.ElementType != ElementType.AssemblyReference
+                && el.ElementType != ElementType.NuGetDependency)
+                .Select(el => el.Element).ToList();
             
             //var iconUrl = GetIcon(nuspecFolder, Path.GetDirectoryName(projectPath), projectPath);
             
@@ -177,7 +201,7 @@ namespace PubComp.Building.NuGetPack
                         new XElement("requireLicenseAcceptance", false),
                         new XElement("licenseUrl", licenseUrl),
                         new XElement("copyright", copyright),
-                        new XElement("dependencies", new XElement("group", dependencies)),
+                        new XElement("dependencies", dependencies),
                         new XElement("references", string.Empty),
                         new XElement("tags", tags)
                         ),
@@ -188,12 +212,11 @@ namespace PubComp.Building.NuGetPack
             return doc;
         }
 
-        public IEnumerable<XObject> GetDependencies(string[] packagesFiles)
+        public IEnumerable<DependencyInfo> GetDependencies(string[] packagesFiles, out XAttribute dependenciesAttribute)
         {
-            var result = new List<XObject>
-            {
-                new XAttribute("targetFramework", "net45")
-            };
+            dependenciesAttribute = new XAttribute("targetFramework", "net45");
+
+            var result = new List<DependencyInfo>();
 
             foreach (var packagesFile in packagesFiles)
                 result.AddRange(GetDependencies(packagesFile));
@@ -201,9 +224,9 @@ namespace PubComp.Building.NuGetPack
             return result;
         }
 
-        public IEnumerable<XObject> GetDependencies(string packagesFile)
+        public IEnumerable<DependencyInfo> GetDependencies(string packagesFile)
         {
-            var result = new List<XObject>();
+            var result = new List<DependencyInfo>();
 
             if (!File.Exists(packagesFile))
                 return result;
@@ -214,9 +237,12 @@ namespace PubComp.Building.NuGetPack
 
             foreach (var package in packages)
             {
-                result.Add(new XElement("dependency",
-                    new XAttribute("id", package.Attribute("id").Value),
-                    new XAttribute("version", package.Attribute("version").Value)));
+                result.Add(
+                    new DependencyInfo(
+                        ElementType.NuGetDependency,
+                        new XElement("dependency",
+                        new XAttribute("id", package.Attribute("id").Value),
+                        new XAttribute("version", package.Attribute("version").Value))));
             }
 
             return result;
@@ -243,7 +269,7 @@ namespace PubComp.Building.NuGetPack
         }
 #endif
 
-        public IEnumerable<XElement> GetFiles(string nuspecFolder, string projectPath, bool isDebug)
+        public IEnumerable<DependencyInfo> GetElements(string nuspecFolder, string projectPath, bool isDebug)
         {
             DebugOut(() => string.Format("\r\n\r\nGetFiles({0}, {1}, {2})\r\n", nuspecFolder, projectPath, isDebug));
 
@@ -255,7 +281,7 @@ namespace PubComp.Building.NuGetPack
             DebugOut(() => "nuspecToProject = " + nuspecToProject);
             DebugOut(() => "ProjectFolder = " + projectFolder);
 
-            var result = new List<XElement>();
+            var result = new List<DependencyInfo>();
 
             result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath));
 
@@ -275,12 +301,13 @@ namespace PubComp.Building.NuGetPack
 
                 result.AddRange(GetBinaryFiles(nuspecFolder, projFolder, projPath, isDebug, nuspecFolder));
                 result.AddRange(GetSourceFiles(nuspecFolder, projFolder, projPath));
+                result.AddRange(GetDependenciesFromProject(projFolder, projPath));
             }
 
             return result;
         }
 
-        public IEnumerable<XElement> GetContentFiles(string nuspecFolder, string projectFolder, string projectPath)
+        public IEnumerable<DependencyInfo> GetContentFiles(string nuspecFolder, string projectFolder, string projectPath)
         {
             DebugOut(() => string.Format("\r\n\r\nGetContentFiles({0}, {1})\r\n", projectFolder, projectPath));
 
@@ -301,14 +328,16 @@ namespace PubComp.Building.NuGetPack
 
             var relativeProjectFolder = AbsolutePathToRelativePath(projectFolder, nuspecFolder + "\\");
 
-            var sources = contentElements
+            var items = contentElements
                 .Select(s =>
-                    new XElement("file",
-                        new XAttribute("src", Path.Combine(relativeProjectFolder, s.src)),
-                        new XAttribute("target", Path.Combine(s.target))))
+                    new DependencyInfo(
+                        ElementType.ContentFile,
+                        new XElement("file",
+                            new XAttribute("src", Path.Combine(relativeProjectFolder, s.src)),
+                            new XAttribute("target", Path.Combine(s.target)))))
                 .ToList();
 
-            return sources;
+            return items;
         }
 
         public string GetIcon(string nuspecFolder, string projectFolder, string projectPath)
@@ -345,7 +374,8 @@ namespace PubComp.Building.NuGetPack
             return references;
         }
 
-        public IEnumerable<XElement> GetBinaryFiles(string nuspecFolder, string projectFolder, string projectPath, bool isDebug, string buildMachineBinFolder)
+        public IEnumerable<DependencyInfo> GetBinaryFiles(
+            string nuspecFolder, string projectFolder, string projectPath, bool isDebug, string buildMachineBinFolder)
         {
             DebugOut(() => string.Format("\r\n\r\nGetBinaryFiles({0}, {1}, {2}, {3})\r\n", projectFolder, projectPath, isDebug, buildMachineBinFolder));
 
@@ -380,17 +410,19 @@ namespace PubComp.Building.NuGetPack
 
             var files = Directory.GetFiles(outputPath, assemblyName + ".*");
 
-            var result = files
+            var items = files
                 .Where(file =>
                     !file.EndsWith(".nuspec") && !file.EndsWith(".nupkg")
                     && IsFileWithDifferentExtension(assemblyName, file))
                 .Select(file =>
-                new XElement("file",
-                    new XAttribute("src", Path.Combine(relativeOutputPath, Path.GetFileName(file))),
-                    new XAttribute("target", Path.Combine(@"lib\net45\", Path.GetFileName(file)))
-                    )).ToList();
+                    new DependencyInfo(
+                        ElementType.LibraryFile,
+                        new XElement("file",
+                            new XAttribute("src", Path.Combine(relativeOutputPath, Path.GetFileName(file))),
+                            new XAttribute("target", Path.Combine(@"lib\net45\", Path.GetFileName(file)))
+                            ))).ToList();
 
-            return result;
+            return items;
         }
 
         private bool IsFileWithDifferentExtension(string expectedFileNameWithoutExtension, string actualFilePath)
@@ -410,7 +442,7 @@ namespace PubComp.Building.NuGetPack
             return true;
         }
 
-        public IEnumerable<XElement> GetSourceFiles(string nuspecFolder, string projectFolder, string projectPath)
+        public IEnumerable<DependencyInfo> GetSourceFiles(string nuspecFolder, string projectFolder, string projectPath)
         {
             DebugOut(() => string.Format("\r\n\r\nGetSourceFiles({0}, {1})\r\n", projectFolder, projectPath));
 
@@ -423,17 +455,47 @@ namespace PubComp.Building.NuGetPack
 
             var relativeProjectFolder = AbsolutePathToRelativePath(projectFolder, nuspecFolder + "\\");
 
-            var sources = codeElements.Union(noneElements)
+            var items = codeElements.Union(noneElements)
                 .Where(el => el.Attribute("Include") != null
                     && !el.Attribute("Include").Value.StartsWith(".."))
                 .Select(el => el.Attribute("Include").Value)
                 .Select(s =>
-                    new XElement("file",
-                        new XAttribute("src", Path.Combine(relativeProjectFolder, s)),
-                        new XAttribute("target", Path.Combine(@"src\", projectName, s))))
+                    new DependencyInfo(
+                        ElementType.SourceFile,
+                        new XElement("file",
+                            new XAttribute("src", Path.Combine(relativeProjectFolder, s)),
+                            new XAttribute("target", Path.Combine(@"src\", projectName, s)))))
                 .ToList();
 
-            return sources;
+            return items;
+        }
+
+        public IEnumerable<DependencyInfo> GetDependenciesFromProject(string projectFolder, string projectPath)
+        {
+            DebugOut(() => string.Format("\r\n\r\nGetDependenciesFromProject({0}, {1})\r\n", projectFolder, projectPath));
+
+            var csProj = XDocument.Load(projectPath);
+            var projectName = Path.GetFileNameWithoutExtension(projectPath);
+
+            var xmlns = csProj.Root.GetDefaultNamespace();
+            var noneElements = csProj.Element(xmlns + "Project").Elements(xmlns + "ItemGroup").Elements(xmlns + "None");
+
+            var packagesFileName = noneElements.Where(el =>
+                    el.Attribute("Include") != null && el.Attribute("Include").Value.ToLower() == "packages.config")
+                .Select(el => el.Attribute("Include").Value)
+                .FirstOrDefault();
+
+            if (packagesFileName == null)
+                return new DependencyInfo[0];
+
+            string packagesFile;
+            packagesFile = projectFolder + @"\" + packagesFileName;
+
+            DebugOut(() => string.Format("packagesFile: {0}", packagesFile));
+
+            var dependencies = GetDependencies(packagesFile);
+
+            return dependencies;
         }
     }
 }

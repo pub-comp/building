@@ -98,14 +98,18 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var packagesFile = Path.GetDirectoryName(nuProj2Csproj) + @"\packages.config";
 
             var creator = new NuspecCreator();
-            var results = creator.GetDependencies(new[] { packagesFile });
 
-            LinqAssert.Count(results, 2);
+            XAttribute dependenciesAttribute;
+            var results = creator.GetDependencies(new[] { packagesFile }, out dependenciesAttribute);
 
-            LinqAssert.Any(results, obj =>
-                obj is XAttribute && ((XAttribute)obj).Name == "targetFramework" && ((XAttribute)obj).Value == "net45");
+            LinqAssert.Count(results, 1);
+            var elements = results.Select(el => el.Element).ToList();
 
-            LinqAssert.Any(results, obj =>
+            Assert.IsNotNull(dependenciesAttribute);
+            Assert.AreEqual("targetFramework", dependenciesAttribute.Name);
+            Assert.AreEqual("net45", dependenciesAttribute.Value);
+
+            LinqAssert.Any(elements, obj =>
                 obj is XElement && ((XElement)obj).Name == "dependency"
                     && ((XElement)obj).Attribute("id").Value == "FakeItEasy"
                     && ((XElement)obj).Attribute("version").Value == "1.24.0");
@@ -120,11 +124,80 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var results = creator.GetDependencies(packagesFile);
 
             LinqAssert.Count(results, 1);
+            var elements = results.Select(el => el.Element).ToList();
 
-            LinqAssert.Any(results, obj =>
+            LinqAssert.Any(elements, obj =>
                 obj is XElement && ((XElement)obj).Name == "dependency"
                     && ((XElement)obj).Attribute("id").Value == "FakeItEasy"
                     && ((XElement)obj).Attribute("version").Value == "1.24.0");
+        }
+
+        [TestMethod]
+        public void TestGetDependenciesViaReferenceInner1()
+        {
+            var project = proj1Csproj;
+            var folder = Path.GetDirectoryName(project);
+
+            var creator = new NuspecCreator();
+            var results = creator.GetDependenciesFromProject(folder, project);
+
+            var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
+                .Select(r => r.Element).ToList();
+
+            LinqAssert.Count(dependencies, 2);
+
+            LinqAssert.Count(dependencies.Where(r => r.Attribute("id").Value == "Common.Logging.DV"), 1);
+            LinqAssert.Count(dependencies.Where(r => r.Attribute("id").Value == "PubComp.NoSql.Core"), 1);
+        }
+
+        [TestMethod]
+        public void TestGetDependenciesViaReferenceInner2()
+        {
+            var project = proj3Csproj;
+            var folder = Path.GetDirectoryName(project);
+
+            var creator = new NuspecCreator();
+            var results = creator.GetDependenciesFromProject(folder, project);
+
+            var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
+                .Select(r => r.Element).ToList();
+
+            LinqAssert.Count(dependencies, 0);
+        }
+
+        [TestMethod]
+        public void TestGetDependenciesViaReferenceOuter1()
+        {
+            var nuspecFolder = Path.GetDirectoryName(nuProj1Dll);
+
+            var creator = new NuspecCreator();
+            var results = creator.GetElements(nuspecFolder, nuProj1Csproj, isDebug);
+
+            var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
+                .Select(r => r.Element).ToList();
+
+            LinqAssert.Count(dependencies, 8);
+
+            LinqAssert.Count(dependencies.Where(r => r.Attribute("id").Value == "Common.Logging.DV"), 2);
+            LinqAssert.Count(dependencies.Where(r => r.Attribute("id").Value == "Common.Logging.NLog.DV"), 1);
+            LinqAssert.Count(dependencies.Where(r => r.Attribute("id").Value == "mongocsharpdriver"), 1);
+            LinqAssert.Count(dependencies.Where(r => r.Attribute("id").Value == "NLog"), 1);
+            LinqAssert.Count(dependencies.Where(r => r.Attribute("id").Value == "PubComp.NoSql.Core"), 2);
+            LinqAssert.Count(dependencies.Where(r => r.Attribute("id").Value == "PubComp.NoSql.MongoDbDriver"), 1);
+        }
+
+        [TestMethod]
+        public void TestGetDependenciesViaReferenceOuter2()
+        {
+            var nuspecFolder = Path.GetDirectoryName(nuProj2Dll);
+
+            var creator = new NuspecCreator();
+            var results = creator.GetElements(nuspecFolder, nuProj2Csproj, isDebug);
+
+            var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
+                .Select(r => r.Element).ToList();
+
+            LinqAssert.Count(dependencies, 0);
         }
 
         [TestMethod]
@@ -135,20 +208,21 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 Path.GetDirectoryName(nuProj1Dll), @"..\..", nuProj1Csproj);
 
             LinqAssert.Count(results, 3);
+            var elements = results.Select(el => el.Element).ToList();
 
-            LinqAssert.Any(results, el =>
+            LinqAssert.Any(elements, el =>
                 el.Name == "file"
                 && el.Attribute("src").Value == @"..\..\..\Data.txt"
                     && el.Attribute("target").Value == @"content\Data.txt",
                 "Found: " + results.First());
 
-            LinqAssert.Any(results, el =>
+            LinqAssert.Any(elements, el =>
                 el.Name == "file"
                 && el.Attribute("src").Value == @"..\..\content\Info.txt"
                     && el.Attribute("target").Value == @"content\Info.txt",
                 "Found: " + results.First());
 
-            LinqAssert.Any(results, el =>
+            LinqAssert.Any(elements, el =>
                 el.Name == "file"
                 && el.Attribute("src").Value == @"..\..\content\SubContent\Other.txt"
                     && el.Attribute("target").Value == @"content\SubContent\Other.txt",
@@ -174,14 +248,15 @@ namespace PubComp.Building.NuGetPack.UnitTests
             }
 
             LinqAssert.Count(results, 2);
+            var elements = results.Select(el => el.Element).ToList();
 
-            LinqAssert.Any(results, el =>
+            LinqAssert.Any(elements, el =>
                 el.Name == "file"
                 && el.Attribute("src").Value == path + @"PubComp.Building.Demo.Library3.dll"
                     && el.Attribute("target").Value == @"lib\net45\PubComp.Building.Demo.Library3.dll",
                 "Found: " + results.First());
 
-            LinqAssert.Any(results, el =>
+            LinqAssert.Any(elements, el =>
                 el.Name == "file"
                 && el.Attribute("src").Value == path + @"PubComp.Building.Demo.Library3.pdb"
                     && el.Attribute("target").Value == @"lib\net45\PubComp.Building.Demo.Library3.pdb",
@@ -196,14 +271,15 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 Path.GetDirectoryName(nuProj1Dll), @"..\..\..\Demo.Library3", proj3Csproj);
 
             LinqAssert.Count(results, 2);
+            var elements = results.Select(el => el.Element).ToList();
 
-            LinqAssert.Any(results, el =>
+            LinqAssert.Any(elements, el =>
                 el.Name == "file"
                 && el.Attribute("src").Value == @"..\..\..\Demo.Library3\Properties\AssemblyInfo.cs"
                     && el.Attribute("target").Value == @"src\Demo.Library3\Properties\AssemblyInfo.cs",
                 "Found: " + results.First());
 
-            LinqAssert.Any(results, el =>
+            LinqAssert.Any(elements, el =>
                 el.Name == "file"
                 && el.Attribute("src").Value == @"..\..\..\Demo.Library3\DemoClass3.cs"
                     && el.Attribute("target").Value == @"src\Demo.Library3\DemoClass3.cs",
@@ -231,12 +307,16 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var nuspecFolder = Path.GetDirectoryName(nuProj1Dll);
 
             var creator = new NuspecCreator();
-            var results = creator.GetFiles(
+            var results = creator.GetElements(
                 nuspecFolder, nuProj1Csproj, isDebug);
 
             Assert.AreNotEqual(0, results.Count());
+            var files = results.Where(el =>
+                    el.ElementType != ElementType.NuGetDependency && el.ElementType != ElementType.AssemblyReference)
+                .ToList();
+            var elements = files.Select(el => el.Element).ToList();
 
-            LinqAssert.All(results, r => File.Exists(Path.Combine(nuspecFolder, r.Attribute("src").Value)));
+            LinqAssert.All(elements, r => File.Exists(Path.Combine(nuspecFolder, r.Attribute("src").Value)));
         }
 
         [TestMethod]
