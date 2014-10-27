@@ -92,6 +92,8 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
         #endregion
 
+        #region Get Packages Dependencies
+
         [TestMethod]
         public void TestGetDependenciesOuter()
         {
@@ -200,6 +202,8 @@ namespace PubComp.Building.NuGetPack.UnitTests
             LinqAssert.Count(dependencies, 0);
         }
 
+        #endregion
+
         [TestMethod]
         public void TestGetContentFiles()
         {
@@ -302,6 +306,21 @@ namespace PubComp.Building.NuGetPack.UnitTests
         }
 
         [TestMethod]
+        public void TestGetFrameworkReferences()
+        {
+            var projFolder = Path.GetDirectoryName(nuProj2Csproj);
+
+            var creator = new NuspecCreator();
+            var results = creator.GetFrameworkReferences(projFolder, nuProj2Csproj);
+
+            LinqAssert.Count(results, 1);
+            LinqAssert.Any(results, r =>
+                r.ElementType == ElementType.FrameworkReference
+                && r.Element.Attribute("assemblyName") != null
+                && r.Element.Attribute("assemblyName").Value == "System.Xaml");
+        }
+
+        [TestMethod]
         public void TestGetFiles()
         {
             var nuspecFolder = Path.GetDirectoryName(nuProj1Dll);
@@ -312,12 +331,16 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             Assert.AreNotEqual(0, results.Count());
             var files = results.Where(el =>
-                    el.ElementType != ElementType.NuGetDependency && el.ElementType != ElementType.AssemblyReference)
+                    el.ElementType != ElementType.NuGetDependency
+                    && el.ElementType != ElementType.AssemblyReference
+                    && el.ElementType != ElementType.FrameworkReference)
                 .ToList();
             var elements = files.Select(el => el.Element).ToList();
 
             LinqAssert.All(elements, r => File.Exists(Path.Combine(nuspecFolder, r.Attribute("src").Value)));
         }
+
+        #region Create Ouput Tests
 
         [TestMethod]
         public void TestCreateNuspec1()
@@ -348,6 +371,10 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             Assert.IsTrue(File.Exists(nuspecPath));
         }
+
+        #endregion
+
+        #region Package Metadata Tests
 
         [TestMethod]
         public void TestParseVersion()
@@ -417,6 +444,8 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             Assert.AreEqual("https://pubcomp.codeplex.com/", version);
         }
+
+        #endregion
 
         #region Command-line Tests
 

@@ -13,6 +13,7 @@ namespace PubComp.Building.NuGetPack
         LibraryFile,
         ToolsFile,
         BuildFile,
+        FrameworkReference,
         AssemblyReference,
         NuGetDependency
     }

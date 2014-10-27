@@ -39,13 +39,7 @@
     <Reference Include="FakeItEasy">
       <HintPath>..\packages\FakeItEasy.1.24.0\lib\net40\FakeItEasy.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <Reference Include="System.Xaml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\DemoVersionInfo.cs">
@@ -56,6 +50,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="internalPackages.config" />
+    <None Include="NuGetPack.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

@@ -122,13 +122,14 @@ namespace PubComp.Building.NuGetPack
             var folder = Path.GetDirectoryName(projectPath);
             var packagesFile = Path.Combine(folder, @"packages.config");
             var internalPackagesFile = Path.Combine(folder, @"internalPackages.config");
+            var configFile = Path.Combine(folder, @"NuGetPack.config");
 
             var nuspecPath = Path.ChangeExtension(assemblyPath, ".nuspec");
 
             var doc = CreateNuspec(
                 packageName, version, owner, shortSummary,
                 longDescription, releaseNotes, licenseUrl, projectUrl, copyright, tags, nuspecPath, projectPath,
-                packagesFile, internalPackagesFile, isDebug);
+                packagesFile, internalPackagesFile, configFile, isDebug);
 
             return doc;
         }
@@ -148,9 +149,24 @@ namespace PubComp.Building.NuGetPack
             string projectPath,
             string packagesFile,
             string internalPackagesFile,
+            string configPath,
             bool isDebug)
         {
             var nuspecFolder = Path.GetDirectoryName(nuspecPath);
+
+            string iconUrl = null;
+            bool addFrameworkReferences = false;
+
+            if (File.Exists(configPath))
+            {
+                var deserializer = new System.Xml.Serialization.XmlSerializer(typeof(NuGetPackConfig));
+                using (var stream = new FileStream(configPath, FileMode.Open, FileAccess.Read))
+                {
+                    var config = deserializer.Deserialize(stream) as NuGetPackConfig;
+                    iconUrl = config.IconUrl;
+                    addFrameworkReferences = config.AddFrameworkReferences;
+                }
+            }
 
             XAttribute dependenciesAttribute;
             var dependenciesInfo = GetDependencies(new[] { packagesFile, internalPackagesFile }, out dependenciesAttribute);
@@ -176,17 +192,15 @@ namespace PubComp.Building.NuGetPack
 
             var files = elements.Where(el =>
                 el.ElementType != ElementType.AssemblyReference
-                && el.ElementType != ElementType.NuGetDependency)
+                && el.ElementType != ElementType.NuGetDependency
+                && el.ElementType != ElementType.FrameworkReference)
                 .Select(el => el.Element).ToList();
             
-            //var iconUrl = GetIcon(nuspecFolder, Path.GetDirectoryName(projectPath), projectPath);
-            
-            //if (string.IsNullOrEmpty(iconUrl))
-            var iconUrl = @"https://nuget.org/Content/Images/packageDefaultIcon-50x50.png";
+            iconUrl = !string.IsNullOrEmpty(iconUrl) ?
+                iconUrl
+                : @"https://nuget.org/Content/Images/packageDefaultIcon-50x50.png";
 
-            var doc = new XDocument(
-                new XElement("package",
-                    new XElement("metadata",
+            var metadataElement = new XElement("metadata",
                         new XElement("id", packageName),
                         new XElement("version", version),
                         new XElement("title", packageName),
@@ -203,8 +217,21 @@ namespace PubComp.Building.NuGetPack
                         new XElement("copyright", copyright),
                         new XElement("dependencies", dependencies),
                         new XElement("references", string.Empty),
-                        new XElement("tags", tags)
-                        ),
+                        new XElement("tags", tags));
+
+            if (addFrameworkReferences)
+            {
+                var frameworkReferences = GetFrameworkReferences(Path.GetDirectoryName(projectPath), projectPath)
+                    .Select(el => el.Element)
+                    .ToList();
+
+                metadataElement.Add(new XElement("frameworkAssemblies",
+                    frameworkReferences));
+            }
+
+            var doc = new XDocument(
+                new XElement("package",
+                    metadataElement,
                     new XElement("files", files)
                 )
             );
@@ -374,16 +401,8 @@ namespace PubComp.Building.NuGetPack
             return references;
         }
 
-        public IEnumerable<DependencyInfo> GetBinaryFiles(
-            string nuspecFolder, string projectFolder, string projectPath, bool isDebug, string buildMachineBinFolder)
+        private string GetOutputPath(XDocument csProj, bool isDebug, string projectFolder)
         {
-            DebugOut(() => string.Format("\r\n\r\nGetBinaryFiles({0}, {1}, {2}, {3})\r\n", projectFolder, projectPath, isDebug, buildMachineBinFolder));
-
-            string outputPath;
-
-            var csProj = XDocument.Load(projectPath);
-            var projectName = Path.GetFileNameWithoutExtension(projectPath);
-
             var xmlns = csProj.Root.GetDefaultNamespace();
             var proj = csProj.Element(xmlns + "Project");
             var propGroups = proj.Elements(xmlns + "PropertyGroup");
@@ -395,7 +414,24 @@ namespace PubComp.Building.NuGetPack
                     && el.Attribute("Condition").Value.Contains(config))
                 .Elements(xmlns + "OutputPath").FirstOrDefault();
 
-            outputPath = Path.Combine(projectFolder, outputPathElement.Value);
+            var outputPath = Path.Combine(projectFolder, outputPathElement.Value);
+            return outputPath;
+        }
+
+        public IEnumerable<DependencyInfo> GetBinaryFiles(
+            string nuspecFolder, string projectFolder, string projectPath, bool isDebug, string buildMachineBinFolder)
+        {
+            DebugOut(() => string.Format("\r\n\r\nGetBinaryFiles({0}, {1}, {2}, {3})\r\n", projectFolder, projectPath, isDebug, buildMachineBinFolder));
+
+            string outputPath;
+
+            var csProj = XDocument.Load(projectPath);
+
+            var xmlns = csProj.Root.GetDefaultNamespace();
+            var proj = csProj.Element(xmlns + "Project");
+            var propGroups = proj.Elements(xmlns + "PropertyGroup");
+
+            outputPath = GetOutputPath(csProj, isDebug, projectFolder);
 
             if (!Directory.Exists(outputPath))
                 outputPath = buildMachineBinFolder;
@@ -496,6 +532,96 @@ namespace PubComp.Building.NuGetPack
             var dependencies = GetDependencies(packagesFile);
 
             return dependencies;
+        }
+
+        public IEnumerable<DependencyInfo> GetFrameworkReferences(string projectFolder, string projectPath)
+        {
+            DebugOut(() => string.Format("\r\n\r\nGetFrameworkReferences({0}, {1})\r\n", projectFolder, projectPath));
+
+            var csProj = XDocument.Load(projectPath);
+
+            var xmlns = csProj.Root.GetDefaultNamespace();
+            var proj = csProj.Element(xmlns + "Project");
+
+            var referencedBinaryFiles = proj.Elements(xmlns + "ItemGroup")
+                .SelectMany(el => el.Elements(xmlns + "Reference"))
+                .Where(el => el.Attribute("Include") != null && !el.Elements(xmlns + "HintPath").Any())
+                .Select(el => el.Attribute("Include").Value)
+                .ToList();
+
+            //<frameworkAssembly assemblyName="System.Speech" targetFramework=".NETFramework4.5" />
+
+            var items = referencedBinaryFiles
+                .Select(el =>
+                    new DependencyInfo(
+                        ElementType.FrameworkReference,
+                        new XElement("frameworkAssembly",
+                            new XAttribute("assemblyName", el))))
+                .ToList();
+
+            return items;
+        }
+
+        public IEnumerable<DependencyInfo> GetAssemblyReferences(
+            string nuspecFolder, string projectFolder, string projectPath, bool isDebug)
+        {
+            DebugOut(() => string.Format("\r\n\r\nGetAssemblyReferences({0}, {1})\r\n", projectFolder, projectPath));
+
+            var csProj = XDocument.Load(projectPath);
+            var projectName = Path.GetFileNameWithoutExtension(projectPath);
+
+            var outputPath = GetOutputPath(csProj, isDebug, projectFolder);
+
+            var xmlns = csProj.Root.GetDefaultNamespace();
+            var proj = csProj.Element(xmlns + "Project");
+            
+            var referencedBinaryFiles = proj.Elements(xmlns + "ItemGroup")
+                .SelectMany(el => el.Elements(xmlns + "Reference"))
+                .SelectMany(el => el.Elements(xmlns + "HintPath"))
+                .Where(el => !el.Value.Contains(@"\packages\"))
+                .Select(el => Path.Combine(projectFolder, el.Value))
+                .ToList();
+
+            var relativeOutputPath = AbsolutePathToRelativePath(outputPath, nuspecFolder + "\\");
+
+            var items = new List<DependencyInfo>();
+
+            foreach (var file in referencedBinaryFiles)
+            {
+                items.Add(
+                    new DependencyInfo(
+                        ElementType.LibraryFile,
+                        new XElement("file",
+                            new XAttribute("src", Path.Combine(relativeOutputPath, Path.GetFileName(file))),
+                            new XAttribute("target", Path.Combine(@"lib\net45\", Path.GetFileName(file)))
+                            )));
+
+                var pdbFile = Path.ChangeExtension(file, ".pdb");
+                if (File.Exists(pdbFile))
+                {
+                    items.Add(
+                    new DependencyInfo(
+                        ElementType.LibraryFile,
+                        new XElement("file",
+                            new XAttribute("src", Path.Combine(relativeOutputPath, Path.GetFileName(pdbFile))),
+                            new XAttribute("target", Path.Combine(@"lib\net45\", Path.GetFileName(pdbFile)))
+                            )));
+                }
+
+                var xmlFile = Path.ChangeExtension(file, ".pdb");
+                if (File.Exists(xmlFile))
+                {
+                    items.Add(
+                    new DependencyInfo(
+                        ElementType.LibraryFile,
+                        new XElement("file",
+                            new XAttribute("src", Path.Combine(relativeOutputPath, Path.GetFileName(xmlFile))),
+                            new XAttribute("target", Path.Combine(@"lib\net45\", Path.GetFileName(xmlFile)))
+                            )));
+                }
+            }
+
+            return items;
         }
     }
 }
