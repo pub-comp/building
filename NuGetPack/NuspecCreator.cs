@@ -608,7 +608,7 @@ namespace PubComp.Building.NuGetPack
                             )));
                 }
 
-                var xmlFile = Path.ChangeExtension(file, ".pdb");
+                var xmlFile = Path.ChangeExtension(file, ".xml");
                 if (File.Exists(xmlFile))
                 {
                     items.Add(
