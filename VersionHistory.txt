@@ -1,0 +1,8 @@
+1.0.0: Initial
+1.1.0: Added support for content files (files marked as content in NuGet project)
+2.0.0: Only take content files under content folder (from NuGet project)
+2.1.0: Take all files under content folder as content (from NuGet project)
+2.2.0: Support packages used by project references.
+2.3.0: Added optional config file (for NuGet projects),
+       now you can set icon and choose to add framework references to your NuGet packages
+2.4.0: Added more config file options
