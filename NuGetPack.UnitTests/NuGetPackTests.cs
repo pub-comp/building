@@ -376,6 +376,8 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
         #region Package Metadata Tests
 
+        #region From Assembly Metadata
+
         [TestMethod]
         public void TestParseVersion()
         {
@@ -407,7 +409,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         }
 
         [TestMethod]
-        public void TestParseDescription()
+        public void TestParseDescriptionFromAssembly()
         {
             var creator = new NuspecCreator();
             var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebug);
@@ -420,7 +422,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         }
 
         [TestMethod]
-        public void TestParseTags()
+        public void TestParseKeywordsFromAssembly()
         {
             var creator = new NuspecCreator();
             var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebug);
@@ -433,7 +435,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         }
 
         [TestMethod]
-        public void TestParseProjectUrl()
+        public void TestParseProjectUrlFromAssembly()
         {
             var creator = new NuspecCreator();
             var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebug);
@@ -444,6 +446,129 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             Assert.AreEqual("https://pubcomp.codeplex.com/", version);
         }
+
+        #endregion
+
+        #region From Config file
+
+        [TestMethod]
+        public void TestParseDescriptionFromConfig()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebug);
+
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/description").Value;
+
+            Assert.AreEqual("Demo Description", version);
+        }
+
+        [TestMethod]
+        public void TestParseSummaryFromConfig()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebug);
+
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/summary").Value;
+
+            Assert.AreEqual("Demo Summary", version);
+        }
+
+        [TestMethod]
+        public void TestParseKeywordsFromConfig()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebug);
+
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/tags").Value;
+
+            Assert.AreEqual("Demo, Key, Word", version);
+        }
+
+        [TestMethod]
+        public void TestParseIconUrlFromConfig()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebug);
+
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/iconUrl").Value;
+
+            Assert.AreEqual("http://www.codeplex.com/favicon.ico", version);
+        }
+
+        [TestMethod]
+        public void TestParseProjectUrlFromConfig()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebug);
+
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/projectUrl").Value;
+
+            Assert.AreEqual("https://pubcomp.codeplex.com/#", version);
+        }
+
+        [TestMethod]
+        public void TestParseLicenseUrlFromConfig()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebug);
+
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/licenseUrl").Value;
+
+            Assert.AreEqual("https://pubcomp.codeplex.com/license", version);
+        }
+
+        [TestMethod]
+        public void TestParseAuthorsFromConfig()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebug);
+
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/authors").Value;
+
+            Assert.AreEqual("Demo Author", version);
+        }
+
+        [TestMethod]
+        public void TestParseOwnersFromConfig()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebug);
+
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/owners").Value;
+
+            Assert.AreEqual("Demo Owner", version);
+        }
+
+        [TestMethod]
+        public void TestParseCopyrightFromConfig()
+        {
+            var creator = new NuspecCreator();
+            var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebug);
+
+            Assert.IsNotNull(nuspec);
+
+            var version = nuspec.XPathSelectElement(@"/package/metadata/copyright").Value;
+
+            Assert.AreEqual("Demo Copyright", version);
+        }
+
+        #endregion
 
         #endregion
 

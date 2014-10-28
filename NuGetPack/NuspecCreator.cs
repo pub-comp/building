@@ -109,13 +109,13 @@ namespace PubComp.Building.NuGetPack
             if (fileVersion.ProductVersion.Contains("-"))
                 version += "-" + "PreRelease";
 
-            var owner = fileVersion.CompanyName;
+            var owners = fileVersion.CompanyName;
 
             var shortSummary = fileVersion.Comments;
             var longDescription = fileVersion.Comments;
             var copyright = fileVersion.LegalCopyright;
             var releaseNotes = fileVersion.SpecialBuild;
-            var tags = fileVersion.FileDescription;
+            var keywords = fileVersion.FileDescription;
             var licenseUrl = fileVersion.LegalTrademarks;
             var projectUrl = fileVersion.LegalTrademarks;
 
@@ -126,10 +126,53 @@ namespace PubComp.Building.NuGetPack
 
             var nuspecPath = Path.ChangeExtension(assemblyPath, ".nuspec");
 
+
+            string iconUrl = @"https://nuget.org/Content/Images/packageDefaultIcon-50x50.png";
+            bool doAddFrameworkReferences = false;
+            string authors = owners;
+
+            if (File.Exists(configFile))
+            {
+                var deserializer = new System.Xml.Serialization.XmlSerializer(typeof(NuGetPackConfig));
+                using (var stream = new FileStream(configFile, FileMode.Open, FileAccess.Read))
+                {
+                    var config = deserializer.Deserialize(stream) as NuGetPackConfig;
+
+                    doAddFrameworkReferences = config.AddFrameworkReferences;
+
+                    if (!string.IsNullOrEmpty(config.Authors))
+                        authors = config.Authors;
+
+                    if (!string.IsNullOrEmpty(config.Copyright))
+                        copyright = config.Copyright;
+
+                    if (!string.IsNullOrEmpty(config.Description))
+                        longDescription = config.Description;
+
+                    if (!string.IsNullOrEmpty(config.IconUrl))
+                        iconUrl = config.IconUrl;
+
+                    if (!string.IsNullOrEmpty(config.Keywords))
+                        keywords = config.Keywords;
+
+                    if (!string.IsNullOrEmpty(config.LicenseUrl))
+                        licenseUrl = config.LicenseUrl;
+
+                    if (!string.IsNullOrEmpty(config.Owners))
+                        owners = config.Owners;
+
+                    if (!string.IsNullOrEmpty(config.ProjectUrl))
+                        projectUrl = config.ProjectUrl;
+
+                    if (!string.IsNullOrEmpty(config.Summary))
+                        shortSummary = config.Summary;
+                }
+            }
+
             var doc = CreateNuspec(
-                packageName, version, owner, shortSummary,
-                longDescription, releaseNotes, licenseUrl, projectUrl, copyright, tags, nuspecPath, projectPath,
-                packagesFile, internalPackagesFile, configFile, isDebug);
+                packageName, version, owners, authors, shortSummary,
+                longDescription, releaseNotes, licenseUrl, projectUrl, iconUrl, copyright, keywords, nuspecPath, projectPath,
+                packagesFile, internalPackagesFile, isDebug, doAddFrameworkReferences);
 
             return doc;
         }
@@ -137,36 +180,24 @@ namespace PubComp.Building.NuGetPack
         public XDocument CreateNuspec(
             string packageName,
             string version,
-            string owner,
+            string owners,
+            string authors,
             string shortSummary,
             string longDescription,
             string releaseNotes,
             string licenseUrl,
             string projectUrl,
+            string iconUrl,
             string copyright,
-            string tags,
+            string keywords,
             string nuspecPath,
             string projectPath,
             string packagesFile,
             string internalPackagesFile,
-            string configPath,
-            bool isDebug)
+            bool isDebug,
+            bool doAddFrameworkReferences)
         {
             var nuspecFolder = Path.GetDirectoryName(nuspecPath);
-
-            string iconUrl = null;
-            bool addFrameworkReferences = false;
-
-            if (File.Exists(configPath))
-            {
-                var deserializer = new System.Xml.Serialization.XmlSerializer(typeof(NuGetPackConfig));
-                using (var stream = new FileStream(configPath, FileMode.Open, FileAccess.Read))
-                {
-                    var config = deserializer.Deserialize(stream) as NuGetPackConfig;
-                    iconUrl = config.IconUrl;
-                    addFrameworkReferences = config.AddFrameworkReferences;
-                }
-            }
 
             XAttribute dependenciesAttribute;
             var dependenciesInfo = GetDependencies(new[] { packagesFile, internalPackagesFile }, out dependenciesAttribute);
@@ -195,17 +226,13 @@ namespace PubComp.Building.NuGetPack
                 && el.ElementType != ElementType.NuGetDependency
                 && el.ElementType != ElementType.FrameworkReference)
                 .Select(el => el.Element).ToList();
-            
-            iconUrl = !string.IsNullOrEmpty(iconUrl) ?
-                iconUrl
-                : @"https://nuget.org/Content/Images/packageDefaultIcon-50x50.png";
 
             var metadataElement = new XElement("metadata",
                         new XElement("id", packageName),
                         new XElement("version", version),
                         new XElement("title", packageName),
-                        new XElement("authors", owner),
-                        new XElement("owners", owner),
+                        new XElement("authors", authors),
+                        new XElement("owners", owners),
                         new XElement("description", longDescription),
                         new XElement("releaseNotes", releaseNotes),
                         new XElement("summary", shortSummary),
@@ -217,9 +244,9 @@ namespace PubComp.Building.NuGetPack
                         new XElement("copyright", copyright),
                         new XElement("dependencies", dependencies),
                         new XElement("references", string.Empty),
-                        new XElement("tags", tags));
+                        new XElement("tags", keywords));
 
-            if (addFrameworkReferences)
+            if (doAddFrameworkReferences)
             {
                 var frameworkReferences = GetFrameworkReferences(Path.GetDirectoryName(projectPath), projectPath)
                     .Select(el => el.Element)
