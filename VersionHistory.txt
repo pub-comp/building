@@ -23,3 +23,7 @@
 2.5.0:
 	* Enabled including non-project references (e.g. 3rd party libraries under lib)
 	* Added Demo.Readme.txt for explaining demo of the various features
+
+2.6.0:
+	* Added support for "sln" folder under NuGet project,
+	this enables adding files that are not copied under project and are not source files

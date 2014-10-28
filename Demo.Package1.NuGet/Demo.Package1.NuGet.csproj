@@ -58,6 +58,9 @@
     <Content Include="..\Dependencies\PubComp.Building.Demo.Binary1.pdb">
       <Link>lib\PubComp.Building.Demo.Binary1.pdb</Link>
     </Content>
+    <Content Include="..\Text.txt">
+      <Link>sln\Text.txt</Link>
+    </Content>
     <Content Include="content\Info.txt" />
     <None Include="content\SubContent\Other.txt" />
   </ItemGroup>

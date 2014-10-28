@@ -8,12 +8,13 @@ namespace PubComp.Building.NuGetPack
 {
     public enum ElementType
     {
+        NuGetDependency,
+        FrameworkReference,
         SourceFile,
         ContentFile,
         LibraryFile,
         ToolsFile,
-        BuildFile,
-        FrameworkReference,
-        NuGetDependency
+        BuildFile,        
+        SolutionItemsFile,
     }
 }

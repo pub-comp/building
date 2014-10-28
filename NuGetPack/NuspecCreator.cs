@@ -338,6 +338,8 @@ namespace PubComp.Building.NuGetPack
 
             result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath));
             result.AddRange(GetBinaryFiles(nuspecFolder, projectFolder, projectPath));
+            result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath,
+                srcFolder: @"sln\", destFolder: @"sln\", flattern: false, elementType: ElementType.SolutionItemsFile));
 
             var references = GetReferences(nuspecFolder, projectPath, projectFolder);
 
@@ -361,13 +363,21 @@ namespace PubComp.Building.NuGetPack
             return result;
         }
 
-        public IEnumerable<DependencyInfo> GetContentFiles(string nuspecFolder, string projectFolder, string projectPath)
+        #region NuGet Project Parsing
+
+        public IEnumerable<DependencyInfo> GetContentFiles(
+            string nuspecFolder, string projectFolder, string projectPath,
+            string srcFolder = @"content\", string destFolder = @"content\",
+            bool flattern = false, ElementType elementType = ElementType.ContentFile)
         {
             DebugOut(() => string.Format("\r\n\r\nGetContentFiles({0}, {1}, {2})\r\n", nuspecFolder, projectFolder, projectPath));
 
             var csProj = XDocument.Load(projectPath);
 
             var xmlns = csProj.Root.GetDefaultNamespace();
+
+            srcFolder = srcFolder.ToLower();
+
             var contentElements = csProj.Element(xmlns + "Project").Elements(xmlns + "ItemGroup").Elements()
                 .Where(el => el.Attribute("Include") != null)
                 .Select(el =>
@@ -378,18 +388,42 @@ namespace PubComp.Building.NuGetPack
                             ? el.Elements(xmlns + "Link").First().Value
                             : el.Attribute("Include").Value
                     })
-                .Where(st => st.target.ToLower().StartsWith(@"content\"));
+                .Where(st => st.target.ToLower().StartsWith(srcFolder) && st.target.ToLower() != srcFolder);
 
             var relativeProjectFolder = AbsolutePathToRelativePath(projectFolder, nuspecFolder + "\\");
 
-            var items = contentElements
-                .Select(s =>
-                    new DependencyInfo(
-                        ElementType.ContentFile,
-                        new XElement("file",
-                            new XAttribute("src", Path.Combine(relativeProjectFolder, s.src)),
-                            new XAttribute("target", Path.Combine(s.target)))))
+            List<DependencyInfo> items;
+
+            if (!flattern)
+            {
+                items = contentElements
+                    .Select(s =>
+                        new DependencyInfo(
+                            elementType,
+                            new XElement("file",
+                                new XAttribute("src", Path.Combine(relativeProjectFolder, s.src)),
+                                new XAttribute("target", s.target))))
+                    .ToList();
+            }
+            else
+            {
+                items = contentElements
+                    .Select(s =>
+                        new DependencyInfo(
+                            elementType,
+                            new XElement("file",
+                                new XAttribute("src", Path.Combine(relativeProjectFolder, s.src)),
+                                new XAttribute("target", Path.Combine(destFolder, Path.GetFileName(s.target))))))
                 .ToList();
+            }
+
+            return items;
+        }
+
+        public IEnumerable<DependencyInfo> GetBinaryFiles(string nuspecFolder, string projectFolder, string projectPath)
+        {
+            var items = GetContentFiles(nuspecFolder, projectFolder, projectPath,
+                srcFolder: @"lib\", destFolder: @"lib\net45\", flattern: true, elementType: ElementType.LibraryFile);
 
             return items;
         }
@@ -422,59 +456,6 @@ namespace PubComp.Building.NuGetPack
             return items;
         }
 
-        public IEnumerable<DependencyInfo> GetBinaryFiles(string nuspecFolder, string projectFolder, string projectPath)
-        {
-            DebugOut(() => string.Format("\r\n\r\nGetAssemblyReferences({0}, {1}, {2})\r\n", nuspecFolder, projectFolder, projectPath));
-
-            var csProj = XDocument.Load(projectPath);
-
-            var xmlns = csProj.Root.GetDefaultNamespace();
-            var libElements = csProj.Element(xmlns + "Project").Elements(xmlns + "ItemGroup").Elements()
-                .Where(el => el.Attribute("Include") != null)
-                .Select(el =>
-                    new
-                    {
-                        src = el.Attribute("Include").Value,
-                        target = el.Elements(xmlns + "Link").Any()
-                            ? el.Elements(xmlns + "Link").First().Value
-                            : el.Attribute("Include").Value
-                    })
-                .Where(st => st.target.ToLower().StartsWith(@"lib\"));
-
-            var relativeProjectFolder = AbsolutePathToRelativePath(projectFolder, nuspecFolder + "\\");
-
-            var items = libElements
-                .Select(s =>
-                    new DependencyInfo(
-                        ElementType.LibraryFile,
-                        new XElement("file",
-                            new XAttribute("src", Path.Combine(relativeProjectFolder, s.src)),
-                            new XAttribute("target", Path.Combine(@"lib\net45\", Path.GetFileName(s.target))))))
-                .ToList();
-
-            return items;
-        }
-
-        public string GetIcon(string nuspecFolder, string projectFolder, string projectPath)
-        {
-            var csProj = XDocument.Load(projectPath);
-
-            var xmlns = csProj.Root.GetDefaultNamespace();
-            var iconElements = csProj.Element(xmlns + "Project").Elements(xmlns + "PropertyGroup").Elements(xmlns + "ApplicationIcon");
-
-            if (!iconElements.Any())
-                return null;
-
-            var iconPath = iconElements.Select(i => i.Value).First();
-
-            if (new Uri(iconPath, UriKind.RelativeOrAbsolute).IsAbsoluteUri == false)
-            {
-                iconPath = AbsolutePathToRelativePath(iconPath, nuspecFolder + "\\");
-            }
-
-            return iconPath;
-        }
-
         public IEnumerable<string> GetReferences(string nuspecFolder, string projectPath, string projectFolder)
         {
             var csProj = XDocument.Load(projectPath);
@@ -488,6 +469,10 @@ namespace PubComp.Building.NuGetPack
 
             return references;
         }
+
+        #endregion
+
+        #region Referenced Projects Parsing
 
         private string GetOutputPath(XDocument csProj, bool isDebug, string projectFolder)
         {
@@ -621,5 +606,7 @@ namespace PubComp.Building.NuGetPack
 
             return dependencies;
         }
+
+        #endregion
     }
 }

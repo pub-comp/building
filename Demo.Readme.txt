@@ -16,6 +16,7 @@ Demo.Package1:
 * gets its metadata from its AssemblyInfo.cs
 * includes content via content folder (both files and linked files in example)
 * includes a "3rd party" non-NuGet .NET assembly (Demo.Binary1) via lib folder (linked files in example)
+* includes a file to be placed under an "sln" folder (linked file in example)
 
 Demo.Package2:
 * a NuGet package created by NuGet project Demo.Package2.NuGet

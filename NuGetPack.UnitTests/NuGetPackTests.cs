@@ -246,6 +246,24 @@ namespace PubComp.Building.NuGetPack.UnitTests
         }
 
         [TestMethod]
+        public void TestGetSlnFiles()
+        {
+            var creator = new NuspecCreator();
+            var results = creator.GetContentFiles(
+                Path.GetDirectoryName(nuProj1Dll), @"..\..", nuProj1Csproj,
+                srcFolder: @"sln\", destFolder: @"sln\", flattern: false, elementType: ElementType.SolutionItemsFile);
+
+            LinqAssert.Count(results, 1);
+            var elements = results.Select(el => el.Element).ToList();
+
+            LinqAssert.Any(elements, el =>
+                el.Name == "file"
+                && el.Attribute("src").Value == @"..\..\..\Text.txt"
+                    && el.Attribute("target").Value == @"sln\Text.txt",
+                "Found: " + results.First());
+        }
+
+        [TestMethod]
         public void TestGetBinaryFiles1()
         {
             var creator = new NuspecCreator();
