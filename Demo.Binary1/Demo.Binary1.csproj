@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{7812FFE0-3D9D-4B93-89F8-770C7B0E92D8}</ProjectGuid>
+    <ProjectGuid>{390AB87B-8AB1-45E7-A444-04EACB7F7F69}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PubComp.Building.Demo.Package1.NuGet</RootNamespace>
-    <AssemblyName>PubComp.Building.Demo.Package1.NuGet</AssemblyName>
+    <RootNamespace>PubComp.Building.Demo.Binary1</RootNamespace>
+    <AssemblyName>PubComp.Building.Demo.Binary1</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
@@ -43,33 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\DemoVersionInfo.cs">
-      <Link>Properties\DemoVersionInfo.cs</Link>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\Data.txt">
-      <Link>content\Data.txt</Link>
-    </Content>
-    <Content Include="..\Dependencies\PubComp.Building.Demo.Binary1.dll">
-      <Link>lib\PubComp.Building.Demo.Binary1.dll</Link>
-    </Content>
-    <Content Include="..\Dependencies\PubComp.Building.Demo.Binary1.pdb">
-      <Link>lib\PubComp.Building.Demo.Binary1.pdb</Link>
-    </Content>
-    <Content Include="content\Info.txt" />
-    <None Include="content\SubContent\Other.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Demo.Library1\Demo.Library1.csproj">
-      <Project>{b0f71956-487c-47bd-84b5-c0cf9f423a12}</Project>
-      <Name>Demo.Library1</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Demo.Library2\Demo.Library2.csproj">
-      <Project>{8e1e32de-d870-4681-8c43-9e725fc4481a}</Project>
-      <Name>Demo.Library2</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

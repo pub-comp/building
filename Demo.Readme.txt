@@ -1,0 +1,27 @@
+Demo.Library1, Demo.Library2, Demo.Library3:
+* are examples of projects in the solution that we want to include in NuGet packages
+* get their version number from DemoVersionInfo.cs which is shared with Demo.Library1, Demo.Library2, Demo.Library3
+
+Demo.Package1.NuGet, Demo.Package2.NuGet:
+* are examples of NuGet projects, for creating a NuGet package
+* are based on the standard Class Library template
+* to create packages automatically during build, add the following post-build event command line to your NuGet projects:
+	"$(SolutionDir)NuGetPack.exe" "$(ProjectPath)" "$(TargetPath)" $(ConfigurationName)
+	(Copy NuGetPack.exe to your solution folder and place it under Solution Items to have it added to your source control)
+
+Demo.Package1:
+* a NuGet package created by NuGet project Demo.Package1.NuGet
+* will include Demo.Library1, Demo.Library2 (via project references) and their external NuGet dependencies (total 6 dependencies)
+* gets its version number from DemoVersionInfo.cs which is shared with Demo.Library1, Demo.Library2, Demo.Library3
+* gets its metadata from its AssemblyInfo.cs
+* includes content via content folder (both files and linked files in example)
+* includes a "3rd party" non-NuGet .NET assembly (Demo.Binary1) via lib folder (linked files in example)
+
+Demo.Package2:
+* a NuGet package created by NuGet project Demo.Package2.NuGet
+* will include Demo.Library3 (via project reference) and its external NuGet dependencies (none)
+* includes direct external NuGet dependencies via its own packages.config
+* includes an internal NuGet dependency (Demo.Package1) via its own internalPackages.config
+* gets its version number from DemoVersionInfo.cs which is shared with Demo.Library1, Demo.Library2, Demo.Library3
+* gets its metadata from its NuGetPack.config
+* includes framework reference System.Xaml (option is set on via NuGetPack.config)

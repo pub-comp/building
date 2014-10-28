@@ -204,8 +204,10 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
         #endregion
 
+        #region Package content (lib, content, ...)
+
         [TestMethod]
-        public void TestGetContentFiles()
+        public void TestGetContentFiles1()
         {
             var creator = new NuspecCreator();
             var results = creator.GetContentFiles(
@@ -234,10 +236,55 @@ namespace PubComp.Building.NuGetPack.UnitTests
         }
 
         [TestMethod]
-        public void TestGetBinaryFiles()
+        public void TestGetContentFiles2()
+        {
+            var creator = new NuspecCreator();
+            var results = creator.GetContentFiles(
+                Path.GetDirectoryName(nuProj2Dll), @"..\..", nuProj2Csproj);
+
+            LinqAssert.Count(results, 0);
+        }
+
+        [TestMethod]
+        public void TestGetBinaryFiles1()
         {
             var creator = new NuspecCreator();
             var results = creator.GetBinaryFiles(
+                Path.GetDirectoryName(nuProj1Dll), @"..\..", nuProj1Csproj);
+
+            var path = isLocal ? @"..\..\..\Dependencies\" : @"..\..\Dependencies\";
+
+            LinqAssert.Count(results, 2);
+            var elements = results.Select(el => el.Element).ToList();
+
+            LinqAssert.Any(elements, el =>
+                el.Name == "file"
+                && el.Attribute("src").Value == path + @"PubComp.Building.Demo.Binary1.dll"
+                    && el.Attribute("target").Value == @"lib\net45\PubComp.Building.Demo.Binary1.dll",
+                "Found: " + results.First());
+
+            LinqAssert.Any(elements, el =>
+                el.Name == "file"
+                && el.Attribute("src").Value == path + @"PubComp.Building.Demo.Binary1.pdb"
+                    && el.Attribute("target").Value == @"lib\net45\PubComp.Building.Demo.Binary1.pdb",
+                "Found: " + results.First());
+        }
+
+        [TestMethod]
+        public void TestGetBinaryFiles2()
+        {
+            var creator = new NuspecCreator();
+            var results = creator.GetBinaryFiles(
+                Path.GetDirectoryName(nuProj2Dll), @"..\..", nuProj2Csproj);
+
+            LinqAssert.Count(results, 0);
+        }
+
+        [TestMethod]
+        public void TestGetBinaryReferences()
+        {
+            var creator = new NuspecCreator();
+            var results = creator.GetBinaryReferences(
                 Path.GetDirectoryName(nuProj1Dll), @"..\..\..\Demo.Library3", proj3Csproj, isDebug, Path.GetDirectoryName(proj3Dll));
 
             var path = isLocal ? @"..\..\..\Demo.Library3\bin\" : @"..\..\Demo.Library3\bin\";
@@ -332,13 +379,14 @@ namespace PubComp.Building.NuGetPack.UnitTests
             Assert.AreNotEqual(0, results.Count());
             var files = results.Where(el =>
                     el.ElementType != ElementType.NuGetDependency
-                    && el.ElementType != ElementType.AssemblyReference
                     && el.ElementType != ElementType.FrameworkReference)
                 .ToList();
             var elements = files.Select(el => el.Element).ToList();
 
             LinqAssert.All(elements, r => File.Exists(Path.Combine(nuspecFolder, r.Attribute("src").Value)));
         }
+
+        #endregion
 
         #region Create Ouput Tests
 

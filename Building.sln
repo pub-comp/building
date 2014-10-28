@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.tfignore = .tfignore
 		Data.txt = Data.txt
+		Demo.Readme.txt = Demo.Readme.txt
 		DemoVersionInfo.cs = DemoVersionInfo.cs
 		VersionHistory.txt = VersionHistory.txt
 		VersionInfo.cs = VersionInfo.cs
@@ -37,9 +38,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.Package2.NuGet", "Demo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{92F43E67-AED8-4353-B2F9-61138C5AAFC4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.Binary1", "Demo.Binary1\Demo.Binary1.csproj", "{390AB87B-8AB1-45E7-A444-04EACB7F7F69}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{8B8778A0-C4F1-4564-A99D-CFEF3517F45C}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\PubComp.Building.Demo.Binary1.dll = Dependencies\PubComp.Building.Demo.Binary1.dll
+		Dependencies\PubComp.Building.Demo.Binary1.pdb = Dependencies\PubComp.Building.Demo.Binary1.pdb
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 8
+		SccNumberOfProjects = 9
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs27
 		SccLocalPath0 = .
@@ -70,6 +79,10 @@ Global
 		SccProjectTopLevelParentUniqueName7 = Building.sln
 		SccProjectName7 = Demo.Package2.NuGet
 		SccLocalPath7 = Demo.Package2.NuGet
+		SccProjectUniqueName8 = Demo.Binary1\\Demo.Binary1.csproj
+		SccProjectTopLevelParentUniqueName8 = Building.sln
+		SccProjectName8 = Demo.Binary1
+		SccLocalPath8 = Demo.Binary1
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,16 +117,22 @@ Global
 		{86666499-C05D-4B93-B955-08196EFA737D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{86666499-C05D-4B93-B955-08196EFA737D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{86666499-C05D-4B93-B955-08196EFA737D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{390AB87B-8AB1-45E7-A444-04EACB7F7F69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{390AB87B-8AB1-45E7-A444-04EACB7F7F69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{390AB87B-8AB1-45E7-A444-04EACB7F7F69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{390AB87B-8AB1-45E7-A444-04EACB7F7F69}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{EBDA70BF-FAAD-4E23-B8D4-79299D049755} = {92F43E67-AED8-4353-B2F9-61138C5AAFC4}
+		{8B8778A0-C4F1-4564-A99D-CFEF3517F45C} = {47B3A300-8E8D-44FD-8391-657BD15F3E49}
 		{B0F71956-487C-47BD-84B5-C0CF9F423A12} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 		{8E1E32DE-D870-4681-8C43-9E725FC4481A} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 		{6B73E931-E155-4F8E-ADEF-83E8E7BB53E4} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 		{7812FFE0-3D9D-4B93-89F8-770C7B0E92D8} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 		{86666499-C05D-4B93-B955-08196EFA737D} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
-		{EBDA70BF-FAAD-4E23-B8D4-79299D049755} = {92F43E67-AED8-4353-B2F9-61138C5AAFC4}
+		{390AB87B-8AB1-45E7-A444-04EACB7F7F69} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 	EndGlobalSection
 EndGlobal
