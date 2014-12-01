@@ -129,6 +129,7 @@ namespace PubComp.Building.NuGetPack
 
             string iconUrl = @"https://nuget.org/Content/Images/packageDefaultIcon-50x50.png";
             bool doAddFrameworkReferences = false;
+            bool doIncludeSources = true;
             string authors = owners;
 
             if (File.Exists(configFile))
@@ -138,41 +139,46 @@ namespace PubComp.Building.NuGetPack
                 {
                     var config = deserializer.Deserialize(stream) as NuGetPackConfig;
 
-                    doAddFrameworkReferences = config.AddFrameworkReferences;
+                    if (config != null)
+                    {
+                        doAddFrameworkReferences = config.AddFrameworkReferences;
 
-                    if (!string.IsNullOrEmpty(config.Authors))
-                        authors = config.Authors;
+                        doIncludeSources = config.DoIncludeSources;
 
-                    if (!string.IsNullOrEmpty(config.Copyright))
-                        copyright = config.Copyright;
+                        if (!string.IsNullOrEmpty(config.Authors))
+                            authors = config.Authors;
 
-                    if (!string.IsNullOrEmpty(config.Description))
-                        longDescription = config.Description;
+                        if (!string.IsNullOrEmpty(config.Copyright))
+                            copyright = config.Copyright;
 
-                    if (!string.IsNullOrEmpty(config.IconUrl))
-                        iconUrl = config.IconUrl;
+                        if (!string.IsNullOrEmpty(config.Description))
+                            longDescription = config.Description;
 
-                    if (!string.IsNullOrEmpty(config.Keywords))
-                        keywords = config.Keywords;
+                        if (!string.IsNullOrEmpty(config.IconUrl))
+                            iconUrl = config.IconUrl;
 
-                    if (!string.IsNullOrEmpty(config.LicenseUrl))
-                        licenseUrl = config.LicenseUrl;
+                        if (!string.IsNullOrEmpty(config.Keywords))
+                            keywords = config.Keywords;
 
-                    if (!string.IsNullOrEmpty(config.Owners))
-                        owners = config.Owners;
+                        if (!string.IsNullOrEmpty(config.LicenseUrl))
+                            licenseUrl = config.LicenseUrl;
 
-                    if (!string.IsNullOrEmpty(config.ProjectUrl))
-                        projectUrl = config.ProjectUrl;
+                        if (!string.IsNullOrEmpty(config.Owners))
+                            owners = config.Owners;
 
-                    if (!string.IsNullOrEmpty(config.Summary))
-                        shortSummary = config.Summary;
+                        if (!string.IsNullOrEmpty(config.ProjectUrl))
+                            projectUrl = config.ProjectUrl;
+
+                        if (!string.IsNullOrEmpty(config.Summary))
+                            shortSummary = config.Summary;
+                    }
                 }
             }
 
             var doc = CreateNuspec(
                 packageName, version, owners, authors, shortSummary,
                 longDescription, releaseNotes, licenseUrl, projectUrl, iconUrl, copyright, keywords, nuspecPath, projectPath,
-                packagesFile, internalPackagesFile, isDebug, doAddFrameworkReferences);
+                packagesFile, internalPackagesFile, isDebug, doAddFrameworkReferences, doIncludeSources);
 
             return doc;
         }
@@ -195,13 +201,14 @@ namespace PubComp.Building.NuGetPack
             string packagesFile,
             string internalPackagesFile,
             bool isDebug,
-            bool doAddFrameworkReferences)
+            bool doAddFrameworkReferences,
+            bool doIncludeSources)
         {
             var nuspecFolder = Path.GetDirectoryName(nuspecPath);
 
             XAttribute dependenciesAttribute;
             var dependenciesInfo = GetDependencies(new[] { packagesFile, internalPackagesFile }, out dependenciesAttribute);
-            var elements = GetElements(nuspecFolder, projectPath, isDebug);
+            var elements = GetElements(nuspecFolder, projectPath, isDebug, doIncludeSources);
 
             var dependencies = new XElement("group");
             dependencies.Add(dependenciesAttribute);
@@ -322,7 +329,7 @@ namespace PubComp.Building.NuGetPack
         }
 #endif
 
-        public IEnumerable<DependencyInfo> GetElements(string nuspecFolder, string projectPath, bool isDebug)
+        public IEnumerable<DependencyInfo> GetElements(string nuspecFolder, string projectPath, bool isDebug, bool doIncludeSources)
         {
             DebugOut(() => string.Format("\r\n\r\nGetFiles({0}, {1}, {2})\r\n", nuspecFolder, projectPath, isDebug));
 
@@ -356,7 +363,10 @@ namespace PubComp.Building.NuGetPack
                 DebugOut(() => "projPath = " + refProjPath);
 
                 result.AddRange(GetBinaryReferences(nuspecFolder, refProjFolder, refProjPath, isDebug, nuspecFolder));
-                result.AddRange(GetSourceFiles(nuspecFolder, refProjFolder, refProjPath));
+                
+                if (doIncludeSources)
+                    result.AddRange(GetSourceFiles(nuspecFolder, refProjFolder, refProjPath));
+                
                 result.AddRange(GetDependenciesFromProject(refProjFolder, refProjPath));
             }
 

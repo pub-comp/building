@@ -27,3 +27,6 @@
 2.6.0:
 	* Added support for "sln" folder under NuGet project,
 	this enables adding files that are not copied under project and are not source files
+
+2.7.0:
+	* Added option to exclude source files from package via NuGetPack.config file.

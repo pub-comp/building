@@ -16,6 +16,11 @@ namespace PubComp.Building.NuGetPack
         public bool AddFrameworkReferences { get; set; }
 
         /// <summary>
+        /// Optional, if set to false does not include sources
+        /// </summary>
+        public bool DoIncludeSources { get; set; }
+
+        /// <summary>
         /// Optional, if set to non-empty value, sets NuGet package icon, otherwise uses default
         /// </summary>
         public string IconUrl { get; set; }

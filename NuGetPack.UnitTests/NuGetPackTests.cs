@@ -173,7 +173,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var nuspecFolder = Path.GetDirectoryName(nuProj1Dll);
 
             var creator = new NuspecCreator();
-            var results = creator.GetElements(nuspecFolder, nuProj1Csproj, isDebug);
+            var results = creator.GetElements(nuspecFolder, nuProj1Csproj, isDebug, true);
 
             var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
                 .Select(r => r.Element).ToList();
@@ -194,7 +194,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var nuspecFolder = Path.GetDirectoryName(nuProj2Dll);
 
             var creator = new NuspecCreator();
-            var results = creator.GetElements(nuspecFolder, nuProj2Csproj, isDebug);
+            var results = creator.GetElements(nuspecFolder, nuProj2Csproj, isDebug, true);
 
             var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
                 .Select(r => r.Element).ToList();
@@ -392,7 +392,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             var creator = new NuspecCreator();
             var results = creator.GetElements(
-                nuspecFolder, nuProj1Csproj, isDebug);
+                nuspecFolder, nuProj1Csproj, isDebug, true);
 
             Assert.AreNotEqual(0, results.Count());
             var files = results.Where(el =>
