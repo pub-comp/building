@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -23,6 +24,8 @@ namespace PubComp.Building.NuGetPack.UnitTests
         private static string nuProj1Dll;
         private static string nuProj2Csproj;
         private static string nuProj2Dll;
+        private static string nuProj3Csproj;
+        private static string nuProj3Dll;
 
 #if DEBUG
         private const bool isDebug = true;
@@ -37,25 +40,21 @@ namespace PubComp.Building.NuGetPack.UnitTests
         {
             string rootPath, testSrcDir, testBinDir, testRunDir;
 
-
             TestResourceFinder.FindResources(testContext, "Building",
                 @"Demo.Library1",
                 true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
-
             proj1Csproj = testSrcDir + @"\Demo.Library1.csproj";
             proj1Dll = testBinDir + @"\PubComp.Building.Demo.Library1.dll";
 
             TestResourceFinder.FindResources(testContext, "Building",
                 @"Demo.Library2",
                 true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
-
             proj2Csproj = testSrcDir + @"\Demo.Library2.csproj";
             proj2Dll = testBinDir + @"\PubComp.Building.Demo.Library2.dll";
 
             TestResourceFinder.FindResources(testContext, "Building",
                 @"Demo.Library3",
                 true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
-
             proj3Csproj = testSrcDir + @"\Demo.Library3.csproj";
             proj3Dll = testBinDir + @"\PubComp.Building.Demo.Library3.dll";
 
@@ -63,24 +62,24 @@ namespace PubComp.Building.NuGetPack.UnitTests
             TestResourceFinder.FindResources(testContext, "Building",
                 @"Demo.Package1.NuGet",
                 true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
-
             nuProj1Csproj = testSrcDir + @"\Demo.Package1.NuGet.csproj";
             nuProj1Dll = testBinDir + @"\PubComp.Building.Demo.Package1.NuGet.dll";
 
             TestResourceFinder.FindResources(testContext, "Building",
                 @"Demo.Package2.NuGet",
                 true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
-
-            TestResourceFinder.CopyResources(testBinDir, testRunDir);
-
             nuProj2Csproj = testSrcDir + @"\Demo.Package2.NuGet.csproj";
             nuProj2Dll = testBinDir + @"\PubComp.Building.Demo.Package2.NuGet.dll";
 
+            TestResourceFinder.FindResources(testContext, "Building",
+                @"Demo.Package3.NuGet",
+                true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
+            nuProj3Csproj = testSrcDir + @"\Demo.Package3.NuGet.csproj";
+            nuProj3Dll = testBinDir + @"\PubComp.Building.Demo.Package3.NuGet.dll";
 
             TestResourceFinder.FindResources(testContext, "Building",
                 @"NuGetPack.UnitTests",
                 true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
-
             TestResourceFinder.CopyResources(testBinDir, testRunDir);
         }
 
@@ -404,6 +403,71 @@ namespace PubComp.Building.NuGetPack.UnitTests
             LinqAssert.All(elements, r => File.Exists(Path.Combine(nuspecFolder, r.Attribute("src").Value)));
         }
 
+        [TestMethod]
+        public void TestGetFilesIncludingVersions()
+        {
+            var nuspecFolder = Path.GetDirectoryName(nuProj3Dll);
+
+            var creator = new NuspecCreator();
+            var results = creator.GetElements(
+                nuspecFolder, nuProj3Csproj, isDebug, true);
+
+            Assert.AreNotEqual(0, results.Count());
+
+            LinqAssert.Single(results, el =>
+                el.ElementType == ElementType.LibraryFile
+                && el.Element.Name == "file"
+                && el.Element.Attribute("target").Value == @"lib\net451\NuGet.exe");
+
+            LinqAssert.Single(results, el =>
+                el.ElementType == ElementType.LibraryFile
+                && el.Element.Name == "file"
+                && el.Element.Attribute("target").Value == @"lib\net40\PubComp.Building.Demo.Binary1.dll");
+
+            LinqAssert.Single(results, el =>
+                el.ElementType == ElementType.LibraryFile
+                && el.Element.Name == "file"
+                && el.Element.Attribute("target").Value == @"lib\net40\PubComp.Building.Demo.Binary1.pdb");
+
+            LinqAssert.Single(results, el =>
+                el.ElementType == ElementType.LibraryFile
+                && el.Element.Name == "file"
+                && el.Element.Attribute("target").Value == @"lib\net45\PubComp.Building.Demo.Binary1.dll");
+
+            LinqAssert.Single(results, el =>
+                el.ElementType == ElementType.LibraryFile
+                && el.Element.Name == "file"
+                && el.Element.Attribute("target").Value == @"lib\net45\PubComp.Building.Demo.Binary1.pdb");
+
+            LinqAssert.Single(results, el =>
+                el.ElementType == ElementType.LibraryFile
+                && el.Element.Name == "file"
+                && el.Element.Attribute("target").Value == @"lib\net40\PubComp.Building.Demo.LibraryNet40.dll");
+
+            LinqAssert.Single(results, el =>
+                el.ElementType == ElementType.LibraryFile
+                && el.Element.Name == "file"
+                && el.Element.Attribute("target").Value == @"lib\net40\PubComp.Building.Demo.LibraryNet40.pdb");
+
+            LinqAssert.Single(results, el =>
+                el.ElementType == ElementType.LibraryFile
+                && el.Element.Name == "file"
+                && el.Element.Attribute("target").Value == @"lib\net451\PubComp.Building.Demo.LibraryNet451.dll");
+
+            LinqAssert.Single(results, el =>
+                el.ElementType == ElementType.LibraryFile
+                && el.Element.Name == "file"
+                && el.Element.Attribute("target").Value == @"lib\net451\PubComp.Building.Demo.LibraryNet451.pdb");
+
+            var files = results.Where(el =>
+                    el.ElementType != ElementType.NuGetDependency
+                    && el.ElementType != ElementType.FrameworkReference)
+                .ToList();
+            var elements = files.Select(el => el.Element).ToList();
+
+            LinqAssert.All(elements, r => File.Exists(Path.Combine(nuspecFolder, r.Attribute("src").Value)));
+        }
+
         #endregion
 
         #region Create Ouput Tests
@@ -434,6 +498,17 @@ namespace PubComp.Building.NuGetPack.UnitTests
             creator.CreatePackage(nuProj2Csproj, nuProj2Dll, isDebug);
 
             var nuspecPath = Path.ChangeExtension(nuProj2Dll, ".nuspec");
+
+            Assert.IsTrue(File.Exists(nuspecPath));
+        }
+
+        [TestMethod]
+        public void TestCreatePackage3()
+        {
+            var creator = new NuspecCreator();
+            creator.CreatePackage(nuProj3Csproj, nuProj3Dll, isDebug);
+
+            var nuspecPath = Path.ChangeExtension(nuProj3Dll, ".nuspec");
 
             Assert.IsTrue(File.Exists(nuspecPath));
         }

@@ -47,10 +47,12 @@ namespace PubComp.Building.NuGetPack
 
                 DebugOut(() => nuGetExe + " Pack " + nuspecPath);
 
-                var startInfo = new ProcessStartInfo();
-                startInfo.UseShellExecute = false;
-                startInfo.FileName = nuGetExe;
-                startInfo.Arguments = "Pack -NoDefaultExcludes " + nuspecPath;
+                var startInfo = new ProcessStartInfo
+                {
+                    UseShellExecute = false,
+                    FileName = nuGetExe,
+                    Arguments = "Pack -NoDefaultExcludes " + nuspecPath
+                };
 
                 if (!startInfo.EnvironmentVariables.ContainsKey("EnableNuGetPackageRestore"))
                     startInfo.EnvironmentVariables.Add("EnableNuGetPackageRestore", "true");
@@ -98,10 +100,10 @@ namespace PubComp.Building.NuGetPack
 
         public XDocument CreateNuspec(string projectPath, string assemblyPath, bool isDebug)
         {
-            const string nugetExtension = ".NuGet";
+            const string nugetExtension = ".nuget";
 
             var packageName = Path.GetFileNameWithoutExtension(assemblyPath);
-            if (packageName.EndsWith(nugetExtension))
+            if (packageName.ToLower().EndsWith(nugetExtension))
                 packageName = packageName.Substring(0, packageName.Length - nugetExtension.Length);
 
             var fileVersion = FileVersionInfo.GetVersionInfo(assemblyPath);
@@ -430,12 +432,45 @@ namespace PubComp.Building.NuGetPack
             return items;
         }
 
+        public string GetFrameworkVersion(string projectPath)
+        {
+            var csProj = XDocument.Load(projectPath);
+
+            var xmlns = csProj.Root.GetDefaultNamespace();
+
+            var targetFrameworkVersion = csProj.Element(xmlns + "Project")
+                .Elements(xmlns + "PropertyGroup").Elements(xmlns + "TargetFrameworkVersion")
+                .Select(el => el.Value)
+                .FirstOrDefault();
+
+            if (string.IsNullOrEmpty(targetFrameworkVersion))
+                return null;
+
+            var result = targetFrameworkVersion.Replace("v", string.Empty).Replace(".", string.Empty);
+            return result;
+        }
+
         public IEnumerable<DependencyInfo> GetBinaryFiles(string nuspecFolder, string projectFolder, string projectPath)
         {
-            var items = GetContentFiles(nuspecFolder, projectFolder, projectPath,
-                srcFolder: @"lib\", destFolder: @"lib\net45\", flattern: true, elementType: ElementType.LibraryFile);
+            var defaultVersionFolder = "net" + (GetFrameworkVersion(projectPath) ?? "45");
 
-            return items;
+            var items = GetContentFiles(nuspecFolder, projectFolder, projectPath,
+                srcFolder: @"lib\", destFolder: @"lib\",
+                flattern: false, elementType: ElementType.LibraryFile);
+
+            var itemsList = items.ToList();
+
+            foreach (var item in itemsList)
+            {
+                var target = item.Element.Attribute("target").Value;
+
+                if (target.StartsWith(@"lib\") && !target.StartsWith(@"lib\net"))
+                {
+                    item.Element.Attribute("target").Value = @"lib\" + defaultVersionFolder + target.Substring(3);
+                }
+            }
+
+            return itemsList;
         }
 
         public IEnumerable<DependencyInfo> GetFrameworkReferences(string projectFolder, string projectPath)
@@ -453,7 +488,7 @@ namespace PubComp.Building.NuGetPack
                 .Select(el => el.Attribute("Include").Value)
                 .ToList();
 
-            //<frameworkAssembly assemblyName="System.Speech" targetFramework=".NETFramework4.5" />
+            // E.g. <frameworkAssembly assemblyName="System.Speech" targetFramework=".NETFramework4.5" />
 
             var items = referencedBinaryFiles
                 .Select(el =>
@@ -506,6 +541,8 @@ namespace PubComp.Building.NuGetPack
         {
             DebugOut(() => string.Format("\r\n\r\nGetBinaryReferences({0}, {1}, {2}, {3})\r\n", projectFolder, projectPath, isDebug, buildMachineBinFolder));
 
+            var versionFolder = "net" + (GetFrameworkVersion(projectPath) ?? "45");
+
             string outputPath;
 
             var csProj = XDocument.Load(projectPath);
@@ -538,7 +575,7 @@ namespace PubComp.Building.NuGetPack
                         ElementType.LibraryFile,
                         new XElement("file",
                             new XAttribute("src", Path.Combine(relativeOutputPath, Path.GetFileName(file))),
-                            new XAttribute("target", Path.Combine(@"lib\net45\", Path.GetFileName(file)))
+                            new XAttribute("target", Path.Combine(@"lib\" + versionFolder + @"\", Path.GetFileName(file)))
                             ))).ToList();
 
             return items;

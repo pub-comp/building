@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30110.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuGetPack", "NuGetPack\NuGetPack.csproj", "{E724FE40-DC51-440A-8CA0-970AB76E0F8D}"
 EndProject
@@ -47,9 +47,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencie
 		Dependencies\PubComp.Building.Demo.Binary1.pdb = Dependencies\PubComp.Building.Demo.Binary1.pdb
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.LibraryNet40", "Demo.LibraryNet40\Demo.LibraryNet40.csproj", "{A0522387-4BB0-4434-8F59-DDD10BA06324}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.LibraryNet451", "Demo.LibraryNet451\Demo.LibraryNet451.csproj", "{8C97AE7C-2CB9-41E1-B18B-259B67B1BF51}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.Package3.NuGet", "Demo.Package3.NuGet\Demo.Package3.NuGet.csproj", "{05AD2391-027A-4B0C-8AA8-989204E2EC0D}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 9
+		SccNumberOfProjects = 12
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs27
 		SccLocalPath0 = .
@@ -84,6 +90,18 @@ Global
 		SccProjectTopLevelParentUniqueName8 = Building.sln
 		SccProjectName8 = Demo.Binary1
 		SccLocalPath8 = Demo.Binary1
+		SccProjectUniqueName9 = Demo.LibraryNet40\\Demo.LibraryNet40.csproj
+		SccProjectTopLevelParentUniqueName9 = Building.sln
+		SccProjectName9 = Demo.LibraryNet40
+		SccLocalPath9 = Demo.LibraryNet40
+		SccProjectUniqueName10 = Demo.LibraryNet451\\Demo.LibraryNet451.csproj
+		SccProjectTopLevelParentUniqueName10 = Building.sln
+		SccProjectName10 = Demo.LibraryNet451
+		SccLocalPath10 = Demo.LibraryNet451
+		SccProjectUniqueName11 = Demo.Package3.NuGet\\Demo.Package3.NuGet.csproj
+		SccProjectTopLevelParentUniqueName11 = Building.sln
+		SccProjectName11 = Demo.Package3.NuGet
+		SccLocalPath11 = Demo.Package3.NuGet
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -122,18 +140,33 @@ Global
 		{390AB87B-8AB1-45E7-A444-04EACB7F7F69}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{390AB87B-8AB1-45E7-A444-04EACB7F7F69}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{390AB87B-8AB1-45E7-A444-04EACB7F7F69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0522387-4BB0-4434-8F59-DDD10BA06324}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0522387-4BB0-4434-8F59-DDD10BA06324}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0522387-4BB0-4434-8F59-DDD10BA06324}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0522387-4BB0-4434-8F59-DDD10BA06324}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C97AE7C-2CB9-41E1-B18B-259B67B1BF51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C97AE7C-2CB9-41E1-B18B-259B67B1BF51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C97AE7C-2CB9-41E1-B18B-259B67B1BF51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C97AE7C-2CB9-41E1-B18B-259B67B1BF51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05AD2391-027A-4B0C-8AA8-989204E2EC0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05AD2391-027A-4B0C-8AA8-989204E2EC0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05AD2391-027A-4B0C-8AA8-989204E2EC0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05AD2391-027A-4B0C-8AA8-989204E2EC0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{EBDA70BF-FAAD-4E23-B8D4-79299D049755} = {92F43E67-AED8-4353-B2F9-61138C5AAFC4}
-		{8B8778A0-C4F1-4564-A99D-CFEF3517F45C} = {47B3A300-8E8D-44FD-8391-657BD15F3E49}
 		{B0F71956-487C-47BD-84B5-C0CF9F423A12} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 		{8E1E32DE-D870-4681-8C43-9E725FC4481A} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 		{6B73E931-E155-4F8E-ADEF-83E8E7BB53E4} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 		{7812FFE0-3D9D-4B93-89F8-770C7B0E92D8} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 		{86666499-C05D-4B93-B955-08196EFA737D} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 		{390AB87B-8AB1-45E7-A444-04EACB7F7F69} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
+		{8B8778A0-C4F1-4564-A99D-CFEF3517F45C} = {47B3A300-8E8D-44FD-8391-657BD15F3E49}
+		{A0522387-4BB0-4434-8F59-DDD10BA06324} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
+		{8C97AE7C-2CB9-41E1-B18B-259B67B1BF51} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
+		{05AD2391-027A-4B0C-8AA8-989204E2EC0D} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 	EndGlobalSection
 EndGlobal
