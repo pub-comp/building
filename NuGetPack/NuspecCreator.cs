@@ -209,7 +209,7 @@ namespace PubComp.Building.NuGetPack
             var nuspecFolder = Path.GetDirectoryName(nuspecPath);
 
             XAttribute dependenciesAttribute;
-            var dependenciesInfo = GetDependencies(new[] { packagesFile, internalPackagesFile }, out dependenciesAttribute);
+            var dependenciesInfo = GetDependencies(projectPath, new[] { packagesFile, internalPackagesFile }, out dependenciesAttribute);
             var elements = GetElements(nuspecFolder, projectPath, isDebug, doIncludeSources);
 
             var dependencies = new XElement("group");
@@ -274,9 +274,12 @@ namespace PubComp.Building.NuGetPack
             return doc;
         }
 
-        public IEnumerable<DependencyInfo> GetDependencies(string[] packagesFiles, out XAttribute dependenciesAttribute)
+        public IEnumerable<DependencyInfo> GetDependencies(
+            string projectPath, string[] packagesFiles, out XAttribute dependenciesAttribute)
         {
-            dependenciesAttribute = new XAttribute("targetFramework", "net45");
+            var targetFramework =  "net" + (GetFrameworkVersion(projectPath) ?? "45");
+
+            dependenciesAttribute = new XAttribute("targetFramework", targetFramework);
 
             var result = new List<DependencyInfo>();
 

@@ -101,7 +101,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var creator = new NuspecCreator();
 
             XAttribute dependenciesAttribute;
-            var results = creator.GetDependencies(new[] { packagesFile }, out dependenciesAttribute);
+            var results = creator.GetDependencies(nuProj2Csproj, new[] { packagesFile }, out dependenciesAttribute);
 
             LinqAssert.Count(results, 1);
             var elements = results.Select(el => el.Element).ToList();
@@ -114,6 +114,23 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 obj is XElement && ((XElement)obj).Name == "dependency"
                     && ((XElement)obj).Attribute("id").Value == "FakeItEasy"
                     && ((XElement)obj).Attribute("version").Value == "1.24.0");
+        }
+
+        [TestMethod]
+        public void TestGetDependenciesOuter3()
+        {
+            var packagesFile = Path.GetDirectoryName(nuProj3Csproj) + @"\packages.config";
+
+            var creator = new NuspecCreator();
+
+            XAttribute dependenciesAttribute;
+            var results = creator.GetDependencies(nuProj3Csproj, new[] { packagesFile }, out dependenciesAttribute);
+
+            LinqAssert.Count(results, 0);
+
+            Assert.IsNotNull(dependenciesAttribute);
+            Assert.AreEqual("targetFramework", dependenciesAttribute.Name);
+            Assert.AreEqual("net451", dependenciesAttribute.Value);
         }
 
         [TestMethod]

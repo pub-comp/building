@@ -37,3 +37,6 @@
 	  * Binaries directly under NuGet project's lib folder will be placed under lib\netX\ where X is NuGet project's .NET version
 	  * Binaries under NuGet project's lib\netY folder will be placed under lib\netY\
 	* Fixed if Package name ended with .nuget or .Nuget or any other case except .NuGet, extension was not ignored within package name
+
+2.9.0:
+	* Required .NET version for Package is now selected according to NuGet Project's .NET version
