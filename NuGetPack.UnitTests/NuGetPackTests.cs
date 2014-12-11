@@ -547,7 +547,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var version = nuspec.XPathSelectElement(@"/package/metadata/version").Value;
 
             #if DEBUG
-                Assert.AreEqual("1.3.2-PreRelease", version);
+                Assert.AreEqual("1.3.2-Test", version);
             #else
                 Assert.AreEqual("1.3.2", version);
             #endif

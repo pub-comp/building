@@ -108,8 +108,20 @@ namespace PubComp.Building.NuGetPack
 
             var fileVersion = FileVersionInfo.GetVersionInfo(assemblyPath);
             var version = fileVersion.FileMajorPart + "." + fileVersion.FileMinorPart + "." + fileVersion.FileBuildPart;
-            if (fileVersion.ProductVersion.Contains("-"))
-                version += "-" + "PreRelease";
+            
+            if (fileVersion.FilePrivatePart != 0)
+                version += "." + fileVersion.FilePrivatePart;
+
+            var fileVersionParts = fileVersion.ProductVersion.Split(new[] { '-' }, StringSplitOptions.None);
+            if (fileVersionParts.Length > 1)
+            {
+                var preReleaseName = string.Join("-", fileVersionParts.Skip(1));
+
+                if (string.IsNullOrWhiteSpace(preReleaseName))
+                    preReleaseName = "PreRelease";
+
+                version += "-" + preReleaseName;
+            }
 
             var owners = fileVersion.CompanyName;
 

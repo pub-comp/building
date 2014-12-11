@@ -40,3 +40,7 @@
 
 2.9.0:
 	* Required .NET version for Package is now selected according to NuGet Project's .NET version
+
+2.10.0:
+	* Enabled different names for pre-releases (pre-release name is taken from AssemblyInformationalVersion (text following the '-'))
+	* Enabled four part version numbers (version numbers are taken from AssemblyFileVersion)
