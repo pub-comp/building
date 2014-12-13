@@ -44,3 +44,6 @@
 2.10.0:
 	* Enabled different names for pre-releases (pre-release name is taken from AssemblyInformationalVersion (text following the '-'))
 	* Enabled four part version numbers (version numbers are taken from AssemblyFileVersion)
+
+2.11.0:
+	* Added support for tools and build folders
