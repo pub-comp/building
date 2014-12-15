@@ -7,8 +7,8 @@
     <ProjectGuid>{F0D4B13E-D07B-4A48-BF14-0269A1696F2D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NuGetPack.NuGet</RootNamespace>
-    <AssemblyName>NuGetPack.NuGet</AssemblyName>
+    <RootNamespace>PubComp.NuGetPack.NuGet</RootNamespace>
+    <AssemblyName>PubComp.NuGetPack.NuGet</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
