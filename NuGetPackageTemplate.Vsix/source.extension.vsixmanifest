@@ -1,16 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="NuGetPackageTemplate.Vsix..00283895-bfc4-4d32-9159-f4137e7dca52" Version="2.11.0" Language="en-US" Publisher="PubComp" />
+    <Identity Id="NuGetPackageTemplate.Vsix..00283895-bfc4-4d32-9159-f4137e7dca52" Version="2.11.1" Language="en-US" Publisher="PubComp" />
     <DisplayName>NuGetPackageTemplate.Vsix</DisplayName>
-    <Description xml:space="preserve">A Project Template for Easy creation of NuGet Packages including Packaging Output and optionally Source Code from multiple Projects References, .NET References, NuGet dependencies, Non-Nuget 3rd party dependencies, Versioning - using same Version number for NuGet packages as the packaged assemblies and much more.</Description>
+    <Description xml:space="preserve">A Project Template for Easy creation of NuGet Packages including Packaging Output and optionally Source Code from multiple Projects References, .NET References, NuGet dependencies, Non-Nuget 3rd party dependencies, Versioning - using same Version number for NuGet packages as the packaged assemblies and much more. For the post-build event to work, please add the NuGet package "PubComp.NuGetPack" to your solution.</Description>
     <MoreInfo>https://pubcomp.codeplex.com/SourceControl/latest#Building/</MoreInfo>
     <License>lgpl.txt</License>
     <GettingStartedGuide>http://www.codeproject.com/Tips/804005/</GettingStartedGuide>
     <ReleaseNotes>https://pubcomp.codeplex.com/SourceControl/latest#Building/VersionHistory.txt</ReleaseNotes>
     <Icon>logo32.png</Icon>
     <PreviewImage>logo128.png</PreviewImage>
-    <Tags>NuGet, Build, NuGetPack, Packaging, Packages. Creation, CDCI, Publish, Publishing, Versioning, Versions, Version, NuGetPack.exe, PubComp, Public Components, DannyVarod, Danny Varod</Tags>
+    <Tags>NuGet, Build, NuGetPack, Packaging, Packages. Creation, CDCI, Publish, Publishing, Versioning, Versions, Version, NuGetPack.exe, PubComp, Public Components, DannyVarod, Danny Varod, PubComp.NuGetPack.</Tags>
   </Metadata>
   <Installation>
     <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[12.0,14.0)" />
