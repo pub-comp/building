@@ -51,7 +51,7 @@ namespace PubComp.Building.NuGetPack
                 {
                     UseShellExecute = false,
                     FileName = nuGetExe,
-                    Arguments = "Pack -NoDefaultExcludes " + nuspecPath
+                    Arguments = "Pack -NoDefaultExcludes \"" + nuspecPath + "\""
                 };
 
                 if (!startInfo.EnvironmentVariables.ContainsKey("EnableNuGetPackageRestore"))

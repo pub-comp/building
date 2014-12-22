@@ -47,3 +47,9 @@
 
 2.11.0:
 	* Added support for tools and build folders
+
+2.11.1:
+	* Fixed package name in VSIX readme file
+
+2.11.2:
+	* Fixed issues with spaces in paths
