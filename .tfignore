@@ -42,3 +42,4 @@
 
 *.cs.bak
 \packages
+!\packages\repositories.config
