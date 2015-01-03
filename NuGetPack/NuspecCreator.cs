@@ -367,7 +367,7 @@ namespace PubComp.Building.NuGetPack
             result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath,
                 srcFolder: @"tools\", destFolder: @"tools\", flattern: false, elementType: ElementType.ToolsFile));
             result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath,
-                srcFolder: @"build \", destFolder: @"build \", flattern: false, elementType: ElementType.BuildFile));
+                srcFolder: @"build\", destFolder: @"build\", flattern: false, elementType: ElementType.BuildFile));
 
             var references = GetReferences(nuspecFolder, projectPath, projectFolder);
 

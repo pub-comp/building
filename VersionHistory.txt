@@ -53,3 +53,6 @@
 
 2.11.2:
 	* Fixed issues with spaces in paths
+
+2.11.3:
+	* Fixed redundant space in NuGet package "build" folder path
