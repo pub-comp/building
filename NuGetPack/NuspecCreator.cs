@@ -572,8 +572,13 @@ namespace PubComp.Building.NuGetPack
 
             outputPath = GetOutputPath(csProj, isDebug, projectFolder);
 
-            if (!Directory.Exists(outputPath))
+            if (!Directory.Exists(outputPath)
+                || !Directory.GetFiles(outputPath).Any(f =>
+                    f.ToLower().EndsWith(".dll") ||f.ToLower().EndsWith(".exe"))
+                )
+            {
                 outputPath = buildMachineBinFolder;
+            }
 
             DebugOut(() => "outputPath = " + outputPath);
 
