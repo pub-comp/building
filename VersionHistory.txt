@@ -62,4 +62,9 @@
 	and therefore assumed it is running locally and could not locate binary files
 
 2.12.0:
-	* Added support for -sym argument via DoSeperateSymbols parameter in NuGetPack.config
+	* Added support for -sym argument via DoSeparateSymbols parameter in NuGetPack.config
+	This enables splitting nupkg into a package without symbols (pdbs and src) and a package with.
+	Default (if not defined or if false) is (former behavior -) create a single package with symbols included in it
+
+2.12.1:
+	* Fixed typo DoSeperateSymbols --> DoSeparateSymbols

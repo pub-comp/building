@@ -28,11 +28,11 @@ namespace PubComp.Building.NuGetPack
 
             DebugOut(() => "CreatingPackage");
 
-            var doSeperateSymbols = config != null ? config.DoSeperateSymbols : false;
-            CreatePackage(nuspecPath, doSeperateSymbols);
+            var doSeparateSymbols = config != null ? config.DoSeparateSymbols : false;
+            CreatePackage(nuspecPath, doSeparateSymbols);
         }
 
-        public void CreatePackage(string nuspecPath, bool doSeperateSymbols)
+        public void CreatePackage(string nuspecPath, bool doSeparateSymbols)
         {
             Console.WriteLine("Packing Package");
 
@@ -54,7 +54,7 @@ namespace PubComp.Building.NuGetPack
                     UseShellExecute = false,
                     FileName = nuGetExe,
                     Arguments = "Pack -NoDefaultExcludes \"" + nuspecPath + "\""
-                        + (doSeperateSymbols ? " -Sym" : string.Empty),
+                        + (doSeparateSymbols ? " -Sym" : string.Empty),
                 };
 
                 if (!startInfo.EnvironmentVariables.ContainsKey("EnableNuGetPackageRestore"))

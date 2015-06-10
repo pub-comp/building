@@ -68,6 +68,6 @@ namespace PubComp.Building.NuGetPack
         /// <summary>
         /// Optional, if set to true, creates a regular NuGet package file and the corresponding symbols package.
         /// </summary>
-        public bool DoSeperateSymbols { get; set; }
+        public bool DoSeparateSymbols { get; set; }
     }
 }
