@@ -14,7 +14,8 @@ namespace PubComp.Building.NuGetPack
         {
             Console.WriteLine("Creating nuspec file");
 
-            var doc = CreateNuspec(projectPath, assemblyPath, isDebug);
+            NuGetPackConfig config;
+            var doc = CreateNuspec(projectPath, assemblyPath, isDebug, out config);
             var nuspecPath = Path.ChangeExtension(assemblyPath, ".nuspec");
 
             DebugOut(() => "nuspecPath = " + nuspecPath);
@@ -27,10 +28,11 @@ namespace PubComp.Building.NuGetPack
 
             DebugOut(() => "CreatingPackage");
 
-            CreatePackage(nuspecPath);
+            var doSeperateSymbols = config != null ? config.DoSeperateSymbols : false;
+            CreatePackage(nuspecPath, doSeperateSymbols);
         }
 
-        public void CreatePackage(string nuspecPath)
+        public void CreatePackage(string nuspecPath, bool doSeperateSymbols)
         {
             Console.WriteLine("Packing Package");
 
@@ -52,6 +54,7 @@ namespace PubComp.Building.NuGetPack
                     UseShellExecute = false,
                     FileName = nuGetExe,
                     Arguments = "Pack -NoDefaultExcludes \"" + nuspecPath + "\""
+                        + (doSeperateSymbols ? " -Sym" : string.Empty),
                 };
 
                 if (!startInfo.EnvironmentVariables.ContainsKey("EnableNuGetPackageRestore"))
@@ -100,6 +103,14 @@ namespace PubComp.Building.NuGetPack
 
         public XDocument CreateNuspec(string projectPath, string assemblyPath, bool isDebug)
         {
+            NuGetPackConfig config;
+            return CreateNuspec(projectPath, assemblyPath, isDebug, out config);
+        }
+
+        public XDocument CreateNuspec(string projectPath, string assemblyPath, bool isDebug, out NuGetPackConfig config)
+        {
+            config = null;
+
             const string nugetExtension = ".nuget";
 
             var packageName = Path.GetFileNameWithoutExtension(assemblyPath);
@@ -151,7 +162,7 @@ namespace PubComp.Building.NuGetPack
                 var deserializer = new System.Xml.Serialization.XmlSerializer(typeof(NuGetPackConfig));
                 using (var stream = new FileStream(configFile, FileMode.Open, FileAccess.Read))
                 {
-                    var config = deserializer.Deserialize(stream) as NuGetPackConfig;
+                    config = deserializer.Deserialize(stream) as NuGetPackConfig;
 
                     if (config != null)
                     {

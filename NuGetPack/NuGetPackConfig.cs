@@ -64,5 +64,10 @@ namespace PubComp.Building.NuGetPack
         /// Optional, if not set (or if empty), value is taken from NuGet project's AssemblyInfo (from AssemblyTitle)
         /// </summary>
         public string Keywords { get; set; }
+
+        /// <summary>
+        /// Optional, if set to true, creates a regular NuGet package file and the corresponding symbols package.
+        /// </summary>
+        public bool DoSeperateSymbols { get; set; }
     }
 }

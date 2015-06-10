@@ -60,3 +60,6 @@
 2.11.4:
 	* Fixed: When XML documentation created on build machine, NuGetPack.exe found XML in local folder structure
 	and therefore assumed it is running locally and could not locate binary files
+
+2.12.0:
+	* Added support for -sym argument via DoSeperateSymbols parameter in NuGetPack.config

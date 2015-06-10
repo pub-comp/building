@@ -504,8 +504,10 @@ namespace PubComp.Building.NuGetPack.UnitTests
             creator.CreatePackage(nuProj1Csproj, nuProj1Dll, isDebug);
 
             var nuspecPath = Path.ChangeExtension(nuProj1Dll, ".nuspec");
+            var nupkgPath = nuspecPath.Replace(".NuGet.nuspec", ".1.3.2" + (isDebug ? "-Test" : string.Empty) + ".nupkg");
 
             Assert.IsTrue(File.Exists(nuspecPath));
+            Assert.IsTrue(File.Exists(nupkgPath));
         }
 
         [TestMethod]
@@ -515,8 +517,10 @@ namespace PubComp.Building.NuGetPack.UnitTests
             creator.CreatePackage(nuProj2Csproj, nuProj2Dll, isDebug);
 
             var nuspecPath = Path.ChangeExtension(nuProj2Dll, ".nuspec");
+            var nupkgPath = nuspecPath.Replace(".NuGet.nuspec", ".1.3.2" + (isDebug ? "-Test" : string.Empty) + ".nupkg");
 
             Assert.IsTrue(File.Exists(nuspecPath));
+            Assert.IsTrue(File.Exists(nupkgPath));
         }
 
         [TestMethod]
@@ -526,8 +530,12 @@ namespace PubComp.Building.NuGetPack.UnitTests
             creator.CreatePackage(nuProj3Csproj, nuProj3Dll, isDebug);
 
             var nuspecPath = Path.ChangeExtension(nuProj3Dll, ".nuspec");
+            var nupkgPath = nuspecPath.Replace(".NuGet.nuspec", ".1.3.2" + (isDebug ? "-Test" : string.Empty) + ".nupkg");
+            var nupkgSymPath = Path.ChangeExtension(nupkgPath, ".symbols.nupkg");
 
             Assert.IsTrue(File.Exists(nuspecPath));
+            Assert.IsTrue(File.Exists(nupkgPath));
+            Assert.IsTrue(File.Exists(nupkgSymPath));
         }
 
         #endregion
