@@ -68,3 +68,6 @@
 
 2.12.1:
 	* Fixed typo DoSeperateSymbols --> DoSeparateSymbols
+
+2.12.1.1:
+	* Fixed PubComp.NuGetPack package contained old version of NuGetPack.exe (v2.11.0 instead of v2.12.1)
