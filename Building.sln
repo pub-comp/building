@@ -66,6 +66,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuGetPack.NuGet", "NuGetPac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuGetPackageTemplate.Vsix", "NuGetPackageTemplate.Vsix\NuGetPackageTemplate.Vsix.csproj", "{4EDE89E8-EA4F-4EBA-BE2B-B5E5931AA151}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.Library4", "Demo.Library4\Demo.Library4.csproj", "{0C516879-E252-42BC-8832-A23AB5C0A58A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.Library5", "Demo.Library5\Demo.Library5.csproj", "{B1BE2E30-638D-4A08-9CC8-E065425E36C3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -124,6 +128,14 @@ Global
 		{4EDE89E8-EA4F-4EBA-BE2B-B5E5931AA151}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4EDE89E8-EA4F-4EBA-BE2B-B5E5931AA151}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4EDE89E8-EA4F-4EBA-BE2B-B5E5931AA151}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C516879-E252-42BC-8832-A23AB5C0A58A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C516879-E252-42BC-8832-A23AB5C0A58A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C516879-E252-42BC-8832-A23AB5C0A58A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C516879-E252-42BC-8832-A23AB5C0A58A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1BE2E30-638D-4A08-9CC8-E065425E36C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1BE2E30-638D-4A08-9CC8-E065425E36C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1BE2E30-638D-4A08-9CC8-E065425E36C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1BE2E30-638D-4A08-9CC8-E065425E36C3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -142,9 +154,11 @@ Global
 		{05AD2391-027A-4B0C-8AA8-989204E2EC0D} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 		{F0D4B13E-D07B-4A48-BF14-0269A1696F2D} = {BC14FA63-AF80-4CD1-B479-8F8AE421DCEC}
 		{4EDE89E8-EA4F-4EBA-BE2B-B5E5931AA151} = {BC14FA63-AF80-4CD1-B479-8F8AE421DCEC}
+		{0C516879-E252-42BC-8832-A23AB5C0A58A} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
+		{B1BE2E30-638D-4A08-9CC8-E065425E36C3} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 	EndGlobalSection
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 14
+		SccNumberOfProjects = 16
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs27
 		SccLocalPath0 = .
@@ -199,5 +213,13 @@ Global
 		SccProjectTopLevelParentUniqueName13 = Building.sln
 		SccProjectName13 = NuGetPackageTemplate.Vsix
 		SccLocalPath13 = NuGetPackageTemplate.Vsix
+		SccProjectUniqueName14 = Demo.Library4\\Demo.Library4.csproj
+		SccProjectTopLevelParentUniqueName14 = Building.sln
+		SccProjectName14 = Demo.Library4
+		SccLocalPath14 = Demo.Library4
+		SccProjectUniqueName15 = Demo.Library5\\Demo.Library5.csproj
+		SccProjectTopLevelParentUniqueName15 = Building.sln
+		SccProjectName15 = Demo.Library5
+		SccLocalPath15 = Demo.Library5
 	EndGlobalSection
 EndGlobal

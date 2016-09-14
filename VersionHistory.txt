@@ -71,3 +71,15 @@
 
 2.12.1.1:
 	* Fixed PubComp.NuGetPack package contained old version of NuGetPack.exe (v2.11.0 instead of v2.12.1)
+
+2.12.2:
+	* Support for VS2015 in extension
+
+2.13.0:
+	* Added support for TFS2015 new build tasks
+		- Enable not running NuGet.exe (create NuSpec only, without NoPkg) - using command line parameter
+		- Enable working on single project for assembly and NuGet - using command line parameter
+		- Receive build root path or sln path and output/bin path
+		- Look for sln/s and bin/a folders under root/sln path
+		- Look for all NuGetPack.config files under sln/s folder
+		- For each NuGetPack.config assume .csproj is in same folder

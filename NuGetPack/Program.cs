@@ -4,39 +4,88 @@ namespace PubComp.Building.NuGetPack
 {
     /// <summary>
     /// Run as post-build on a project
-    /// e.g. NuGetPack.exe ""$(ProjectPath)"" ""$(TargetPath)"" $(ConfigurationName)"
+    /// e.g. NuGetPack.exe ""$(ProjectPath)"" ""$(TargetPath)"" $(ConfigurationName) [nopkg]"
     /// </summary>
     public class Program
     {
         public static void Main(string[] args)
         {
-            string projPath, dllPath;
-            bool isDebug;
+            Mode mode;
+            string projPath, dllPath, binFolder, solutionFolder;
+            bool isDebug, doCreatePkg, doIncludeCurrentProj;
 
-            if (!TryParseArguments(args, out projPath, out dllPath, out isDebug))
+
+            if (!TryParseArguments(
+                args, out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
+                out isDebug, out doCreatePkg, out doIncludeCurrentProj))
             {
                 WriteError();
                 return;
             }
 
             var creator = new NuspecCreator();
-            creator.CreatePackage(projPath, dllPath, isDebug);
+
+            if (mode != Mode.Solution)
+            {
+                creator.CreatePackage(projPath, dllPath, isDebug, doCreatePkg, doIncludeCurrentProj);
+            }
+            else
+            {
+                creator.CreatePackages(binFolder, solutionFolder, isDebug, doCreatePkg, doIncludeCurrentProj);
+            }
         }
 
-        public static bool TryParseArguments(string[] args, out string projPath, out string dllPath, out bool isDebug)
+        public enum Mode { Solution, Project };
+
+        public static bool TryParseArguments(
+            string[] args,
+            out Mode mode,
+            out string projPath, out string dllPath, out string binFolder, out string solutionFolder,
+            out bool isDebug, out bool doCreateNuPkg, out bool doIncludeCurrentProj)
         {
+            mode = Mode.Project;
+            Mode? modeVar = null;
             projPath = null;
             dllPath = null;
             isDebug = false;
+            doCreateNuPkg = true;
+            doIncludeCurrentProj = false;
+            binFolder = null;
+            solutionFolder = null;
 
             string config = null;
 
-            if (args.Length < 2 || args.Length > 3)
-                return false;
-
             foreach (var arg in args)
             {
-                if (arg.EndsWith(".csproj"))
+                if (arg.ToLower() == "solution")
+                {
+                    if (modeVar.HasValue)
+                        return false;
+
+                    modeVar = Mode.Solution;
+                }
+                else if (arg.ToLower() == "project")
+                {
+                    if (modeVar.HasValue)
+                        return false;
+
+                    modeVar = Mode.Project;
+                }
+                else if (arg.ToLower().StartsWith("bin="))
+                {
+                    if (binFolder != null)
+                        return false;
+
+                    binFolder = arg.Substring(4);
+                }
+                else if (arg.ToLower().StartsWith("sln="))
+                {
+                    if (solutionFolder != null)
+                        return false;
+
+                    solutionFolder = arg.Substring(4);
+                }
+                else if (arg.EndsWith(".csproj"))
                 {
                     if (projPath != null)
                         return false;
@@ -57,23 +106,58 @@ namespace PubComp.Building.NuGetPack
 
                     config = arg;
                 }
+                else if (arg.ToLower() == "nopkg")
+                {
+                    if (doCreateNuPkg == false)
+                        return false;
+
+                    doCreateNuPkg = false;
+                }
+                else if (arg.ToLower() == "includecurrentproj")
+                {
+                    if (doIncludeCurrentProj == true)
+                        return false;
+
+                    doIncludeCurrentProj = true;
+                }
+                else
+                {
+                    return false;
+                }
             }
 
+            if (modeVar != Mode.Solution)
+            {
+                if (projPath == null || dllPath == null)
+                    return false;
+
+                if (binFolder != null || solutionFolder != null)
+                    return false;
+            }
+            else
+            {
+                if (binFolder == null || solutionFolder == null)
+                    return false;
+
+                if (projPath != null || dllPath != null)
+                    return false;
+            }
+
+            mode = modeVar ?? Mode.Project;
             isDebug = (config ?? string.Empty).ToLower() == "debug";
-
-            if (args.Length == 2 && (projPath == null || dllPath == null))
-                return false;
-
-            if (args.Length == 3 && (projPath == null || dllPath == null || config == null))
-                return false;
 
             return true;
         }
 
         private static void WriteError()
         {
-            Console.WriteLine(@"Correct usage: NuGetPack.exe <pathToCsProj> <pathToDll> [<Debug|Release>]");
-            Console.WriteLine(@"Via post build event: NuGetPack.exe ""$(ProjectPath)"" ""$(TargetPath)"" $(ConfigurationName)");
+            Console.WriteLine(@"Correct usage: NuGetPack.exe [project] <pathToCsProj> <pathToDll> [<Debug|Release>] [nopkg]");
+            Console.WriteLine(@"Via post build event: NuGetPack.exe [project] ""$(ProjectPath)"" ""$(TargetPath)"" $(ConfigurationName)");
+            Console.WriteLine(@"or: NuGetPack.exe [project] ""$(ProjectPath)"" ""$(TargetPath)"" $(ConfigurationName) nopkg");
+            Console.WriteLine();
+            Console.WriteLine(@"or for solution level:");
+            Console.WriteLine();
+            Console.WriteLine(@"Correct usage: NuGetPack.exe solution bin=<binFolder> src=<solutionFolder> [<Debug|Release>] [nopkg]");
         }
     }
 }

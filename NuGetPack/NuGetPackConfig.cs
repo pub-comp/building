@@ -69,5 +69,17 @@ namespace PubComp.Building.NuGetPack
         /// Optional, if set to true, creates a regular NuGet package file and the corresponding symbols package.
         /// </summary>
         public bool DoSeparateSymbols { get; set; }
+
+        /// <summary>
+        /// Optional, if set to true,
+        /// enables treating current project as both
+        /// NuGet definition project
+        /// and project for consumption (binaries, sources)
+        /// If set to true, does not package referenced projects with a NuGetPack.config file in them
+        /// - instead they are added as NuGet dependencies.
+        /// If set to false, uses former behavior
+        /// If set to null, uses command line option (or false if not set via command line)
+        /// </summary>
+        public bool? DoIncludeCurrentProjectInNuSpec { get; set; }
     }
 }

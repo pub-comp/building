@@ -8,14 +8,67 @@ using System.Xml.XPath;
 
 namespace PubComp.Building.NuGetPack
 {
+    // ReSharper disable once PartialTypeWithSinglePart
     public partial class NuspecCreator
     {
-        public void CreatePackage(string projectPath, string assemblyPath, bool isDebug)
+        public void CreatePackages(
+            string binFolder, string solutionFolder, bool isDebug,
+            bool doCreatePkg = true, bool doIncludeCurrentProj = false)
+        {
+            var projects = new LinkedList<string>();
+            FindProjects(solutionFolder, projects);
+
+            foreach (var projectPath in projects)
+            {
+                string assemblyName, assemblyPath;
+                GetAssemblyNameAndPath(
+                    projectPath, out assemblyName, isDebug, binFolder, out assemblyPath);
+
+                CreatePackage(projectPath, assemblyPath, isDebug, doCreatePkg, doIncludeCurrentProj);
+            }
+        }
+
+        private void FindProjects(string parentFolder, LinkedList<string> projects)
+        {
+            if (!Directory.Exists(parentFolder))
+                return;
+
+            var configFiles = Directory.GetFiles(parentFolder).Where(f =>
+                Path.GetFileName(f).ToLower() == "nugetpack.config")
+                .ToList();
+
+            if (configFiles.Any())
+            {
+                var projectFiles = Directory.GetFiles(parentFolder).Where(f =>
+                    Path.GetExtension(f) == ".csproj" || Path.GetExtension(f) == ".vbproj")
+                    .ToList();
+
+                if (projectFiles.Count == 1)
+                {
+                    projects.AddLast(projectFiles[0]);
+                }
+                else if (projectFiles.Count > 1)
+                {
+                    throw new ApplicationException($"More than one project file found in folder {parentFolder}");
+                }
+            }
+
+            var subFolders = Directory.GetDirectories(parentFolder);
+
+            foreach (var folder in subFolders)
+            {
+                FindProjects(folder, projects);
+            }
+        }
+
+        public void CreatePackage(
+            string projectPath, string assemblyPath, bool isDebug,
+            bool doCreatePkg = true, bool doIncludeCurrentProj = false)
         {
             Console.WriteLine("Creating nuspec file");
 
             NuGetPackConfig config;
-            var doc = CreateNuspec(projectPath, assemblyPath, isDebug, out config);
+            var doc = CreateNuspec(projectPath, assemblyPath, isDebug, doIncludeCurrentProj, out config);
             var nuspecPath = Path.ChangeExtension(assemblyPath, ".nuspec");
 
             DebugOut(() => "nuspecPath = " + nuspecPath);
@@ -26,14 +79,20 @@ namespace PubComp.Building.NuGetPack
 
             doc.Save(nuspecPath);
 
+            if (!doCreatePkg)
+                return;
+
             DebugOut(() => "CreatingPackage");
 
-            var doSeparateSymbols = config != null ? config.DoSeparateSymbols : false;
+            var doSeparateSymbols = config?.DoSeparateSymbols ?? false;
             CreatePackage(nuspecPath, doSeparateSymbols);
         }
 
         public void CreatePackage(string nuspecPath, bool doSeparateSymbols)
         {
+            if (nuspecPath == null)
+                throw new ArgumentNullException(nameof(nuspecPath));
+
             Console.WriteLine("Packing Package");
 
             var nuGetExe = Path.Combine(Path.GetDirectoryName(this.GetType().Assembly.Location), "NuGet.exe");
@@ -43,6 +102,7 @@ namespace PubComp.Building.NuGetPack
 
             try
             {
+                // ReSharper disable once AssignNullToNotNullAttribute
                 Environment.CurrentDirectory = Path.GetDirectoryName(nuspecPath);
 
                 DebugOut(() => "CurrentDirectory = " + Environment.CurrentDirectory);
@@ -65,6 +125,8 @@ namespace PubComp.Building.NuGetPack
                 startInfo.RedirectStandardOutput = true;
 
                 var process = Process.Start(startInfo);
+                if (process == null)
+                    throw new ApplicationException($"Could not start process {nuGetExe}");
 
                 process.WaitForExit();
 
@@ -81,6 +143,9 @@ namespace PubComp.Building.NuGetPack
 
         public void PublishPackage(string packagePath)
         {
+            if (packagePath == null)
+                throw new ArgumentNullException(nameof(packagePath));
+
             Console.WriteLine("Publishing Package");
 
             var nuGetExe = Path.Combine(Path.GetDirectoryName(this.GetType().Assembly.Location), "NuGet.exe");
@@ -89,9 +154,12 @@ namespace PubComp.Building.NuGetPack
 
             try
             {
+                // ReSharper disable once AssignNullToNotNullAttribute
                 Environment.CurrentDirectory = Path.GetDirectoryName(packagePath);
 
                 var process = Process.Start(nuGetExe, "Push " + packagePath);
+                if (process == null)
+                    throw new ApplicationException($"Could not start process {nuGetExe}");
 
                 process.WaitForExit();
             }
@@ -101,14 +169,23 @@ namespace PubComp.Building.NuGetPack
             }
         }
 
-        public XDocument CreateNuspec(string projectPath, string assemblyPath, bool isDebug)
+        public XDocument CreateNuspec(
+            string projectPath, string assemblyPath, bool isDebug, bool doIncludeCurrentProj = false)
         {
             NuGetPackConfig config;
-            return CreateNuspec(projectPath, assemblyPath, isDebug, out config);
+            return CreateNuspec(projectPath, assemblyPath, isDebug, doIncludeCurrentProj, out config);
         }
 
-        public XDocument CreateNuspec(string projectPath, string assemblyPath, bool isDebug, out NuGetPackConfig config)
+        public XDocument CreateNuspec(
+            string projectPath, string assemblyPath, bool isDebug, bool doIncludeCurrentProj,
+            out NuGetPackConfig config)
         {
+            if (projectPath == null)
+                throw new ArgumentNullException(nameof(projectPath));
+
+            if (assemblyPath == null)
+                throw new ArgumentNullException(nameof(assemblyPath));
+
             config = null;
 
             const string nugetExtension = ".nuget";
@@ -118,21 +195,7 @@ namespace PubComp.Building.NuGetPack
                 packageName = packageName.Substring(0, packageName.Length - nugetExtension.Length);
 
             var fileVersion = FileVersionInfo.GetVersionInfo(assemblyPath);
-            var version = fileVersion.FileMajorPart + "." + fileVersion.FileMinorPart + "." + fileVersion.FileBuildPart;
-            
-            if (fileVersion.FilePrivatePart != 0)
-                version += "." + fileVersion.FilePrivatePart;
-
-            var fileVersionParts = fileVersion.ProductVersion.Split(new[] { '-' }, StringSplitOptions.None);
-            if (fileVersionParts.Length > 1)
-            {
-                var preReleaseName = string.Join("-", fileVersionParts.Skip(1));
-
-                if (string.IsNullOrWhiteSpace(preReleaseName))
-                    preReleaseName = "PreRelease";
-
-                version += "-" + preReleaseName;
-            }
+            var version = GetVersion(fileVersion);
 
             var owners = fileVersion.CompanyName;
 
@@ -145,8 +208,11 @@ namespace PubComp.Building.NuGetPack
             var projectUrl = fileVersion.LegalTrademarks;
 
             var folder = Path.GetDirectoryName(projectPath);
+            // ReSharper disable once AssignNullToNotNullAttribute
             var packagesFile = Path.Combine(folder, @"packages.config");
+            // ReSharper disable once AssignNullToNotNullAttribute
             var internalPackagesFile = Path.Combine(folder, @"internalPackages.config");
+            // ReSharper disable once AssignNullToNotNullAttribute
             var configFile = Path.Combine(folder, @"NuGetPack.config");
 
             var nuspecPath = Path.ChangeExtension(assemblyPath, ".nuspec");
@@ -196,6 +262,9 @@ namespace PubComp.Building.NuGetPack
 
                         if (!string.IsNullOrEmpty(config.Summary))
                             shortSummary = config.Summary;
+
+                        if (config.DoIncludeCurrentProjectInNuSpec.HasValue)
+                            doIncludeCurrentProj = config.DoIncludeCurrentProjectInNuSpec.Value;
                     }
                 }
             }
@@ -203,9 +272,31 @@ namespace PubComp.Building.NuGetPack
             var doc = CreateNuspec(
                 packageName, version, owners, authors, shortSummary,
                 longDescription, releaseNotes, licenseUrl, projectUrl, iconUrl, copyright, keywords, nuspecPath, projectPath,
-                packagesFile, internalPackagesFile, isDebug, doAddFrameworkReferences, doIncludeSources);
+                isDebug, doAddFrameworkReferences, doIncludeSources,
+                doIncludeCurrentProj);
 
             return doc;
+        }
+
+        private string GetVersion(FileVersionInfo fileVersion)
+        {
+            var version = fileVersion.FileMajorPart + "." + fileVersion.FileMinorPart + "." + fileVersion.FileBuildPart;
+
+            if (fileVersion.FilePrivatePart != 0)
+                version += "." + fileVersion.FilePrivatePart;
+
+            var fileVersionParts = fileVersion.ProductVersion.Split(new[] { '-' }, StringSplitOptions.None);
+            if (fileVersionParts.Length > 1)
+            {
+                var preReleaseName = string.Join("-", fileVersionParts.Skip(1));
+
+                if (string.IsNullOrWhiteSpace(preReleaseName))
+                    preReleaseName = "PreRelease";
+
+                version += "-" + preReleaseName;
+            }
+
+            return version;
         }
 
         public XDocument CreateNuspec(
@@ -223,31 +314,25 @@ namespace PubComp.Building.NuGetPack
             string keywords,
             string nuspecPath,
             string projectPath,
-            string packagesFile,
-            string internalPackagesFile,
             bool isDebug,
             bool doAddFrameworkReferences,
-            bool doIncludeSources)
+            bool doIncludeSources,
+            bool doIncludeCurrentProj)
         {
             var nuspecFolder = Path.GetDirectoryName(nuspecPath);
 
             XAttribute dependenciesAttribute;
-            var dependenciesInfo = GetDependencies(projectPath, new[] { packagesFile, internalPackagesFile }, out dependenciesAttribute);
-            var elements = GetElements(nuspecFolder, projectPath, isDebug, doIncludeSources);
+
+            var elements = GetElements(
+                nuspecFolder, projectPath, isDebug, doIncludeSources, doIncludeCurrentProj,
+                out dependenciesAttribute);
 
             var dependencies = new XElement("group");
             dependencies.Add(dependenciesAttribute);
 
-            var d1 = dependenciesInfo.Where(el => el.ElementType == ElementType.NuGetDependency).Select(el => el.Element).ToList();
-            var d2 = elements.Where(el => el.ElementType == ElementType.NuGetDependency).Select(el => el.Element).ToList();
+            var dep = elements.Where(el => el.ElementType == ElementType.NuGetDependency).Select(el => el.Element).ToList();
 
-            foreach (var d in d1)
-            {
-                if (!dependencies.Elements().Any(el => el.ToString() == d.ToString()))
-                    dependencies.Add(d);
-            }
-
-            foreach (var d in d2)
+            foreach (var d in dep)
             {
                 if (!dependencies.Elements().Any(el => el.ToString() == d.ToString()))
                     dependencies.Add(d);
@@ -297,7 +382,7 @@ namespace PubComp.Building.NuGetPack
             return doc;
         }
 
-        public IEnumerable<DependencyInfo> GetDependencies(
+        public List<DependencyInfo> GetDependencies(
             string projectPath, string[] packagesFiles, out XAttribute dependenciesAttribute)
         {
             var targetFramework =  "net" + (GetFrameworkVersion(projectPath) ?? "45");
@@ -312,7 +397,7 @@ namespace PubComp.Building.NuGetPack
             return result;
         }
 
-        public IEnumerable<DependencyInfo> GetDependencies(string packagesFile)
+        public List<DependencyInfo> GetDependencies(string packagesFile)
         {
             var result = new List<DependencyInfo>();
 
@@ -336,6 +421,38 @@ namespace PubComp.Building.NuGetPack
             return result;
         }
 
+        public List<DependencyInfo> GetInternalDependencies(
+            string projectPath, bool isDebug, string buildMachineBinFolder)
+        {
+            var references = GetReferences(projectPath, true);
+            var projectFolder = Path.GetDirectoryName(projectPath);
+
+            var results = new List<DependencyInfo>();
+
+            foreach (var reference in references)
+            {
+                // ReSharper disable once AssignNullToNotNullAttribute
+                var refProjPath = Path.Combine(projectFolder, reference);
+
+                string assemblyName, assemblyPath;
+                GetAssemblyNameAndPath(refProjPath, out assemblyName, isDebug, buildMachineBinFolder, out assemblyPath);
+
+                DebugOut(() => "assemblyPath = " + assemblyPath);
+
+                var fileVersion = FileVersionInfo.GetVersionInfo(assemblyPath);
+                var referenceVersion = GetVersion(fileVersion);
+
+                results.Add(
+                    new DependencyInfo(
+                        ElementType.NuGetDependency,
+                        new XElement("dependency",
+                        new XAttribute("id", assemblyName),
+                        new XAttribute("version", referenceVersion))));
+            }
+
+            return results;
+        }
+
         public static string AbsolutePathToRelativePath(string filePath, string referencePath)
         {
             if (!Path.IsPathRooted(filePath))
@@ -348,6 +465,7 @@ namespace PubComp.Building.NuGetPack
             return referenceUri.MakeRelativeUri(fileUri).ToString().Replace('/', '\\');
         }
 
+        // ReSharper disable once PartialMethodWithSinglePart
         partial void DebugOut(Func<string> getText);
 
 #if DEBUG
@@ -357,19 +475,47 @@ namespace PubComp.Building.NuGetPack
         }
 #endif
 
-        public IEnumerable<DependencyInfo> GetElements(string nuspecFolder, string projectPath, bool isDebug, bool doIncludeSources)
+        /// <summary>
+        /// Get NuSpec elements from a given project and its references
+        /// </summary>
+        /// <param name="nuspecFolder">Output folder</param>
+        /// <param name="projectPath">Path to project file to process</param>
+        /// <param name="isDebug">For local builds, if true looks in Debug folder under bin folders, if false looks under release folders</param>
+        /// <param name="doIncludeSources">If true, includes source files in NuSpec</param>
+        /// <param name="doIncludeCurrentProj">
+        /// If true, treats given project as regular project,
+        ///  if not treats it as a NuGet definition project only - does not take binaries or source from project
+        /// </param>
+        /// <param name="dependenciesAttribute"></param>
+        /// <returns>Elements for NuSpec</returns>
+        public List<DependencyInfo> GetElements(
+            string nuspecFolder, string projectPath, bool isDebug, bool doIncludeSources,
+            bool doIncludeCurrentProj,
+            out XAttribute dependenciesAttribute)
         {
-            DebugOut(() => string.Format("\r\n\r\nGetFiles({0}, {1}, {2})\r\n", nuspecFolder, projectPath, isDebug));
+            if (nuspecFolder == null)
+                throw new ArgumentNullException(nameof(nuspecFolder));
 
-            var nuspecToProject = Path.GetDirectoryName(
-                AbsolutePathToRelativePath(Path.GetDirectoryName(projectPath), nuspecFolder + "\\"));
+            if (projectPath == null)
+                throw new ArgumentNullException(nameof(projectPath));
+
+            DebugOut(() => $"\r\n\r\nGetFiles({nuspecFolder}, {projectPath}, {isDebug})\r\n");
 
             var projectFolder = Path.GetDirectoryName(projectPath);
 
-            DebugOut(() => "nuspecToProject = " + nuspecToProject);
+            DebugOut(() => "nuspecToProject = " + Path.GetDirectoryName(
+                AbsolutePathToRelativePath(Path.GetDirectoryName(projectPath), nuspecFolder + "\\")));
+
             DebugOut(() => "ProjectFolder = " + projectFolder);
 
+            var packagesFile = Path.Combine(projectPath, "packages.config");
+            var internalPackagesFile = Path.Combine(projectPath, "internalPackages.config");
+
             var result = new List<DependencyInfo>();
+
+            result.AddRange(GetDependencies(
+                projectPath, new[] { packagesFile, internalPackagesFile }, out dependenciesAttribute));
+
 
             result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath));
             result.AddRange(GetBinaryFiles(nuspecFolder, projectFolder, projectPath));
@@ -380,7 +526,22 @@ namespace PubComp.Building.NuGetPack
             result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath,
                 srcFolder: @"build\", destFolder: @"build\", flattern: false, elementType: ElementType.BuildFile));
 
-            var references = GetReferences(nuspecFolder, projectPath, projectFolder);
+            if (doIncludeCurrentProj)
+            {
+                result.AddRange(GetInternalDependencies(projectPath, isDebug, nuspecFolder));
+
+                result.AddRange(GetBinaryReferences(nuspecFolder, projectFolder, projectPath, isDebug, nuspecFolder));
+
+                if (doIncludeSources)
+                    result.AddRange(GetSourceFiles(nuspecFolder, projectFolder, projectPath));
+
+                result.AddRange(GetDependenciesFromProject(projectFolder, projectPath));
+            }
+
+            bool? referencesContainNuGetPackConfig =
+                (doIncludeCurrentProj ? false : (bool?)null);
+
+            var references = GetReferences(projectPath, referencesContainNuGetPackConfig);
 
             foreach (var reference in references)
             {
@@ -388,7 +549,12 @@ namespace PubComp.Building.NuGetPack
 
                 DebugOut(() => "refFolder = " + refFolder);
 
+                if (refFolder == null)
+                    throw new NullReferenceException(nameof(refFolder));
+
+                // ReSharper disable once AssignNullToNotNullAttribute
                 var refProjFolder = Path.Combine(projectFolder, refFolder);
+                // ReSharper disable once AssignNullToNotNullAttribute
                 var refProjPath = Path.Combine(projectFolder, reference);
 
                 DebugOut(() => "projFolder = " + refProjFolder);
@@ -402,25 +568,38 @@ namespace PubComp.Building.NuGetPack
                 result.AddRange(GetDependenciesFromProject(refProjFolder, refProjPath));
             }
 
+            var exclude = result.Where(r =>
+                r.Element.Attribute("target") != null
+                && !string.IsNullOrEmpty(r.Element.Attribute("target").Value)
+                &&
+                (
+                    r.Element.Attribute("target").Value.ToLower().EndsWith(@"\packages.config")
+                    || r.Element.Attribute("target").Value.ToLower().EndsWith(@"\internalpackages.config")
+                    || r.Element.Attribute("target").Value.ToLower().EndsWith(@"\nugetpack.config")
+                )).ToList();
+
+            result = result.Except(exclude).ToList();
+
             return result;
         }
 
         #region NuGet Project Parsing
 
-        public IEnumerable<DependencyInfo> GetContentFiles(
+        public List<DependencyInfo> GetContentFiles(
             string nuspecFolder, string projectFolder, string projectPath,
             string srcFolder = @"content\", string destFolder = @"content\",
             bool flattern = false, ElementType elementType = ElementType.ContentFile)
         {
-            DebugOut(() => string.Format("\r\n\r\nGetContentFiles({0}, {1}, {2})\r\n", nuspecFolder, projectFolder, projectPath));
+            DebugOut(() => $"\r\n\r\nGetContentFiles({nuspecFolder}, {projectFolder}, {projectPath})\r\n");
 
-            var csProj = XDocument.Load(projectPath);
-
-            var xmlns = csProj.Root.GetDefaultNamespace();
+            XDocument csProj;
+            XNamespace xmlns;
+            XElement proj;
+            LoadProject(projectPath, out csProj, out xmlns, out proj);
 
             srcFolder = srcFolder.ToLower();
 
-            var contentElements = csProj.Element(xmlns + "Project").Elements(xmlns + "ItemGroup").Elements()
+            var contentElements = proj.Elements(xmlns + "ItemGroup").Elements()
                 .Where(el => el.Attribute("Include") != null)
                 .Select(el =>
                     new
@@ -464,11 +643,12 @@ namespace PubComp.Building.NuGetPack
 
         public string GetFrameworkVersion(string projectPath)
         {
-            var csProj = XDocument.Load(projectPath);
+            XDocument csProj;
+            XNamespace xmlns;
+            XElement proj;
+            LoadProject(projectPath, out csProj, out xmlns, out proj);
 
-            var xmlns = csProj.Root.GetDefaultNamespace();
-
-            var targetFrameworkVersion = csProj.Element(xmlns + "Project")
+            var targetFrameworkVersion = proj
                 .Elements(xmlns + "PropertyGroup").Elements(xmlns + "TargetFrameworkVersion")
                 .Select(el => el.Value)
                 .FirstOrDefault();
@@ -480,7 +660,8 @@ namespace PubComp.Building.NuGetPack
             return result;
         }
 
-        public IEnumerable<DependencyInfo> GetBinaryFiles(string nuspecFolder, string projectFolder, string projectPath)
+        public List<DependencyInfo> GetBinaryFiles(
+            string nuspecFolder, string projectFolder, string projectPath)
         {
             var defaultVersionFolder = "net" + (GetFrameworkVersion(projectPath) ?? "45");
 
@@ -503,14 +684,14 @@ namespace PubComp.Building.NuGetPack
             return itemsList;
         }
 
-        public IEnumerable<DependencyInfo> GetFrameworkReferences(string projectFolder, string projectPath)
+        public List<DependencyInfo> GetFrameworkReferences(string projectFolder, string projectPath)
         {
-            DebugOut(() => string.Format("\r\n\r\nGetFrameworkReferences({0}, {1})\r\n", projectFolder, projectPath));
+            DebugOut(() => $"\r\n\r\nGetFrameworkReferences({projectFolder}, {projectPath})\r\n");
 
-            var csProj = XDocument.Load(projectPath);
-
-            var xmlns = csProj.Root.GetDefaultNamespace();
-            var proj = csProj.Element(xmlns + "Project");
+            XDocument csProj;
+            XNamespace xmlns;
+            XElement proj;
+            LoadProject(projectPath, out csProj, out xmlns, out proj);
 
             var referencedBinaryFiles = proj.Elements(xmlns + "ItemGroup")
                 .SelectMany(el => el.Elements(xmlns + "Reference"))
@@ -531,19 +712,40 @@ namespace PubComp.Building.NuGetPack
             return items;
         }
 
-        public IEnumerable<string> GetReferences(string nuspecFolder, string projectPath, string projectFolder)
+        public List<string> GetReferences(string projectPath, bool? referencesContainNuGetPackConfig = null)
         {
-            var csProj = XDocument.Load(projectPath);
+            XDocument csProj;
+            XNamespace xmlns;
+            XElement proj;
+            LoadProject(projectPath, out csProj, out xmlns, out proj);
 
-            var xmlns = csProj.Root.GetDefaultNamespace();
-            var elements = csProj.Element(xmlns + "Project").Elements(xmlns + "ItemGroup").Elements(xmlns + "ProjectReference");
+            var elements = proj
+                .Elements(xmlns + "ItemGroup").Elements(xmlns + "ProjectReference");
 
             var references = elements
                 .Select(r => r.Attribute("Include").Value)
                 .ToList();
 
-            return references;
-        }
+            if (!referencesContainNuGetPackConfig.HasValue)
+                return references;
+
+            var projectFolder = Path.GetDirectoryName(projectPath);
+
+            var results = new List<string>();
+
+            foreach (var reference in references)
+            {
+                // ReSharper disable once AssignNullToNotNullAttribute
+                var referencePath = Path.GetFullPath(Path.Combine(projectFolder, reference));
+
+                var isPkgProject = DoesProjectContainFile(referencePath, "nugetpack.config");
+
+                if (isPkgProject == referencesContainNuGetPackConfig.Value)
+                    results.Add(reference);
+            }
+
+            return results;
+        }  
 
         #endregion
 
@@ -566,19 +768,21 @@ namespace PubComp.Building.NuGetPack
             return outputPath;
         }
 
-        public IEnumerable<DependencyInfo> GetBinaryReferences(
+        public List<DependencyInfo> GetBinaryReferences(
             string nuspecFolder, string projectFolder, string projectPath, bool isDebug, string buildMachineBinFolder)
         {
-            DebugOut(() => string.Format("\r\n\r\nGetBinaryReferences({0}, {1}, {2}, {3})\r\n", projectFolder, projectPath, isDebug, buildMachineBinFolder));
+            DebugOut(() =>
+                $"\r\n\r\nGetBinaryReferences({projectFolder}, {projectPath}, {isDebug}, {buildMachineBinFolder})\r\n");
 
             var versionFolder = "net" + (GetFrameworkVersion(projectPath) ?? "45");
 
             string outputPath;
 
-            var csProj = XDocument.Load(projectPath);
+            XDocument csProj;
+            XNamespace xmlns;
+            XElement proj;
+            LoadProject(projectPath, out csProj, out xmlns, out proj);
 
-            var xmlns = csProj.Root.GetDefaultNamespace();
-            var proj = csProj.Element(xmlns + "Project");
             var propGroups = proj.Elements(xmlns + "PropertyGroup");
 
             outputPath = GetOutputPath(csProj, isDebug, projectFolder);
@@ -596,6 +800,9 @@ namespace PubComp.Building.NuGetPack
             var relativeOutputPath = AbsolutePathToRelativePath(outputPath, nuspecFolder + "\\");
 
             var assemblyNameElement = propGroups.Elements(xmlns + "AssemblyName").FirstOrDefault();
+
+            if (assemblyNameElement == null)
+                throw new ApplicationException($"Could find AssemblyName in {projectPath})");
 
             var assemblyName = assemblyNameElement.Value;
 
@@ -616,9 +823,59 @@ namespace PubComp.Building.NuGetPack
             return items;
         }
 
-        private bool IsFileWithDifferentExtension(string expectedFileNameWithoutExtension, string actualFilePath)
+        private void GetAssemblyNameAndPath(
+            string projectPath, out string assemblyName, bool isDebug, string buildMachineBinFolder, out string assemblyPath)
+        {
+            DebugOut(() => $"\r\n\r\nGetAssemblyName({projectPath})\r\n");
+
+            XDocument csProj;
+            XNamespace xmlns;
+            XElement proj;
+            LoadProject(projectPath, out csProj, out xmlns, out proj);
+
+            var propGroups = proj.Elements(xmlns + "PropertyGroup");
+
+            var assemblyNameElement = propGroups.Elements(xmlns + "AssemblyName").FirstOrDefault();
+
+            if (assemblyNameElement == null)
+                throw new ApplicationException($"Could find AssemblyName in {projectPath})");
+
+            var asmName = assemblyNameElement.Value;
+
+            var projectFolder = Path.GetDirectoryName(projectPath);
+
+            var outputPath = GetOutputPath(csProj, isDebug, projectFolder);
+
+            if (!Directory.Exists(outputPath)
+                || !Directory.GetFiles(outputPath).Any(f =>
+                    f.ToLower().EndsWith(".dll") || f.ToLower().EndsWith(".exe"))
+                )
+            {
+                outputPath = buildMachineBinFolder;
+            }
+
+            DebugOut(() => "outputPath = " + outputPath);
+
+            var dllExe = new[] { ".dll", ".exe" };
+
+            var asmFile = Directory.GetFiles(outputPath).FirstOrDefault(f =>
+                f != null
+                && Path.GetFileNameWithoutExtension(f) == asmName
+                && dllExe.Contains(Path.GetExtension(f).ToLower()));
+
+            if (asmFile == null)
+                throw new ApplicationException($"Could not find path for {asmName}, searched {outputPath}");
+
+            assemblyName = asmName;
+            assemblyPath = asmFile;
+        }
+
+        private bool IsFileWithDifferentExtension(
+            string expectedFileNameWithoutExtension, string actualFilePath)
         {
             var actualFileName = Path.GetFileName(actualFilePath);
+            if (actualFileName == null)
+                throw new ArgumentNullException(nameof(actualFileName));
 
             if (!actualFileName.StartsWith(expectedFileNameWithoutExtension))
                 return false;
@@ -633,20 +890,28 @@ namespace PubComp.Building.NuGetPack
             return true;
         }
 
-        public IEnumerable<DependencyInfo> GetSourceFiles(string nuspecFolder, string projectFolder, string projectPath)
+        public List<DependencyInfo> GetSourceFiles(string nuspecFolder, string projectFolder, string projectPath)
         {
-            DebugOut(() => string.Format("\r\n\r\nGetSourceFiles({0}, {1})\r\n", projectFolder, projectPath));
+            DebugOut(() => $"\r\n\r\nGetSourceFiles({projectFolder}, {projectPath})\r\n");
 
-            var csProj = XDocument.Load(projectPath);
             var projectName = Path.GetFileNameWithoutExtension(projectPath);
 
-            var xmlns = csProj.Root.GetDefaultNamespace();
-            var codeElements = csProj.Element(xmlns + "Project").Elements(xmlns + "ItemGroup").Elements(xmlns + "Compile");
-            var noneElements = csProj.Element(xmlns + "Project").Elements(xmlns + "ItemGroup").Elements(xmlns + "None");
+            XDocument csProj;
+            XNamespace xmlns;
+            XElement proj;
+            LoadProject(projectPath, out csProj, out xmlns, out proj);
+
+            if (proj == null)
+                throw new ApplicationException($"Could find namespace in load project file {projectPath}");
+
+            var codeElements = proj.Elements(xmlns + "ItemGroup").Elements(xmlns + "Compile");
+
+            // TODO: Remove commented out line after confirming it is redundant
+            //var noneElements = proj.Elements(xmlns + "ItemGroup").Elements(xmlns + "None");
 
             var relativeProjectFolder = AbsolutePathToRelativePath(projectFolder, nuspecFolder + "\\");
 
-            var items = codeElements.Union(noneElements)
+            var items = codeElements//.Union(noneElements)
                 .Where(el => el.Attribute("Include") != null
                     && !el.Attribute("Include").Value.StartsWith(".."))
                 .Select(el => el.Attribute("Include").Value)
@@ -661,15 +926,40 @@ namespace PubComp.Building.NuGetPack
             return items;
         }
 
-        public IEnumerable<DependencyInfo> GetDependenciesFromProject(string projectFolder, string projectPath)
+        public bool DoesProjectContainFile(string projectPath, string file)
         {
-            DebugOut(() => string.Format("\r\n\r\nGetDependenciesFromProject({0}, {1})\r\n", projectFolder, projectPath));
+            DebugOut(() => $"\r\n\r\nDoesProjectContainFile({projectPath}, {file})\r\n");
 
-            var csProj = XDocument.Load(projectPath);
-            var projectName = Path.GetFileNameWithoutExtension(projectPath);
+            XDocument csProj;
+            XNamespace xmlns;
+            XElement proj;
+            LoadProject(projectPath, out csProj, out xmlns, out proj);
 
-            var xmlns = csProj.Root.GetDefaultNamespace();
-            var noneElements = csProj.Element(xmlns + "Project").Elements(xmlns + "ItemGroup").Elements(xmlns + "None");
+            var codeElements = proj.Elements(xmlns + "ItemGroup").Elements(xmlns + "Compile");
+            var noneElements = proj.Elements(xmlns + "ItemGroup").Elements(xmlns + "None");
+
+            var result = codeElements
+                .Union(noneElements)
+                .Any(el =>
+                    el.Attribute("Include") != null
+                    && string.Compare(
+                        el.Attribute("Include").Value,
+                        file,
+                        StringComparison.InvariantCultureIgnoreCase) == 0);
+
+            return result;
+        }
+
+        public IList<DependencyInfo> GetDependenciesFromProject(string projectFolder, string projectPath)
+        {
+            DebugOut(() => $"\r\n\r\nGetDependenciesFromProject({projectFolder}, {projectPath})\r\n");
+
+            XDocument csProj;
+            XNamespace xmlns;
+            XElement proj;
+            LoadProject(projectPath, out csProj, out xmlns, out proj);
+
+            var noneElements = proj.Elements(xmlns + "ItemGroup").Elements(xmlns + "None");
 
             var packagesFileName = noneElements.Where(el =>
                     el.Attribute("Include") != null && el.Attribute("Include").Value.ToLower() == "packages.config")
@@ -682,11 +972,30 @@ namespace PubComp.Building.NuGetPack
             string packagesFile;
             packagesFile = projectFolder + @"\" + packagesFileName;
 
-            DebugOut(() => string.Format("packagesFile: {0}", packagesFile));
+            DebugOut(() => $"packagesFile: {packagesFile}");
 
             var dependencies = GetDependencies(packagesFile);
 
             return dependencies;
+        }
+
+        private void LoadProject(
+            string projectPath, out XDocument csProj, out XNamespace xmlns, out XElement proj)
+        {
+            csProj = XDocument.Load(projectPath);
+
+            if (csProj == null)
+                throw new ApplicationException($"Could not load project file {projectPath}");
+
+            if (csProj.Root == null)
+                throw new ApplicationException($"Could find load namespace from project file {projectPath}");
+
+            xmlns = csProj.Root.GetDefaultNamespace();
+
+            proj = csProj.Element(xmlns + "Project");
+
+            if (proj == null)
+                throw new ApplicationException($"Could not project from project file {projectPath}");
         }
 
         #endregion
