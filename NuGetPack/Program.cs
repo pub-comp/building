@@ -78,7 +78,7 @@ namespace PubComp.Building.NuGetPack
 
                     binFolder = arg.Substring(4);
                 }
-                else if (arg.ToLower().StartsWith("sln="))
+                else if (arg.ToLower().StartsWith("sln=") || arg.ToLower().StartsWith("src="))
                 {
                     if (solutionFolder != null)
                         return false;

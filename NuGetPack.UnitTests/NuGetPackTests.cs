@@ -1617,6 +1617,123 @@ namespace PubComp.Building.NuGetPack.UnitTests
         }
 
         [TestMethod]
+        public void TestParseArguments_SlnMode_src()
+        {
+            Program.Mode mode;
+            string projPath, dllPath, binFolder, solutionFolder;
+            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
+
+            var result = Program.TryParseArguments(
+                new[]
+                {
+                    @"Solution",
+                    @"src=C:\MyProj\sln\",
+                    @"bin=C:\MyProj\bin\",
+                    @"Debug",
+                },
+                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
+                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+
+            Assert.AreEqual(Program.Mode.Solution, mode);
+            Assert.AreEqual(null, projPath);
+            Assert.AreEqual(null, dllPath);
+            Assert.AreEqual(@"C:\MyProj\bin\", binFolder);
+            Assert.AreEqual(@"C:\MyProj\sln\", solutionFolder);
+            Assert.AreEqual(true, isDebugOut);
+            Assert.AreEqual(true, doCreatePkg);
+            Assert.AreEqual(false, doIncludeCurrentProj);
+            Assert.AreEqual(true, result);
+        }
+
+        [TestMethod]
+        public void TestParseArguments_SlnMode_ExtraBin()
+        {
+            Program.Mode mode;
+            string projPath, dllPath, binFolder, solutionFolder;
+            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
+
+            var result = Program.TryParseArguments(
+                new[]
+                {
+                    @"Solution",
+                    @"sln=C:\MyProj\sln\",
+                    @"bin=C:\MyProj\bin\",
+                    @"bin=C:\MyProj\bin\",
+                    @"Debug",
+                },
+                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
+                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+
+            Assert.AreEqual(false, result);
+        }
+
+        [TestMethod]
+        public void TestParseArguments_SlnMode_ExtraSln()
+        {
+            Program.Mode mode;
+            string projPath, dllPath, binFolder, solutionFolder;
+            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
+
+            var result = Program.TryParseArguments(
+                new[]
+                {
+                    @"Solution",
+                    @"sln=C:\MyProj\sln\",
+                    @"bin=C:\MyProj\bin\",
+                    @"sln=C:\MyProj\sln\",
+                    @"Debug",
+                },
+                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
+                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+
+            Assert.AreEqual(false, result);
+        }
+
+        [TestMethod]
+        public void TestParseArguments_SlnMode_ExtraSrc()
+        {
+            Program.Mode mode;
+            string projPath, dllPath, binFolder, solutionFolder;
+            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
+
+            var result = Program.TryParseArguments(
+                new[]
+                {
+                    @"Solution",
+                    @"sln=C:\MyProj\sln\",
+                    @"bin=C:\MyProj\bin\",
+                    @"src=C:\MyProj\sln\",
+                    @"Debug",
+                },
+                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
+                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+
+            Assert.AreEqual(false, result);
+        }
+
+        [TestMethod]
+        public void TestParseArguments_SlnMode_ExtraSrc2()
+        {
+            Program.Mode mode;
+            string projPath, dllPath, binFolder, solutionFolder;
+            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
+
+            var result = Program.TryParseArguments(
+                new[]
+                {
+                    @"Solution",
+                    @"src=C:\MyProj\sln\",
+                    @"bin=C:\MyProj\bin\",
+                    @"src=C:\MyProj\sln\",
+                    @"Debug",
+                },
+                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
+                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+
+            Assert.AreEqual(false, result);
+        }
+
+        [TestMethod]
         public void TestParseArguments_SlnMode_ExtraProj()
         {
             Program.Mode mode;
@@ -1734,6 +1851,27 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"C:\MyProj\MyProj.csproj",
                     @"C:\MyProj\MyProj\bin\Debug\MyProj.dll",
                     @"sln=C:\MyProj\sln\",
+                    @"Debug",
+                },
+                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
+                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+
+            Assert.AreEqual(false, result);
+        }
+
+        [TestMethod]
+        public void TestParseArguments_ProjMode_ExtraSrc()
+        {
+            Program.Mode mode;
+            string projPath, dllPath, binFolder, solutionFolder;
+            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
+
+            var result = Program.TryParseArguments(
+                new[]
+                {
+                    @"C:\MyProj\MyProj.csproj",
+                    @"C:\MyProj\MyProj\bin\Debug\MyProj.dll",
+                    @"src=C:\MyProj\sln\",
                     @"Debug",
                 },
                 out mode, out projPath, out dllPath, out binFolder, out solutionFolder,

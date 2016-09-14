@@ -83,3 +83,6 @@
 		- Look for sln/s and bin/a folders under root/sln path
 		- Look for all NuGetPack.config files under sln/s folder
 		- For each NuGetPack.config assume .csproj is in same folder
+
+2.13.1:
+	* Accept either src= OR sln= as command line argument (both have the same meaning)
