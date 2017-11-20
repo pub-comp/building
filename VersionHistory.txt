@@ -86,3 +86,9 @@
 
 2.13.1:
 	* Accept either src= OR sln= as command line argument (both have the same meaning)
+
+2.14.0:
+	* Updated project path in NuGet (CodePlex --> GitHub)
+	* Added documentation
+	* Added support for overriding the prerelease version (-suffix) via command line
+

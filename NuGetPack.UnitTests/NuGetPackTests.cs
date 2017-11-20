@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -82,8 +83,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
             proj5Csproj = testSrcDir + @"\Demo.Library5.csproj";
             proj5Dll = testBinDir + @"\PubComp.Building.Demo.Library5.dll";
-
-
+            
             TestResourceFinder.FindResources(testContext, "Building",
                 @"Demo.Package1.NuGet",
                 true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
@@ -219,7 +219,8 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var creator = new NuspecCreator();
 
             XAttribute attribute;
-            var results = creator.GetElements(nuspecFolder, nuProj1Csproj, isDebugVariable, true, false, out attribute);
+            var results = creator.GetElements(
+                nuspecFolder, nuProj1Csproj, isDebugVariable, true, false, null, out attribute);
 
             var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
                 .Select(r => r.Element).ToList();
@@ -242,12 +243,69 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var creator = new NuspecCreator();
 
             XAttribute attribute;
-            var results = creator.GetElements(nuspecFolder, nuProj2Csproj, isDebugVariable, true, false, out attribute);
+            var results = creator.GetElements(
+                nuspecFolder, nuProj2Csproj, isDebugVariable, true, false, null, out attribute);
 
             var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
                 .Select(r => r.Element).ToList();
 
             LinqAssert.Count(dependencies, 0);
+        }
+
+        [TestMethod]
+        public void TestGetInternalDependencies1()
+        {
+            var creator = new NuspecCreator();
+
+            var results = creator.GetInternalDependencies(
+                proj5Csproj, isDebugVariable, Path.GetDirectoryName(proj5Dll), null);
+
+            var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
+                .Select(r => r.Element).ToList();
+
+            LinqAssert.Count(dependencies, 1);
+
+            var expectedVersion = "1.3.2" + (isDebugVariable ? "-Test" : string.Empty);
+
+            LinqAssert.Count(dependencies.Where(r =>
+                r.Attribute("id").Value == "PubComp.Building.Demo.Library4"
+                && r.Attribute("version").Value == expectedVersion), 1);
+        }
+
+        [TestMethod]
+        public void TestGetInternalDependencies1_OverridePreReleaseEmpty()
+        {
+            var creator = new NuspecCreator();
+
+            var results = creator.GetInternalDependencies(
+                proj5Csproj, isDebugVariable, Path.GetDirectoryName(proj5Dll), String.Empty);
+
+            var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
+                .Select(r => r.Element).ToList();
+
+            LinqAssert.Count(dependencies, 1);
+
+            LinqAssert.Count(dependencies.Where(r =>
+                r.Attribute("id").Value == "PubComp.Building.Demo.Library4"
+                && r.Attribute("version").Value == "1.3.2"), 1);
+        }
+
+        [TestMethod]
+        public void TestGetInternalDependencies1_OverridePreReleaseAlpha102()
+        {
+            var creator = new NuspecCreator();
+
+            var results = creator.GetInternalDependencies(
+                proj5Csproj, isDebugVariable, Path.GetDirectoryName(proj5Dll), "alpha102");
+
+            var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
+                .Select(r => r.Element).ToList();
+
+            LinqAssert.Count(dependencies, 1);
+
+            LinqAssert.Count(dependencies.Where(r =>
+                r.Attribute("id").Value == "PubComp.Building.Demo.Library4"
+                && r.Attribute("version").Value == "1.3.2-alpha102"), 1);
         }
 
         #endregion
@@ -366,7 +424,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                Path.GetDirectoryName(nuProj1Dll), nuProj1Csproj, isDebugVariable, true, false, out attribute);
+                Path.GetDirectoryName(nuProj1Dll), nuProj1Csproj, isDebugVariable, true, false, null, out attribute);
 
             LinqAssert.Count(results, 22);
 
@@ -433,7 +491,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                Path.GetDirectoryName(nuProj2Dll), nuProj2Csproj, isDebugVariable, true, false, out attribute);
+                Path.GetDirectoryName(nuProj2Dll), nuProj2Csproj, isDebugVariable, true, false, null, out attribute);
 
             LinqAssert.Count(results, 4);
 
@@ -466,7 +524,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                Path.GetDirectoryName(nuProj2Dll), nuProj2Csproj, isDebugVariable, false, false, out attribute);
+                Path.GetDirectoryName(nuProj2Dll), nuProj2Csproj, isDebugVariable, false, false, null, out attribute);
 
             LinqAssert.Count(results, 2);
 
@@ -494,7 +552,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                Path.GetDirectoryName(nuProj3Dll), nuProj3Csproj, isDebugVariable, true, false, out attribute);
+                Path.GetDirectoryName(nuProj3Dll), nuProj3Csproj, isDebugVariable, true, false, null, out attribute);
 
             LinqAssert.Count(results, 13);
 
@@ -545,7 +603,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                testRunDir, proj4Csproj, isDebugVariable, true, true, out attribute);
+                testRunDir, proj4Csproj, isDebugVariable, true, true, null, out attribute);
 
             LinqAssert.Count(results, 17);
 
@@ -605,7 +663,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                testRunDir, proj5Csproj, isDebugVariable, true, true, out attribute);
+                testRunDir, proj5Csproj, isDebugVariable, true, true, null, out attribute);
 
             LinqAssert.Count(results, 15);
 
@@ -804,7 +862,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                nuspecFolder, nuProj1Csproj, isDebugVariable, true, false, out attribute);
+                nuspecFolder, nuProj1Csproj, isDebugVariable, true, false, null, out attribute);
 
             Assert.AreNotEqual(0, results.Count());
             var files = results.Where(el =>
@@ -825,9 +883,9 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                nuspecFolder, nuProj3Csproj, isDebugVariable, true, false, out attribute);
+                nuspecFolder, nuProj3Csproj, isDebugVariable, true, false, null, out attribute);
 
-            Assert.AreNotEqual(0, results.Count());
+            Assert.AreNotEqual(0, results.Count);
 
             LinqAssert.Single(results, el =>
                 el.ElementType == ElementType.LibraryFile
@@ -1042,12 +1100,94 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             foreach (var nuspecPath in nuspecPaths)
             {
-                Assert.IsTrue(File.Exists(nuspecPath));
+                Assert.IsTrue(File.Exists(nuspecPath), nuspecPath);
             }
 
             foreach (var nupkgPath in nupkgPaths)
             {
-                Assert.IsTrue(File.Exists(nupkgPath));
+                Assert.IsTrue(File.Exists(nupkgPath), nupkgPath);
+            }
+        }
+
+        [TestMethod]
+        public void TestCreatePackagesAll_WithNuPkg_OverridePreReleaseToNone()
+        {
+            var nuspecPaths = new List<string>();
+            var nupkgPaths = new List<string>();
+
+            foreach (var dll in new[] { nuProj2Dll, nuProj3Dll, proj4Dll, proj5Dll })
+            {
+                var nuspecPath = Path.ChangeExtension(dll, ".nuspec");
+
+                const string nuGetNuSpec = ".NuGet.nuspec";
+                const string nuSpec = ".nuspec";
+
+                var replaceToken = nuspecPath.Contains(nuGetNuSpec)
+                    ? nuGetNuSpec
+                    : nuSpec;
+
+                var nupkgPath = nuspecPath.Replace(replaceToken, ".1.3.2.nupkg");
+
+                File.Delete(nupkgPath);
+                File.Delete(nuspecPath);
+
+                nuspecPaths.Add(nuspecPath);
+                nupkgPaths.Add(nupkgPath);
+            }
+
+            var creator = new NuspecCreator();
+            creator.CreatePackages(testRunDir, slnPath, isDebugVariable, true, true,
+                preReleaseSuffixOverride: string.Empty);
+
+            foreach (var nuspecPath in nuspecPaths)
+            {
+                Assert.IsTrue(File.Exists(nuspecPath), nuspecPath);
+            }
+
+            foreach (var nupkgPath in nupkgPaths)
+            {
+                Assert.IsTrue(File.Exists(nupkgPath), nupkgPath);
+            }
+        }
+
+        [TestMethod]
+        public void TestCreatePackagesAll_WithNuPkg_OverridePreReleaseToAlpha101()
+        {
+            var nuspecPaths = new List<string>();
+            var nupkgPaths = new List<string>();
+
+            foreach (var dll in new[] { nuProj2Dll, nuProj3Dll, proj4Dll, proj5Dll })
+            {
+                var nuspecPath = Path.ChangeExtension(dll, ".nuspec");
+
+                const string nuGetNuSpec = ".NuGet.nuspec";
+                const string nuSpec = ".nuspec";
+
+                var replaceToken = nuspecPath.Contains(nuGetNuSpec)
+                    ? nuGetNuSpec
+                    : nuSpec;
+                
+                var nupkgPath = nuspecPath.Replace(replaceToken, ".1.3.2-Alpha101.nupkg");
+
+                File.Delete(nupkgPath);
+                File.Delete(nuspecPath);
+
+                nuspecPaths.Add(nuspecPath);
+                nupkgPaths.Add(nupkgPath);
+            }
+
+            var creator = new NuspecCreator();
+            creator.CreatePackages(testRunDir, slnPath, isDebugVariable, true, true,
+                preReleaseSuffixOverride: "Alpha101");
+
+            foreach (var nuspecPath in nuspecPaths)
+            {
+                Assert.IsTrue(File.Exists(nuspecPath), nuspecPath);
+            }
+
+            foreach (var nupkgPath in nupkgPaths)
+            {
+                Assert.IsTrue(File.Exists(nupkgPath), nupkgPath);
             }
         }
 
@@ -1256,10 +1396,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_Debug()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1267,27 +1403,23 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"C:\MyProj\MyProj\bin\Debug\MyProj.dll",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
-            Assert.AreEqual(Program.Mode.Project, mode);
-            Assert.AreEqual(null, binFolder);
-            Assert.AreEqual(null, solutionFolder);
-            Assert.AreEqual(@"C:\MyProj\MyProj.csproj", projPath);
-            Assert.AreEqual(@"C:\MyProj\MyProj\bin\Debug\MyProj.dll", dllPath);
-            Assert.AreEqual(true, isDebugOut);
-            Assert.AreEqual(true, doCreatePkg);
-            Assert.AreEqual(false, doIncludeCurrentProj);
             Assert.AreEqual(true, result);
+            Assert.AreEqual(Program.Mode.Project, cla.Mode);
+            Assert.AreEqual(null, cla.BinFolder);
+            Assert.AreEqual(null, cla.SolutionFolder);
+            Assert.AreEqual(@"C:\MyProj\MyProj.csproj", cla.ProjPath);
+            Assert.AreEqual(@"C:\MyProj\MyProj\bin\Debug\MyProj.dll", cla.DllPath);
+            Assert.AreEqual(true, cla.IsDebug);
+            Assert.AreEqual(true, cla.DoCreateNuPkg);
+            Assert.AreEqual(false, cla.DoIncludeCurrentProj);
+            Assert.IsNull(cla.PreReleaseSuffixOverride);
         }
 
         [TestMethod]
         public void TestParseArguments_Release()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1295,27 +1427,23 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"C:\MyProj\MyProj\bin\Release\MyProj.dll",
                     @"Release",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
-            Assert.AreEqual(Program.Mode.Project, mode);
-            Assert.AreEqual(null, binFolder);
-            Assert.AreEqual(null, solutionFolder);
-            Assert.AreEqual(@"C:\MyProj\MyProj.csproj", projPath);
-            Assert.AreEqual(@"C:\MyProj\MyProj\bin\Release\MyProj.dll", dllPath);
-            Assert.AreEqual(false, isDebugOut);
-            Assert.AreEqual(true, doCreatePkg);
-            Assert.AreEqual(false, doIncludeCurrentProj);
             Assert.AreEqual(true, result);
+            Assert.AreEqual(Program.Mode.Project, cla.Mode);
+            Assert.AreEqual(null, cla.BinFolder);
+            Assert.AreEqual(null, cla.SolutionFolder);
+            Assert.AreEqual(@"C:\MyProj\MyProj.csproj", cla.ProjPath);
+            Assert.AreEqual(@"C:\MyProj\MyProj\bin\Release\MyProj.dll", cla.DllPath);
+            Assert.AreEqual(false, cla.IsDebug);
+            Assert.AreEqual(true, cla.DoCreateNuPkg);
+            Assert.AreEqual(false, cla.DoIncludeCurrentProj);
+            Assert.IsNull(cla.PreReleaseSuffixOverride);
         }
 
         [TestMethod]
         public void TestParseArguments_NoPkg()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1324,27 +1452,23 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"Release",
                     @"NoPkg",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
-            Assert.AreEqual(Program.Mode.Project, mode);
-            Assert.AreEqual(null, binFolder);
-            Assert.AreEqual(null, solutionFolder);
-            Assert.AreEqual(@"C:\MyProj\MyProj.csproj", projPath);
-            Assert.AreEqual(@"C:\MyProj\MyProj\bin\Release\MyProj.dll", dllPath);
-            Assert.AreEqual(false, isDebugOut);
-            Assert.AreEqual(false, doCreatePkg);
-            Assert.AreEqual(false, doIncludeCurrentProj);
             Assert.AreEqual(true, result);
+            Assert.AreEqual(Program.Mode.Project, cla.Mode);
+            Assert.AreEqual(null, cla.BinFolder);
+            Assert.AreEqual(null, cla.SolutionFolder);
+            Assert.AreEqual(@"C:\MyProj\MyProj.csproj", cla.ProjPath);
+            Assert.AreEqual(@"C:\MyProj\MyProj\bin\Release\MyProj.dll", cla.DllPath);
+            Assert.AreEqual(false, cla.IsDebug);
+            Assert.AreEqual(false, cla.DoCreateNuPkg);
+            Assert.AreEqual(false, cla.DoIncludeCurrentProj);
+            Assert.IsNull(cla.PreReleaseSuffixOverride);
         }
 
         [TestMethod]
         public void TestParseArguments_IncludeCurrentPrj()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1353,27 +1477,23 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"Release",
                     @"includecurrentProj",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
-            Assert.AreEqual(Program.Mode.Project, mode);
-            Assert.AreEqual(null, binFolder);
-            Assert.AreEqual(null, solutionFolder);
-            Assert.AreEqual(@"C:\MyProj\MyProj.csproj", projPath);
-            Assert.AreEqual(@"C:\MyProj\MyProj\bin\Release\MyProj.dll", dllPath);
-            Assert.AreEqual(false, isDebugOut);
-            Assert.AreEqual(true, doCreatePkg);
-            Assert.AreEqual(true, doIncludeCurrentProj);
             Assert.AreEqual(true, result);
+            Assert.AreEqual(Program.Mode.Project, cla.Mode);
+            Assert.AreEqual(null, cla.BinFolder);
+            Assert.AreEqual(null, cla.SolutionFolder);
+            Assert.AreEqual(@"C:\MyProj\MyProj.csproj", cla.ProjPath);
+            Assert.AreEqual(@"C:\MyProj\MyProj\bin\Release\MyProj.dll", cla.DllPath);
+            Assert.AreEqual(false, cla.IsDebug);
+            Assert.AreEqual(true, cla.DoCreateNuPkg);
+            Assert.AreEqual(true, cla.DoIncludeCurrentProj);
+            Assert.IsNull(cla.PreReleaseSuffixOverride);
         }
 
         [TestMethod]
         public void TestParseArguments_NoPkgIncludeCurrentPrj()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1383,27 +1503,23 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"NoPkg",
                     @"Includecurrentproj",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
-            Assert.AreEqual(Program.Mode.Project, mode);
-            Assert.AreEqual(null, binFolder);
-            Assert.AreEqual(null, solutionFolder);
-            Assert.AreEqual(@"C:\MyProj\MyProj.csproj", projPath);
-            Assert.AreEqual(@"C:\MyProj\MyProj\bin\Release\MyProj.dll", dllPath);
-            Assert.AreEqual(false, isDebugOut);
-            Assert.AreEqual(false, doCreatePkg);
-            Assert.AreEqual(true, doIncludeCurrentProj);
+            Assert.AreEqual(true, result);
+            Assert.AreEqual(Program.Mode.Project, cla.Mode);
+            Assert.AreEqual(null, cla.BinFolder);
+            Assert.AreEqual(null, cla.SolutionFolder);
+            Assert.AreEqual(@"C:\MyProj\MyProj.csproj", cla.ProjPath);
+            Assert.AreEqual(@"C:\MyProj\MyProj\bin\Release\MyProj.dll", cla.DllPath);
+            Assert.AreEqual(false, cla.IsDebug);
+            Assert.AreEqual(false, cla.DoCreateNuPkg);
+            Assert.AreEqual(true, cla.DoIncludeCurrentProj);
             Assert.AreEqual(true, result);
         }
 
         [TestMethod]
         public void TestParseArguments_UnidentifiedParam()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1412,8 +1528,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"Release",
                     @"x",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1421,10 +1536,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_ExtraNoPkg()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1434,8 +1545,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"NoPkg",
                     @"NoPkg",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1443,10 +1553,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_ExtraIncludeCurrentProj()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1456,8 +1562,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"Includecurrentproj",
                     @"includeCurrentproj",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1465,10 +1570,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_ReleaseAndDebug()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1477,8 +1578,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"Release",
                     @"debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1486,10 +1586,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_ExtraDebug()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1498,8 +1594,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"debug",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1507,10 +1602,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_ExtraRelease()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1519,8 +1610,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"Release",
                     @"release",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1528,10 +1618,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_SlnMode_ProjDllInsteadOfSlnBin()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1540,8 +1626,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"C:\MyProj\MyProj\bin\Debug\MyProj.dll",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1549,10 +1634,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_ProjMode_SlnBinInsteadOfProjDll()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1561,8 +1642,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"sln=C:\MyProj\sln\",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1570,10 +1650,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_ImplicitProjMode_SlnBinInsteadOfProjDln()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1581,8 +1657,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"sln=C:\MyProj\sln\",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1590,10 +1665,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_SlnMode()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1602,27 +1673,22 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"bin=C:\MyProj\bin\",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
-            Assert.AreEqual(Program.Mode.Solution, mode);
-            Assert.AreEqual(null, projPath);
-            Assert.AreEqual(null, dllPath);
-            Assert.AreEqual(@"C:\MyProj\bin\", binFolder);
-            Assert.AreEqual(@"C:\MyProj\sln\", solutionFolder);
-            Assert.AreEqual(true, isDebugOut);
-            Assert.AreEqual(true, doCreatePkg);
-            Assert.AreEqual(false, doIncludeCurrentProj);
             Assert.AreEqual(true, result);
+            Assert.AreEqual(Program.Mode.Solution, cla.Mode);
+            Assert.AreEqual(null, cla.ProjPath);
+            Assert.AreEqual(null, cla.DllPath);
+            Assert.AreEqual(@"C:\MyProj\bin\", cla.BinFolder);
+            Assert.AreEqual(@"C:\MyProj\sln\", cla.SolutionFolder);
+            Assert.AreEqual(true, cla.IsDebug);
+            Assert.AreEqual(true, cla.DoCreateNuPkg);
+            Assert.AreEqual(false, cla.DoIncludeCurrentProj);
         }
 
         [TestMethod]
         public void TestParseArguments_SlnMode_src()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1631,27 +1697,22 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"bin=C:\MyProj\bin\",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
-            Assert.AreEqual(Program.Mode.Solution, mode);
-            Assert.AreEqual(null, projPath);
-            Assert.AreEqual(null, dllPath);
-            Assert.AreEqual(@"C:\MyProj\bin\", binFolder);
-            Assert.AreEqual(@"C:\MyProj\sln\", solutionFolder);
-            Assert.AreEqual(true, isDebugOut);
-            Assert.AreEqual(true, doCreatePkg);
-            Assert.AreEqual(false, doIncludeCurrentProj);
             Assert.AreEqual(true, result);
+            Assert.AreEqual(Program.Mode.Solution, cla.Mode);
+            Assert.AreEqual(null, cla.ProjPath);
+            Assert.AreEqual(null, cla.DllPath);
+            Assert.AreEqual(@"C:\MyProj\bin\", cla.BinFolder);
+            Assert.AreEqual(@"C:\MyProj\sln\", cla.SolutionFolder);
+            Assert.AreEqual(true, cla.IsDebug);
+            Assert.AreEqual(true, cla.DoCreateNuPkg);
+            Assert.AreEqual(false, cla.DoIncludeCurrentProj);
         }
 
         [TestMethod]
         public void TestParseArguments_SlnMode_ExtraBin()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1661,8 +1722,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"bin=C:\MyProj\bin\",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1670,10 +1730,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_SlnMode_ExtraSln()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1683,8 +1739,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"sln=C:\MyProj\sln\",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1692,10 +1747,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_SlnMode_ExtraSrc()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1705,8 +1756,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"src=C:\MyProj\sln\",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1714,10 +1764,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_SlnMode_ExtraSrc2()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1727,8 +1773,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"src=C:\MyProj\sln\",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1736,10 +1781,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_SlnMode_ExtraProj()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1749,8 +1790,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"C:\MyProj\MyProj.csproj",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1758,10 +1798,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_SlnMode_ExtraDll()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1771,8 +1807,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"C:\MyProj\MyProj\bin\Debug\MyProj.dll",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1780,10 +1815,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_MissingBin()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1791,8 +1822,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"sln=C:\MyProj\sln\",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1800,10 +1830,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_MissingSln()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1811,8 +1837,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"bin=C:\MyProj\bin\",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1820,10 +1845,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_ProjMode_ExtraBin()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1832,8 +1853,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"bin=C:\MyProj\bin\",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1841,10 +1861,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_ProjMode_ExtraSln()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1853,8 +1869,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"sln=C:\MyProj\sln\",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1862,10 +1877,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_ProjMode_ExtraSrc()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
@@ -1874,8 +1885,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                     @"src=C:\MyProj\sln\",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1883,18 +1893,13 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_MissingProj()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
                     @"C:\MyProj\MyProj\bin\Debug\MyProj.dll",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
         }
@@ -1902,20 +1907,93 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseArguments_MissingDll()
         {
-            Program.Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebugOut, doCreatePkg, doIncludeCurrentProj;
-
             var result = Program.TryParseArguments(
                 new[]
                 {
                     @"C:\MyProj\MyProj.csproj",
                     @"Debug",
                 },
-                out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebugOut, out doCreatePkg, out doIncludeCurrentProj);
+                out Program.CommandLineArguments cla);
 
             Assert.AreEqual(false, result);
+        }
+
+        [TestMethod]
+        public void TestParseArguments_PreReleaseOverride1()
+        {
+            var result = Program.TryParseArguments(
+                new[]
+                {
+                    @"Solution",
+                    @"sln=C:\MyProj\sln\",
+                    @"bin=C:\MyProj\bin\",
+                    @"Debug",
+                    @"pre=beta",
+                },
+                out Program.CommandLineArguments cla);
+
+            Assert.AreEqual(true, result);
+            Assert.AreEqual(Program.Mode.Solution, cla.Mode);
+            Assert.AreEqual(null, cla.ProjPath);
+            Assert.AreEqual(null, cla.DllPath);
+            Assert.AreEqual(@"C:\MyProj\bin\", cla.BinFolder);
+            Assert.AreEqual(@"C:\MyProj\sln\", cla.SolutionFolder);
+            Assert.AreEqual(true, cla.IsDebug);
+            Assert.AreEqual(true, cla.DoCreateNuPkg);
+            Assert.AreEqual(false, cla.DoIncludeCurrentProj);
+            Assert.AreEqual("beta", cla.PreReleaseSuffixOverride);
+        }
+
+        [TestMethod]
+        public void TestParseArguments_PreReleaseOverride2()
+        {
+            var result = Program.TryParseArguments(
+                new[]
+                {
+                    @"Solution",
+                    @"sln=C:\MyProj\sln\",
+                    @"bin=C:\MyProj\bin\",
+                    @"Debug",
+                    @"preReleaseSuffixOverride=beta",
+                },
+                out Program.CommandLineArguments cla);
+
+            Assert.AreEqual(true, result);
+            Assert.AreEqual(Program.Mode.Solution, cla.Mode);
+            Assert.AreEqual(null, cla.ProjPath);
+            Assert.AreEqual(null, cla.DllPath);
+            Assert.AreEqual(@"C:\MyProj\bin\", cla.BinFolder);
+            Assert.AreEqual(@"C:\MyProj\sln\", cla.SolutionFolder);
+            Assert.AreEqual(true, cla.IsDebug);
+            Assert.AreEqual(true, cla.DoCreateNuPkg);
+            Assert.AreEqual(false, cla.DoIncludeCurrentProj);
+            Assert.AreEqual("beta", cla.PreReleaseSuffixOverride);
+        }
+
+        [TestMethod]
+        public void TestParseArguments_PreReleaseOverride3()
+        {
+            var result = Program.TryParseArguments(
+                new[]
+                {
+                    @"Solution",
+                    @"sln=C:\MyProj\sln\",
+                    @"bin=C:\MyProj\bin\",
+                    @"Debug",
+                    @"pre=-beta",
+                },
+                out Program.CommandLineArguments cla);
+
+            Assert.AreEqual(true, result);
+            Assert.AreEqual(Program.Mode.Solution, cla.Mode);
+            Assert.AreEqual(null, cla.ProjPath);
+            Assert.AreEqual(null, cla.DllPath);
+            Assert.AreEqual(@"C:\MyProj\bin\", cla.BinFolder);
+            Assert.AreEqual(@"C:\MyProj\sln\", cla.SolutionFolder);
+            Assert.AreEqual(true, cla.IsDebug);
+            Assert.AreEqual(true, cla.DoCreateNuPkg);
+            Assert.AreEqual(false, cla.DoIncludeCurrentProj);
+            Assert.AreEqual("beta", cla.PreReleaseSuffixOverride);
         }
 
         #endregion

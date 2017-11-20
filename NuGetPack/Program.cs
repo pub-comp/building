@@ -10,14 +10,9 @@ namespace PubComp.Building.NuGetPack
     {
         public static void Main(string[] args)
         {
-            Mode mode;
-            string projPath, dllPath, binFolder, solutionFolder;
-            bool isDebug, doCreatePkg, doIncludeCurrentProj;
+            CommandLineArguments cla;
 
-
-            if (!TryParseArguments(
-                args, out mode, out projPath, out dllPath, out binFolder, out solutionFolder,
-                out isDebug, out doCreatePkg, out doIncludeCurrentProj))
+            if (!TryParseArguments(args, out cla))
             {
                 WriteError();
                 return;
@@ -25,33 +20,48 @@ namespace PubComp.Building.NuGetPack
 
             var creator = new NuspecCreator();
 
-            if (mode != Mode.Solution)
+            if (cla.Mode != Mode.Solution)
             {
-                creator.CreatePackage(projPath, dllPath, isDebug, doCreatePkg, doIncludeCurrentProj);
+                creator.CreatePackage(
+                    cla.ProjPath, cla.DllPath, cla.IsDebug, cla.DoCreateNuPkg, cla.DoIncludeCurrentProj, cla.PreReleaseSuffixOverride);
             }
             else
             {
-                creator.CreatePackages(binFolder, solutionFolder, isDebug, doCreatePkg, doIncludeCurrentProj);
+                creator.CreatePackages(
+                    cla.BinFolder, cla.SolutionFolder, cla.IsDebug, cla.DoCreateNuPkg, cla.DoIncludeCurrentProj, cla.PreReleaseSuffixOverride);
             }
         }
 
         public enum Mode { Solution, Project };
 
+        public class CommandLineArguments
+        {
+            public Mode Mode { get; set; }
+            public string ProjPath { get; set; }
+            public string DllPath { get; set; }
+            public string BinFolder { get; set; }
+            public string SolutionFolder { get; set; }
+            public bool IsDebug { get; set; }
+            public bool DoCreateNuPkg { get; set; }
+            public bool DoIncludeCurrentProj { get; set; }
+            public string PreReleaseSuffixOverride { get; set; }
+        }
+
         public static bool TryParseArguments(
             string[] args,
-            out Mode mode,
-            out string projPath, out string dllPath, out string binFolder, out string solutionFolder,
-            out bool isDebug, out bool doCreateNuPkg, out bool doIncludeCurrentProj)
+            out CommandLineArguments commandLineArguments)
         {
-            mode = Mode.Project;
+            Mode mode = Mode.Project;
             Mode? modeVar = null;
-            projPath = null;
-            dllPath = null;
-            isDebug = false;
-            doCreateNuPkg = true;
-            doIncludeCurrentProj = false;
-            binFolder = null;
-            solutionFolder = null;
+            string projPath = null;
+            string dllPath = null;
+            bool isDebug = false;
+            bool doCreateNuPkg = true;
+            bool doIncludeCurrentProj = false;
+            string binFolder = null;
+            string solutionFolder = null;
+            string preReleaseSuffixOverride = null;
+            commandLineArguments = null;
 
             string config = null;
 
@@ -120,6 +130,16 @@ namespace PubComp.Building.NuGetPack
 
                     doIncludeCurrentProj = true;
                 }
+                else if (arg.ToLower().StartsWith("pre=") || arg.ToLower().StartsWith("prereleasesuffixoverride="))
+                {
+                    if (preReleaseSuffixOverride != null)
+                        return false;
+
+                    preReleaseSuffixOverride = arg.Substring(arg.IndexOf('=') + 1);
+
+                    if (preReleaseSuffixOverride.StartsWith("-"))
+                        preReleaseSuffixOverride = preReleaseSuffixOverride.Substring(1);
+                }
                 else
                 {
                     return false;
@@ -146,18 +166,36 @@ namespace PubComp.Building.NuGetPack
             mode = modeVar ?? Mode.Project;
             isDebug = (config ?? string.Empty).ToLower() == "debug";
 
+            commandLineArguments = new CommandLineArguments
+            {
+                Mode = mode,
+                ProjPath = projPath,
+                DllPath = dllPath,
+                BinFolder = binFolder,
+                SolutionFolder = solutionFolder,
+                IsDebug = isDebug,
+                DoCreateNuPkg = doCreateNuPkg,
+                DoIncludeCurrentProj = doIncludeCurrentProj,
+                PreReleaseSuffixOverride = preReleaseSuffixOverride,
+            };
+
             return true;
         }
 
         private static void WriteError()
         {
-            Console.WriteLine(@"Correct usage: NuGetPack.exe [project] <pathToCsProj> <pathToDll> [<Debug|Release>] [nopkg]");
-            Console.WriteLine(@"Via post build event: NuGetPack.exe [project] ""$(ProjectPath)"" ""$(TargetPath)"" $(ConfigurationName)");
-            Console.WriteLine(@"or: NuGetPack.exe [project] ""$(ProjectPath)"" ""$(TargetPath)"" $(ConfigurationName) nopkg");
+            Console.WriteLine(
+                @"Correct usage: NuGetPack.exe [project] <pathToCsProj> <pathToDll> [<Debug|Release>] [nopkg] [pre=|preReleaseSuffixOverride=<suffixForPreRelease>]");
+            Console.WriteLine(
+                @"Via post build event: NuGetPack.exe [project] ""$(ProjectPath)"" ""$(TargetPath)"" $(ConfigurationName)");
+            Console.WriteLine(
+                @"or: NuGetPack.exe [project] ""$(ProjectPath)"" ""$(TargetPath)"" $(ConfigurationName) nopkg");
             Console.WriteLine();
-            Console.WriteLine(@"or for solution level:");
+            Console.WriteLine(
+                @"or for solution level:");
             Console.WriteLine();
-            Console.WriteLine(@"Correct usage: NuGetPack.exe solution bin=<binFolder> src=<solutionFolder> [<Debug|Release>] [nopkg]");
+            Console.WriteLine(
+                @"Correct usage: NuGetPack.exe solution bin=<binFolder> src=<solutionFolder> [<Debug|Release>] [nopkg]");
         }
     }
 }
