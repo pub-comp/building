@@ -13,7 +13,7 @@
         <Tags>NuGet, Build, NuGetPack, Packaging, Packages. Creation, CDCI, Publish, Publishing, Versioning, Versions, Version, NuGetPack.exe, PubComp, Public Components, DannyVarod, Danny Varod, PubComp.NuGetPack.</Tags>
     </Metadata>
     <Installation>
-        <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[12.0,14.0]" />
+        <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[12.0,15.0]" />
     </Installation>
     <Dependencies>
         <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,6.0)" />
