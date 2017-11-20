@@ -1,11 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{47B3A300-8E8D-44FD-8391-657BD15F3E49}"
 	ProjectSection(SolutionItems) = preProject
-		.tfignore = .tfignore
 		Data.txt = Data.txt
 		Demo.Readme.txt = Demo.Readme.txt
 		DemoVersionInfo.cs = DemoVersionInfo.cs
@@ -13,7 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		logo32.png = logo32.png
 		logo64.png = logo64.png
 		logofull.png = logofull.png
-		Text.txt = Text.txtl
+		Text.txt = Text.txt
 		VersionHistory.txt = VersionHistory.txt
 		VersionInfo.cs = VersionInfo.cs
 	EndProjectSection
@@ -156,5 +155,8 @@ Global
 		{4EDE89E8-EA4F-4EBA-BE2B-B5E5931AA151} = {BC14FA63-AF80-4CD1-B479-8F8AE421DCEC}
 		{0C516879-E252-42BC-8832-A23AB5C0A58A} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 		{B1BE2E30-638D-4A08-9CC8-E065425E36C3} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6A14DA10-5CA8-46FE-B6B6-8305B512B2F8}
 	EndGlobalSection
 EndGlobal
