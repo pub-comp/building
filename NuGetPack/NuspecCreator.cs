@@ -554,8 +554,8 @@ namespace PubComp.Building.NuGetPack
 
             DebugOut(() => "ProjectFolder = " + projectFolder);
 
-            var packagesFile = Path.Combine(projectPath, "packages.config");
-            var internalPackagesFile = Path.Combine(projectPath, "internalPackages.config");
+            var packagesFile = Path.Combine(projectFolder, "packages.config");
+            var internalPackagesFile = Path.Combine(projectFolder, "internalPackages.config");
 
             var result = new List<DependencyInfo>();
 
