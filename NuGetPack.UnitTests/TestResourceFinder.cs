@@ -116,7 +116,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         {
             var current = Path.GetDirectoryName(testContext.DeploymentDirectory);
 
-            while (!current.EndsWith(@"\" + rootDirName))
+            while (!current.EndsWith(@"\" + rootDirName, StringComparison.InvariantCultureIgnoreCase))
             {
                 current = Path.GetFullPath(current + @"\..");
 
