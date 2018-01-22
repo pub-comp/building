@@ -181,18 +181,26 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetDependencies_InternalPackages()
         {
-            var packagesFile = Path.GetDirectoryName(nuProj2Csproj) + @"\internalPackages.config";
+            var nuspecFolder = Path.GetDirectoryName(nuProj2Dll);
 
             var creator = new NuspecCreator();
-            var results = creator.GetDependencies(packagesFile);
 
-            LinqAssert.Count(results, 1);
-            var elements = results.Select(el => el.Element).ToList();
+            XAttribute attribute;
+            var elements = creator.GetElements(
+                nuspecFolder, nuProj2Csproj, isDebugVariable, true, false, null, out attribute);
 
-            LinqAssert.Any(elements, obj =>
-                obj is XElement && ((XElement)obj).Name == "dependency"
-                && ((XElement)obj).Attribute("id").Value == "PubComp.Building.Demo.Package1"
-                && ((XElement)obj).Attribute("version").Value == "1.4.1");
+            var dependencies = elements.Where(r => r.ElementType == ElementType.NuGetDependency)
+                .Select(r => r.Element).ToList();
+
+            LinqAssert.Count(dependencies, 2);
+
+            LinqAssert.Count(dependencies.Where(r =>
+                r.Attribute("id").Value == "FakeItEasy"
+                && r.Attribute("version").Value == "1.24.0"), 1);
+
+            LinqAssert.Count(dependencies.Where(r =>
+                r.Attribute("id").Value == "PubComp.Building.Demo.Package1"
+                && r.Attribute("version").Value == "1.4.1"), 1);
         }
 
         [TestMethod]
