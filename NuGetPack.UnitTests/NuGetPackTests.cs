@@ -179,6 +179,31 @@ namespace PubComp.Building.NuGetPack.UnitTests
         }
 
         [TestMethod]
+        public void TestGetDependencies_InternalPackages()
+        {
+            var nuspecFolder = Path.GetDirectoryName(nuProj2Dll);
+
+            var creator = new NuspecCreator();
+
+            XAttribute attribute;
+            var elements = creator.GetElements(
+                nuspecFolder, nuProj2Csproj, isDebugVariable, true, false, null, out attribute);
+
+            var dependencies = elements.Where(r => r.ElementType == ElementType.NuGetDependency)
+                .Select(r => r.Element).ToList();
+
+            LinqAssert.Count(dependencies, 2);
+
+            LinqAssert.Count(dependencies.Where(r =>
+                r.Attribute("id").Value == "FakeItEasy"
+                && r.Attribute("version").Value == "1.24.0"), 1);
+
+            LinqAssert.Count(dependencies.Where(r =>
+                r.Attribute("id").Value == "PubComp.Building.Demo.Package1"
+                && r.Attribute("version").Value == "1.4.1"), 1);
+        }
+
+        [TestMethod]
         public void TestGetDependenciesViaReferenceInner1()
         {
             var project = proj1Csproj;
