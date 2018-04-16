@@ -11,6 +11,7 @@ namespace PubComp.Building.NuGetPack
     // ReSharper disable once PartialTypeWithSinglePart
     public partial class NuspecCreator
     {
+        private string PackageVersion {get; set;}
         public void CreatePackages(
             string binFolder, string solutionFolder, bool isDebug,
             bool doCreatePkg = true, bool doIncludeCurrentProj = false,
@@ -211,6 +212,7 @@ namespace PubComp.Building.NuGetPack
 
             var fileVersion = FileVersionInfo.GetVersionInfo(assemblyPath);
             var version = GetVersion(fileVersion, preReleaseSuffixOverride);
+            PackageVersion = version;
 
             var owners = fileVersion.CompanyName;
 
@@ -397,8 +399,13 @@ namespace PubComp.Building.NuGetPack
                     .Select(el => el.Element)
                     .ToList();
 
+                frameworkReferences.AddRange(
+                    elements.Where(el => el.ElementType == ElementType.FrameworkReference)
+                    .Distinct(new DependencyInfoComparer())
+                    .Select(el => el.Element).ToList());
+    
                 metadataElement.Add(new XElement("frameworkAssemblies",
-                    frameworkReferences));
+                    frameworkReferences.Distinct(new XElementComparer())));
             }
 
             var doc = new XDocument(
@@ -440,12 +447,19 @@ namespace PubComp.Building.NuGetPack
             foreach (var package in packages)
             {
                 // ReSharper disable PossibleNullReferenceException
+                string version = PackageVersion;
+                if (package.Attribute("version") != null )
+                {
+                    version = package.Attribute("version").Value;
+                }
+
                 result.Add(
                     new DependencyInfo(
                         ElementType.NuGetDependency,
                         new XElement("dependency",
                         new XAttribute("id", package.Attribute("id").Value),
-                        new XAttribute("version", package.Attribute("version").Value))));
+                        new XAttribute("version", version)))
+                        );
                 // ReSharper enable PossibleNullReferenceException
             }
 
@@ -554,8 +568,8 @@ namespace PubComp.Building.NuGetPack
 
             DebugOut(() => "ProjectFolder = " + projectFolder);
 
-            var packagesFile = Path.Combine(projectPath, "packages.config");
-            var internalPackagesFile = Path.Combine(projectPath, "internalPackages.config");
+            var packagesFile = Path.Combine(projectFolder, "packages.config");
+            var internalPackagesFile = Path.Combine(projectFolder, "internalPackages.config");
 
             var result = new List<DependencyInfo>();
 
@@ -607,6 +621,8 @@ namespace PubComp.Building.NuGetPack
                 DebugOut(() => "projPath = " + refProjPath);
 
                 result.AddRange(GetBinaryReferences(nuspecFolder, refProjFolder, refProjPath, isDebug, nuspecFolder));
+
+                result.AddRange(GetFrameworkReferences(refProjFolder, refProjPath));
                 
                 if (doIncludeSources)
                     result.AddRange(GetSourceFiles(nuspecFolder, refProjFolder, refProjPath));
