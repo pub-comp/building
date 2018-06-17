@@ -11,6 +11,8 @@ namespace PubComp.Building.NuGetPack.UnitTests
     [TestClass]
     public class NuGetPackTests
     {
+        #region Private Fields
+
         private static bool isLocal;
 
         private static string testRunDir;
@@ -26,6 +28,10 @@ namespace PubComp.Building.NuGetPack.UnitTests
         private static string proj4Dll;
         private static string proj5Csproj;
         private static string proj5Dll;
+        private static string projNetStandardCsproj;
+        private static string projNetStandardDll;
+        private static string projNetStandard2Csproj;
+        private static string projNetStandard2Dll;
         // ReSharper restore NotAccessedField.Local
 
         private static string nuProj1Csproj;
@@ -37,6 +43,8 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
         private static bool isDebugVariable;
         private static string slnPath;
+
+        #endregion
 
 #if DEBUG
         private const bool IsDebug = true;
@@ -83,6 +91,18 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
             proj5Csproj = testSrcDir + @"\Demo.Library5.csproj";
             proj5Dll = testBinDir + @"\PubComp.Building.Demo.Library5.dll";
+
+            TestResourceFinder.FindResources(testContext, "Building",
+                @"Demo.LibraryNetStandard",
+                true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
+            projNetStandardCsproj = testSrcDir + @"\Demo.LibraryNetStandard.csproj";
+            projNetStandardDll = testBinDir + @"\PubComp.Building.Demo.LibraryNetStandard.dll";
+
+            TestResourceFinder.FindResources(testContext, "Building",
+                @"Demo.LibraryNetStandard2",
+                true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
+            projNetStandard2Csproj = testSrcDir + @"\Demo.LibraryNetStandard2.csproj";
+            projNetStandard2Dll = testBinDir + @"\PubComp.Building.Demo.LibraryNetStandard2.dll";
             
             TestResourceFinder.FindResources(testContext, "Building",
                 @"Demo.Package1.NuGet",
@@ -142,6 +162,40 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 obj is XElement && ((XElement)obj).Name == "dependency"
                     && ((XElement)obj).Attribute("id").Value == "FakeItEasy"
                     && ((XElement)obj).Attribute("version").Value == "1.24.0");
+        }
+
+        [TestMethod]
+        public void TestGetDependenciesOuterNetStandard()
+        {
+            var creator = new NuspecCreator();
+
+            var results = creator.GetDependenciesNetStandard(projNetStandardCsproj, out var dependenciesAttribute);
+
+            LinqAssert.Count(results, 1);
+            var elements = results.Select(el => el.Element).ToList();
+
+            Assert.IsNotNull(dependenciesAttribute);
+            Assert.AreEqual("targetFramework", dependenciesAttribute.Name);
+            Assert.AreEqual("netstandard20", dependenciesAttribute.Value);
+
+            var dependency = elements.Single();
+            Assert.AreEqual("dependency", dependency.Name);
+            Assert.AreEqual("Newtonsoft.Json", dependency.Attribute("id")?.Value);
+            Assert.AreEqual("11.0.2", dependency.Attribute("version")?.Value);
+        }
+
+        [TestMethod]
+        public void TestGetDependenciesNoneNetStandard()
+        {
+            var creator = new NuspecCreator();
+
+            var results = creator.GetDependenciesNetStandard(projNetStandard2Csproj, out var dependenciesAttribute);
+
+            LinqAssert.Count(results, 0);
+
+            Assert.IsNotNull(dependenciesAttribute);
+            Assert.AreEqual("targetFramework", dependenciesAttribute.Name);
+            Assert.AreEqual("netstandard20", dependenciesAttribute.Value);
         }
 
         [TestMethod]
@@ -273,6 +327,26 @@ namespace PubComp.Building.NuGetPack.UnitTests
         }
 
         [TestMethod]
+        public void TestGetInternalDependenciesNetStandard1()
+        {
+            var creator = new NuspecCreator();
+
+            var results = creator.GetInternalDependencies(
+                projNetStandardCsproj, isDebugVariable, Path.GetDirectoryName(projNetStandardDll), null, true);
+
+            var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
+                .Select(r => r.Element).ToList();
+
+            LinqAssert.Count(dependencies, 1);
+
+            var expectedVersion = "1.3.2";
+            var dependency = dependencies.Single();
+
+            Assert.AreEqual("PubComp.Building.Demo.LibraryNetStandard2", dependency.Attribute("id")?.Value);
+            Assert.AreEqual(expectedVersion, dependency.Attribute("version")?.Value);
+        }
+
+        [TestMethod]
         public void TestGetInternalDependencies1_OverridePreReleaseEmpty()
         {
             var creator = new NuspecCreator();
@@ -338,6 +412,35 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 el.Name == "file"
                 && el.Attribute("src").Value == @"..\..\content\SubContent\Other.txt"
                     && el.Attribute("target").Value == @"content\SubContent\Other.txt",
+                "Found: " + results.First());
+        }
+
+        [TestMethod]
+        public void TestGetContentFilesNetStandard()
+        {
+            var creator = new NuspecCreator();
+            var results = creator.GetContentFiles(
+                Path.GetDirectoryName(projNetStandard2Dll), @"..\..", projNetStandard2Csproj, isProjNetStandard: true);
+
+            LinqAssert.Count(results, 3);
+            var elements = results.Select(el => el.Element).ToList();
+
+            LinqAssert.Any(elements, el =>
+                el.Name == "file"
+                && el.Attribute("src")?.Value == @"..\..\..\Data.txt"
+                    && el.Attribute("target")?.Value == @"content\Data.txt",
+                "Found: " + results.First());
+
+            LinqAssert.Any(elements, el =>
+                el.Name == "file"
+                && el.Attribute("src")?.Value == @"..\..\content\Info.txt"
+                    && el.Attribute("target")?.Value == @"content\Info.txt",
+                "Found: " + results.First());
+
+            LinqAssert.Any(elements, el =>
+                el.Name == "file"
+                && el.Attribute("src")?.Value == @"..\..\content\SubContent\Other.txt"
+                    && el.Attribute("target")?.Value == @"content\SubContent\Other.txt",
                 "Found: " + results.First());
         }
 
