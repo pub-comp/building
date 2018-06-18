@@ -18,7 +18,7 @@ namespace PubComp.Building.NuGetPack
                 return;
             }
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
 
             if (cla.Mode != Mode.Solution)
             {

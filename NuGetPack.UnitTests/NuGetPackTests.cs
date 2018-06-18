@@ -98,11 +98,14 @@ namespace PubComp.Building.NuGetPack.UnitTests
             projNetStandardCsproj = testSrcDir + @"\Demo.LibraryNetStandard.csproj";
             projNetStandardDll = testBinDir + @"\PubComp.Building.Demo.LibraryNetStandard.dll";
 
+
+            var creator = new NuspecCreatorNetStandard();
             TestResourceFinder.FindResources(testContext, "Building",
                 @"Demo.LibraryNetStandard2",
                 true, out rootPath, out testSrcDir, out testBinDir, out testRunDir, out isLocal);
             projNetStandard2Csproj = testSrcDir + @"\Demo.LibraryNetStandard2.csproj";
-            projNetStandard2Dll = testBinDir + @"\PubComp.Building.Demo.LibraryNetStandard2.dll";
+            var targetFramework = creator.GetFrameworkOutputFolder(projNetStandard2Csproj,IsDebug);
+            projNetStandard2Dll = $@"{testBinDir}\{targetFramework}\{"PubComp.Building.Demo.LibraryNetStandard2.dll"}";
             
             TestResourceFinder.FindResources(testContext, "Building",
                 @"Demo.Package1.NuGet",
@@ -144,12 +147,13 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetDependenciesOuter()
         {
-            var packagesFile = Path.GetDirectoryName(nuProj2Csproj) + @"\packages.config";
+            //var packagesFile = Path.GetDirectoryName(nuProj2Csproj) + @"\packages.config";
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
 
             XAttribute dependenciesAttribute;
-            var results = creator.GetDependencies(nuProj2Csproj, new[] { packagesFile }, out dependenciesAttribute);
+            //var results = creator.GetDependencies(nuProj2Csproj, new[] { packagesFile },false, out dependenciesAttribute);
+            var results = creator.GetDependencies(nuProj2Csproj, out dependenciesAttribute);
 
             LinqAssert.Count(results, 1);
             var elements = results.Select(el => el.Element).ToList();
@@ -167,9 +171,9 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetDependenciesOuterNetStandard()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetStandard();
 
-            var results = creator.GetDependenciesNetStandard(projNetStandardCsproj, out var dependenciesAttribute);
+            var results = creator.GetDependencies(projNetStandardCsproj, out var dependenciesAttribute);
 
             LinqAssert.Count(results, 1);
             var elements = results.Select(el => el.Element).ToList();
@@ -187,9 +191,9 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetDependenciesNoneNetStandard()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
 
-            var results = creator.GetDependenciesNetStandard(projNetStandard2Csproj, out var dependenciesAttribute);
+            var results = creator.GetDependencies(projNetStandard2Csproj, out var dependenciesAttribute);
 
             LinqAssert.Count(results, 0);
 
@@ -201,12 +205,12 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetDependenciesOuter3()
         {
-            var packagesFile = Path.GetDirectoryName(nuProj3Csproj) + @"\packages.config";
+            //var packagesFile = Path.GetDirectoryName(nuProj3Csproj) + @"\packages.config";
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
 
             XAttribute dependenciesAttribute;
-            var results = creator.GetDependencies(nuProj3Csproj, new[] { packagesFile }, out dependenciesAttribute);
+            var results = creator.GetDependencies(nuProj3Csproj, out dependenciesAttribute);
 
             LinqAssert.Count(results, 0);
 
@@ -220,7 +224,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         {
             var packagesFile = Path.GetDirectoryName(nuProj2Csproj) + @"\packages.config";
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var results = creator.GetDependencies(packagesFile);
 
             LinqAssert.Count(results, 1);
@@ -238,7 +242,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var project = proj1Csproj;
             var folder = Path.GetDirectoryName(project);
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var results = creator.GetDependenciesFromProject(folder, project);
 
             var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
@@ -256,7 +260,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var project = proj3Csproj;
             var folder = Path.GetDirectoryName(project);
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var results = creator.GetDependenciesFromProject(folder, project);
 
             var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
@@ -270,7 +274,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         {
             var nuspecFolder = Path.GetDirectoryName(nuProj1Dll);
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
 
             XAttribute attribute;
             var results = creator.GetElements(
@@ -294,7 +298,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         {
             var nuspecFolder = Path.GetDirectoryName(nuProj2Dll);
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
 
             XAttribute attribute;
             var results = creator.GetElements(
@@ -309,7 +313,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetInternalDependencies1()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
 
             var results = creator.GetInternalDependencies(
                 proj5Csproj, isDebugVariable, Path.GetDirectoryName(proj5Dll), null);
@@ -329,7 +333,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetInternalDependenciesNetStandard1()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
 
             var results = creator.GetInternalDependencies(
                 projNetStandardCsproj, isDebugVariable, Path.GetDirectoryName(projNetStandardDll), null, true);
@@ -349,7 +353,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetInternalDependencies1_OverridePreReleaseEmpty()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
 
             var results = creator.GetInternalDependencies(
                 proj5Csproj, isDebugVariable, Path.GetDirectoryName(proj5Dll), String.Empty);
@@ -367,7 +371,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetInternalDependencies1_OverridePreReleaseAlpha102()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
 
             var results = creator.GetInternalDependencies(
                 proj5Csproj, isDebugVariable, Path.GetDirectoryName(proj5Dll), "alpha102");
@@ -389,7 +393,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetContentFiles1()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var results = creator.GetContentFiles(
                 Path.GetDirectoryName(nuProj1Dll), @"..\..", nuProj1Csproj);
 
@@ -418,7 +422,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetContentFilesNetStandard()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var results = creator.GetContentFiles(
                 Path.GetDirectoryName(projNetStandard2Dll), @"..\..", projNetStandard2Csproj, isProjNetStandard: true);
 
@@ -447,7 +451,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetContentFiles2()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var results = creator.GetContentFiles(
                 Path.GetDirectoryName(nuProj2Dll), @"..\..", nuProj2Csproj);
 
@@ -457,7 +461,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetSlnFiles()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var results = creator.GetContentFiles(
                 Path.GetDirectoryName(nuProj1Dll), @"..\..", nuProj1Csproj,
                 srcFolder: @"sln\", destFolder: @"sln\", flattern: false, elementType: ElementType.SolutionItemsFile);
@@ -475,7 +479,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetBinaryFiles1()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var results = creator.GetBinaryFiles(
                 Path.GetDirectoryName(nuProj1Dll), @"..\..", nuProj1Csproj);
 
@@ -500,7 +504,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetBinaryFiles2()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var results = creator.GetBinaryFiles(
                 Path.GetDirectoryName(nuProj2Dll), @"..\..", nuProj2Csproj);
 
@@ -512,7 +516,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetPackage1Files()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var path = isLocal ? @"..\..\..\" : @"..\..\";
 
             var binSuffix = @"bin\";
@@ -579,7 +583,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetPackage2Files()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var path = isLocal ? @"..\..\..\" : @"..\..\";
 
             var binSuffix = @"bin\";
@@ -612,7 +616,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetPackage2Files_NoSource()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var path = isLocal ? @"..\..\..\" : @"..\..\";
 
             var binSuffix = @"bin\";
@@ -640,7 +644,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetPackage3Files()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var path = isLocal ? @"..\..\..\" : @"..\..\";
 
             var binSuffix = @"bin\";
@@ -691,7 +695,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetLibrary4Files()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var path = isLocal ? @"..\..\..\" : @"..\..\";
 
             var binSuffix = @"bin\";
@@ -751,7 +755,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetLibrary5Files()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var path = isLocal ? @"..\..\..\" : @"..\..\";
 
             var binSuffix = @"bin\";
@@ -874,7 +878,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetBinaryReferences()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var results = creator.GetBinaryReferences(
                 Path.GetDirectoryName(nuProj1Dll), @"..\..\..\Demo.Library3", proj3Csproj, isDebugVariable, Path.GetDirectoryName(proj3Dll));
 
@@ -907,7 +911,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetSourceFiles()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var results = creator.GetSourceFiles(
                 Path.GetDirectoryName(nuProj1Dll), @"..\..\..\Demo.Library3", proj3Csproj);
 
@@ -933,7 +937,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var nuspecFolder = Path.GetDirectoryName(nuProj1Dll);
             var projFolder = Path.GetDirectoryName(nuProj1Csproj);
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var results = creator.GetReferences(nuProj1Csproj);
 
             LinqAssert.Count(results, 2);
@@ -946,7 +950,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         {
             var projFolder = Path.GetDirectoryName(nuProj2Csproj);
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var results = creator.GetFrameworkReferences(projFolder, nuProj2Csproj);
 
             LinqAssert.Count(results, 1);
@@ -961,7 +965,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         {
             var nuspecFolder = Path.GetDirectoryName(nuProj1Dll);
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
 
             XAttribute attribute;
             var results = creator.GetElements(
@@ -982,7 +986,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         {
             var nuspecFolder = Path.GetDirectoryName(nuProj3Dll);
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
 
             XAttribute attribute;
             var results = creator.GetElements(
@@ -1049,9 +1053,17 @@ namespace PubComp.Building.NuGetPack.UnitTests
         #region Create Ouput Tests
 
         [TestMethod]
+        public void TestCreateNuspecNetStandard2()
+        {
+            var creator = new NuspecCreatorNetFramework();
+            var nuspec = creator.CreateNuspec(projNetStandard2Csproj, projNetStandard2Dll, isDebugVariable);
+            Assert.IsNotNull(nuspec);
+        }
+
+        [TestMethod]
         public void TestCreateNuspec1()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebugVariable);
             Assert.IsNotNull(nuspec);
         }
@@ -1065,7 +1077,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             File.Delete(nupkgPath);
             File.Delete(nuspecPath);
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             creator.CreatePackage(nuProj1Csproj, nuProj1Dll, isDebugVariable);
 
             Assert.IsTrue(File.Exists(nuspecPath));
@@ -1081,7 +1093,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             File.Delete(nupkgPath);
             File.Delete(nuspecPath);
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             creator.CreatePackage(nuProj1Csproj, nuProj1Dll, isDebugVariable, false);
 
             Assert.IsTrue(File.Exists(nuspecPath));
@@ -1097,7 +1109,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             File.Delete(nupkgPath);
             File.Delete(nuspecPath);
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             creator.CreatePackage(nuProj2Csproj, nuProj2Dll, isDebugVariable);
 
             Assert.IsTrue(File.Exists(nuspecPath));
@@ -1115,7 +1127,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             File.Delete(nuspecPath);
             File.Delete(nupkgSymPath);
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             creator.CreatePackage(nuProj3Csproj, nuProj3Dll, isDebugVariable);
 
             Assert.IsTrue(File.Exists(nuspecPath));
@@ -1154,7 +1166,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 nupkgPaths.Add(nupkgPath);
             }
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             creator.CreatePackages(testRunDir, slnPath, isDebugVariable, false, true);
 
             foreach (var nuspecPath in nuspecPaths)
@@ -1198,7 +1210,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 nupkgPaths.Add(nupkgPath);
             }
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             creator.CreatePackages(testRunDir, slnPath, isDebugVariable, true, true);
 
             foreach (var nuspecPath in nuspecPaths)
@@ -1238,7 +1250,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 nupkgPaths.Add(nupkgPath);
             }
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             creator.CreatePackages(testRunDir, slnPath, isDebugVariable, true, true,
                 preReleaseSuffixOverride: string.Empty);
 
@@ -1279,7 +1291,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 nupkgPaths.Add(nupkgPath);
             }
 
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             creator.CreatePackages(testRunDir, slnPath, isDebugVariable, true, true,
                 preReleaseSuffixOverride: "Alpha101");
 
@@ -1303,7 +1315,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseVersion()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebugVariable);
             
             Assert.IsNotNull(nuspec);
@@ -1320,7 +1332,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseName()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebugVariable);
 
             Assert.IsNotNull(nuspec);
@@ -1333,7 +1345,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseDescriptionFromAssembly()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebugVariable);
 
             Assert.IsNotNull(nuspec);
@@ -1346,7 +1358,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseKeywordsFromAssembly()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebugVariable);
 
             Assert.IsNotNull(nuspec);
@@ -1359,7 +1371,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseProjectUrlFromAssembly()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj1Csproj, nuProj1Dll, isDebugVariable);
 
             Assert.IsNotNull(nuspec);
@@ -1376,7 +1388,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseDescriptionFromConfig()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebugVariable);
 
             Assert.IsNotNull(nuspec);
@@ -1389,7 +1401,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseSummaryFromConfig()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebugVariable);
 
             Assert.IsNotNull(nuspec);
@@ -1402,7 +1414,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseKeywordsFromConfig()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebugVariable);
 
             Assert.IsNotNull(nuspec);
@@ -1415,7 +1427,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseIconUrlFromConfig()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebugVariable);
 
             Assert.IsNotNull(nuspec);
@@ -1428,7 +1440,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseProjectUrlFromConfig()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebugVariable);
 
             Assert.IsNotNull(nuspec);
@@ -1441,7 +1453,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseLicenseUrlFromConfig()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebugVariable);
 
             Assert.IsNotNull(nuspec);
@@ -1454,7 +1466,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseAuthorsFromConfig()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebugVariable);
 
             Assert.IsNotNull(nuspec);
@@ -1467,7 +1479,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseOwnersFromConfig()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebugVariable);
 
             Assert.IsNotNull(nuspec);
@@ -1480,7 +1492,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestParseCopyrightFromConfig()
         {
-            var creator = new NuspecCreator();
+            var creator = new NuspecCreatorNetFramework();
             var nuspec = creator.CreateNuspec(nuProj2Csproj, nuProj2Dll, isDebugVariable);
 
             Assert.IsNotNull(nuspec);
