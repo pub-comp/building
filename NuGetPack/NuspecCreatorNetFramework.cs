@@ -14,10 +14,10 @@ namespace PubComp.Building.NuGetPack
         {
             TargetFrameworkElement = "TargetFrameworkVersion";
         }
-        public override List<DependencyInfo> GetDependencies(string projectPath, out XAttribute dependenciesAttribute)
+
+        public List<DependencyInfo> GetDependencies(
+            string projectPath, string[] packagesFiles, out XAttribute dependenciesAttribute)
         {
-            var packagesFiles = new[] { Path.GetDirectoryName(projectPath) + @"\packages.config", Path.Combine(projectPath, "internalPackages.config")};
-            
             var targetFramework =  "net" + (GetFrameworkVersion(projectPath) ?? "45");
 
             dependenciesAttribute = new XAttribute("targetFramework", targetFramework);
@@ -30,9 +30,25 @@ namespace PubComp.Building.NuGetPack
             return result;
         }
 
+        public override List<DependencyInfo> GetDependencies(string projectPath, out XAttribute dependenciesAttribute)
+        {
+            var packagesFiles = new[] { Path.GetDirectoryName(projectPath) + @"\packages.config", Path.GetDirectoryName(projectPath) + @"\internalPackages.config"};
+
+            return GetDependencies(projectPath, packagesFiles, out dependenciesAttribute);
+        }
+
         protected override string GetContentFileTarget(XElement el,XNamespace xmlns)
         {
             return el.Elements(xmlns + "Link").FirstOrDefault()?.Value;
+        }
+
+        protected override string FormatFrameworkVersion(string targetFrameworkVersion)
+        {
+            var result = targetFrameworkVersion
+                .Replace("v", string.Empty)
+                .Replace(".", string.Empty)
+                .Replace("net", string.Empty);
+            return result;
         }
 
 

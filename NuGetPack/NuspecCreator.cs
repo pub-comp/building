@@ -454,9 +454,9 @@ namespace PubComp.Building.NuGetPack
         /// <returns></returns>
         public List<DependencyInfo> GetInternalDependencies(
             string projectPath, bool isDebug, string buildMachineBinFolder,
-            string preReleaseSuffixOverride, bool isProjNetStandard = false)
+            string preReleaseSuffixOverride)
         {
-            var references = GetReferences(projectPath, true, isProjNetStandard);
+            var references = GetReferences(projectPath, true);
             var projectFolder = Path.GetDirectoryName(projectPath);
 
             var results = new List<DependencyInfo>();
@@ -467,7 +467,7 @@ namespace PubComp.Building.NuGetPack
                 var refProjPath = Path.Combine(projectFolder, reference);
 
                 string assemblyName, assemblyPath;
-                GetAssemblyNameAndPath(refProjPath, out assemblyName, isDebug, buildMachineBinFolder, out assemblyPath, isProjNetStandard);
+                GetAssemblyNameAndPath(refProjPath, out assemblyName, isDebug, buildMachineBinFolder, out assemblyPath);
 
                 if (assemblyName == null)
                     continue;
@@ -795,6 +795,8 @@ namespace PubComp.Building.NuGetPack
             return items;
         }
 
+        protected abstract string FormatFrameworkVersion(string targetFrameworkVersion);
+
         protected string GetFrameworkVersion(string projectPath)
         {
             LoadProject(projectPath, out XDocument _, out XNamespace xmlns, out XElement proj);
@@ -807,12 +809,8 @@ namespace PubComp.Building.NuGetPack
 
             if (string.IsNullOrEmpty(targetFrameworkVersion))
                 return null;
-
-            var result = targetFrameworkVersion
-                .Replace("v", string.Empty)
-                .Replace(".", string.Empty)
-                .Replace("net", string.Empty);
-            return result;
+            
+            return FormatFrameworkVersion(targetFrameworkVersion);
         }
 
         public List<DependencyInfo> GetBinaryFiles(
@@ -882,7 +880,7 @@ namespace PubComp.Building.NuGetPack
         /// or no filtering (null)
         /// </param>
         /// <returns></returns>
-        public List<string> GetReferences(string projectPath, bool? referencesContainNuGetPackConfig = null, bool isProjNetStandard = false)
+        public List<string> GetReferences(string projectPath, bool? referencesContainNuGetPackConfig = null)
         {
             XNamespace xmlns;
             XElement proj;
@@ -1015,7 +1013,7 @@ namespace PubComp.Building.NuGetPack
         /// <param name="assemblyPath"></param>
         private void GetAssemblyNameAndPath(
             string projectPath, out string assemblyName, bool isDebug, string buildMachineBinFolder, 
-            out string assemblyPath, bool isProjNetStandard = false)
+            out string assemblyPath)
         {
             DebugOut(() => $"\r\n\r\nGetAssemblyName({projectPath})\r\n");
 

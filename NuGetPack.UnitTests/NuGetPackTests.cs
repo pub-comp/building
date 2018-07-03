@@ -147,13 +147,13 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetDependenciesOuter()
         {
-            //var packagesFile = Path.GetDirectoryName(nuProj2Csproj) + @"\packages.config";
+            var packagesFile = Path.GetDirectoryName(nuProj2Csproj) + @"\packages.config";
 
             var creator = new NuspecCreatorNetFramework();
 
             XAttribute dependenciesAttribute;
-            //var results = creator.GetDependencies(nuProj2Csproj, new[] { packagesFile },false, out dependenciesAttribute);
-            var results = creator.GetDependencies(nuProj2Csproj, out dependenciesAttribute);
+            var results = creator.GetDependencies(nuProj2Csproj, new[] { packagesFile }, out dependenciesAttribute);
+            //var results = creator.GetDependencies(nuProj2Csproj, out dependenciesAttribute);
 
             LinqAssert.Count(results, 1);
             var elements = results.Select(el => el.Element).ToList();
@@ -180,7 +180,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             Assert.IsNotNull(dependenciesAttribute);
             Assert.AreEqual("targetFramework", dependenciesAttribute.Name);
-            Assert.AreEqual("netstandard20", dependenciesAttribute.Value);
+            Assert.AreEqual(".NETStandard2.0", dependenciesAttribute.Value);
 
             var dependency = elements.Single();
             Assert.AreEqual("dependency", dependency.Name);
@@ -191,7 +191,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetDependenciesNoneNetStandard()
         {
-            var creator = new NuspecCreatorNetFramework();
+            var creator = new NuspecCreatorNetStandard();
 
             var results = creator.GetDependencies(projNetStandard2Csproj, out var dependenciesAttribute);
 
@@ -307,7 +307,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
                 .Select(r => r.Element).ToList();
 
-            LinqAssert.Count(dependencies, 0);
+            LinqAssert.Count(dependencies, 2);
         }
 
         [TestMethod]
@@ -333,10 +333,10 @@ namespace PubComp.Building.NuGetPack.UnitTests
         [TestMethod]
         public void TestGetInternalDependenciesNetStandard1()
         {
-            var creator = new NuspecCreatorNetFramework();
+            var creator = new NuspecCreatorNetStandard();
 
             var results = creator.GetInternalDependencies(
-                projNetStandardCsproj, isDebugVariable, Path.GetDirectoryName(projNetStandardDll), null, true);
+                projNetStandardCsproj, isDebugVariable, Path.GetDirectoryName(projNetStandardDll), null);
 
             var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
                 .Select(r => r.Element).ToList();
@@ -600,7 +600,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var results = creator.GetElements(
                 Path.GetDirectoryName(nuProj2Dll), nuProj2Csproj, isDebugVariable, true, false, null, out attribute);
 
-            LinqAssert.Count(results, 4);
+            LinqAssert.Count(results, 6);
 
             AssertBinaryFile(
                 results, "net45", path + @"Demo.Library3\" + binSuffix, @"PubComp.Building.Demo.Library3.dll");
@@ -633,7 +633,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var results = creator.GetElements(
                 Path.GetDirectoryName(nuProj2Dll), nuProj2Csproj, isDebugVariable, false, false, null, out attribute);
 
-            LinqAssert.Count(results, 2);
+            LinqAssert.Count(results, 4);
 
             AssertBinaryFile(
                 results, "net45", path + @"Demo.Library3\" + binSuffix, @"PubComp.Building.Demo.Library3.dll");
@@ -712,7 +712,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var results = creator.GetElements(
                 testRunDir, proj4Csproj, isDebugVariable, true, true, null, out attribute);
 
-            LinqAssert.Count(results, 17);
+            LinqAssert.Count(results, 18);
 
             AssertBinaryFile(
                 results, "net45", path + @"Demo.Library4\..\dependencies\", @"PubComp.Building.Demo.Binary1.dll");

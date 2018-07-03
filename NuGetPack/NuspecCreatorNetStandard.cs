@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,7 +20,8 @@ namespace PubComp.Building.NuGetPack
         public override List<DependencyInfo> GetDependencies(
             string projectPath, out XAttribute dependenciesAttribute)
         {
-            var targetFramework =  ".Net" + (GetFrameworkVersion(projectPath) ?? "Standard2.0");
+            var version = GetFrameworkVersion(projectPath);
+            var targetFramework = version !=null ? $".{version}".Replace("netstandard","NETStandard") : ".NETStandard2.0";
 
             dependenciesAttribute = new XAttribute("targetFramework", targetFramework);
 
@@ -73,6 +75,11 @@ namespace PubComp.Building.NuGetPack
         protected override string GetContentFileTarget(XElement el,XNamespace xmlns)
         {
             return el.Attribute("Link")?.Value;
+        }
+
+        protected override string FormatFrameworkVersion(string targetFrameworkVersion)
+        {
+            return targetFrameworkVersion;
         }
 
         private List<DependencyInfo> GetPackageDependenciesNetStandard(string projectPath)
