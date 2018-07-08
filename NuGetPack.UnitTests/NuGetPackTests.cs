@@ -1166,8 +1166,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 nupkgPaths.Add(nupkgPath);
             }
 
-            var creator = new NuspecCreatorNetFramework();
-            creator.CreatePackages(testRunDir, slnPath, isDebugVariable, false, true);
+            NuspecCreatorHelper.CreatePackages(testRunDir, slnPath, isDebugVariable, false, true);
 
             foreach (var nuspecPath in nuspecPaths)
             {
@@ -1210,8 +1209,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 nupkgPaths.Add(nupkgPath);
             }
 
-            var creator = new NuspecCreatorNetFramework();
-            creator.CreatePackages(testRunDir, slnPath, isDebugVariable, true, true);
+            NuspecCreatorHelper.CreatePackages(testRunDir, slnPath, isDebugVariable, true, true);
 
             foreach (var nuspecPath in nuspecPaths)
             {
@@ -1251,7 +1249,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             }
 
             var creator = new NuspecCreatorNetFramework();
-            creator.CreatePackages(testRunDir, slnPath, isDebugVariable, true, true,
+            NuspecCreatorHelper.CreatePackages(testRunDir, slnPath, isDebugVariable, true, true,
                 preReleaseSuffixOverride: string.Empty);
 
             foreach (var nuspecPath in nuspecPaths)
@@ -1291,8 +1289,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 nupkgPaths.Add(nupkgPath);
             }
 
-            var creator = new NuspecCreatorNetFramework();
-            creator.CreatePackages(testRunDir, slnPath, isDebugVariable, true, true,
+            NuspecCreatorHelper.CreatePackages(testRunDir, slnPath, isDebugVariable, true, true,
                 preReleaseSuffixOverride: "Alpha101");
 
             foreach (var nuspecPath in nuspecPaths)

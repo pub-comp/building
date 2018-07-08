@@ -22,12 +22,12 @@ namespace PubComp.Building.NuGetPack
 
             if (cla.Mode != Mode.Solution)
             {
-                creator.CreatePackage(
+                NusPecCreatorFactory.GetCreator(cla.ProjPath).CreatePackage(
                     cla.ProjPath, cla.DllPath, cla.IsDebug, cla.DoCreateNuPkg, cla.DoIncludeCurrentProj, cla.PreReleaseSuffixOverride);
             }
             else
             {
-                creator.CreatePackages(
+                NuspecCreatorHelper.CreatePackages(
                     cla.BinFolder, cla.SolutionFolder, cla.IsDebug, cla.DoCreateNuPkg, cla.DoIncludeCurrentProj, cla.PreReleaseSuffixOverride);
             }
         }

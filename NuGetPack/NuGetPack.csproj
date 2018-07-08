@@ -53,6 +53,8 @@
     <Compile Include="ElementType.cs" />
     <Compile Include="NuGetPackConfig.cs" />
     <Compile Include="NuspecCreator.cs" />
+    <Compile Include="NusPecCreatorFactory.cs" />
+    <Compile Include="NuspecCreatorHelper.cs" />
     <Compile Include="NuspecCreatorNetFramework.cs" />
     <Compile Include="NuspecCreatorNetStandard.cs" />
     <Compile Include="Program.cs" />

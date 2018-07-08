@@ -13,61 +13,6 @@ namespace PubComp.Building.NuGetPack
     {
         protected string TargetFrameworkElement { get; set; }
 
-        public void CreatePackages(
-            string binFolder, string solutionFolder, bool isDebug,
-            bool doCreatePkg = true, bool doIncludeCurrentProj = false,
-            string preReleaseSuffixOverride = null)
-        {
-            var projects = new LinkedList<string>();
-            FindProjects(solutionFolder, projects);
-
-            foreach (var projectPath in projects)
-            {
-                string assemblyPath;
-                GetAssemblyNameAndPath(
-                    projectPath, out string assemblyName, isDebug, binFolder, out assemblyPath);
-
-                if (assemblyName == null)
-                    continue;
-
-                CreatePackage(
-                    projectPath, assemblyPath, isDebug, doCreatePkg, doIncludeCurrentProj,
-                    preReleaseSuffixOverride);
-            }
-        }
-
-        private void FindProjects(string parentFolder, LinkedList<string> projects)
-        {
-            if (!Directory.Exists(parentFolder))
-                return;
-
-            var configFiles = Directory.GetFiles(parentFolder).Where(f =>
-                Path.GetFileName(f).ToLower() == "nugetpack.config")
-                .ToList();
-
-            if (configFiles.Any())
-            {
-                var projectFiles = Directory.GetFiles(parentFolder).Where(f =>
-                    Path.GetExtension(f) == ".csproj" || Path.GetExtension(f) == ".vbproj")
-                    .ToList();
-
-                if (projectFiles.Count == 1)
-                {
-                    projects.AddLast(projectFiles[0]);
-                }
-                else if (projectFiles.Count > 1)
-                {
-                    throw new ApplicationException($"More than one project file found in folder {parentFolder}");
-                }
-            }
-
-            var subFolders = Directory.GetDirectories(parentFolder);
-
-            foreach (var folder in subFolders)
-            {
-                FindProjects(folder, projects);
-            }
-        }
 
         public void CreatePackage(
             string projectPath, string assemblyPath, bool isDebug,
@@ -488,11 +433,7 @@ namespace PubComp.Building.NuGetPack
             return results;
         }
 
-        private bool IsProjNetStandard(string projectPath)
-        {
-            LoadProject(projectPath, out _, out _, out var csproj);
-            return csproj.Elements("PropertyGroup").Any(e => e.Elements("TargetFramework").Any());
-        }
+        
 
         public static string AbsolutePathToRelativePath(string filePath, string referencePath)
         {
@@ -748,7 +689,7 @@ namespace PubComp.Building.NuGetPack
 
             XNamespace xmlns;
             XElement proj;
-            LoadProject(projectPath, out XDocument csProj, out xmlns, out proj);
+            NuspecCreatorHelper.LoadProject(projectPath, out XDocument csProj, out xmlns, out proj);
 
             srcFolder = srcFolder.ToLower();
 
@@ -799,7 +740,7 @@ namespace PubComp.Building.NuGetPack
 
         protected string GetFrameworkVersion(string projectPath)
         {
-            LoadProject(projectPath, out XDocument _, out XNamespace xmlns, out XElement proj);
+            NuspecCreatorHelper.LoadProject(projectPath, out XDocument _, out XNamespace xmlns, out XElement proj);
 
             var targetFrameworkVersion = proj
                 .Elements(xmlns + "PropertyGroup")
@@ -849,7 +790,7 @@ namespace PubComp.Building.NuGetPack
             
             XNamespace xmlns;
             XElement proj;
-            LoadProject(projectPath, out XDocument csProj, out xmlns, out proj);
+            NuspecCreatorHelper.LoadProject(projectPath, out XDocument csProj, out xmlns, out proj);
 
             var referencedBinaryFiles = proj.Elements(xmlns + "ItemGroup")
                 .SelectMany(el => el.Elements(xmlns + "Reference"))
@@ -884,7 +825,7 @@ namespace PubComp.Building.NuGetPack
         {
             XNamespace xmlns;
             XElement proj;
-            LoadProject(projectPath, out XDocument csProj, out xmlns, out proj);
+            NuspecCreatorHelper.LoadProject(projectPath, out XDocument csProj, out xmlns, out proj);
 
             var elements = proj
                 .Elements(xmlns + "ItemGroup").Elements(xmlns + "ProjectReference");
@@ -961,7 +902,7 @@ namespace PubComp.Building.NuGetPack
             XDocument csProj;
             XNamespace xmlns;
             XElement proj;
-            LoadProject(projectPath, out csProj, out xmlns, out proj);
+            NuspecCreatorHelper.LoadProject(projectPath, out csProj, out xmlns, out proj);
 
             var propGroups = proj.Elements(xmlns + "PropertyGroup");
 
@@ -1011,7 +952,7 @@ namespace PubComp.Building.NuGetPack
         /// <param name="isDebug"></param>
         /// <param name="buildMachineBinFolder"></param>
         /// <param name="assemblyPath"></param>
-        private void GetAssemblyNameAndPath(
+        public void GetAssemblyNameAndPath(
             string projectPath, out string assemblyName, bool isDebug, string buildMachineBinFolder, 
             out string assemblyPath)
         {
@@ -1020,7 +961,7 @@ namespace PubComp.Building.NuGetPack
             XDocument csProj;
             XNamespace xmlns;
             XElement proj;
-            LoadProject(projectPath, out csProj, out xmlns, out proj);
+            NuspecCreatorHelper.LoadProject(projectPath, out csProj, out xmlns, out proj);
 
             var propGroups = proj.Elements(xmlns + "PropertyGroup");
 
@@ -1101,7 +1042,7 @@ namespace PubComp.Building.NuGetPack
             
             XNamespace xmlns;
             XElement proj;
-            LoadProject(projectPath, out XDocument csProj, out xmlns, out proj);
+            NuspecCreatorHelper.LoadProject(projectPath, out XDocument csProj, out xmlns, out proj);
 
             if (proj == null)
                 throw new ApplicationException($"Could find namespace in load project file {projectPath}");
@@ -1141,7 +1082,7 @@ namespace PubComp.Building.NuGetPack
         {
             DebugOut(() => $"\r\n\r\nDoesProjectContainFile({projectPath}, {file})\r\n");
 
-            LoadProject(projectPath, out var _, out var xmlns, out var proj);
+            NuspecCreatorHelper.LoadProject(projectPath, out var _, out var xmlns, out var proj);
 
             var codeElements = proj.Elements(xmlns + "ItemGroup").Elements(xmlns + "Compile");
             var noneElements = proj.Elements(xmlns + "ItemGroup").Elements(xmlns + "None");
@@ -1161,7 +1102,7 @@ namespace PubComp.Building.NuGetPack
             
             XNamespace xmlns;
             XElement proj;
-            LoadProject(projectPath, out XDocument csProj, out xmlns, out proj);
+            NuspecCreatorHelper.LoadProject(projectPath, out XDocument csProj, out xmlns, out proj);
 
             var noneElements = proj.Elements(xmlns + "ItemGroup").Elements(xmlns + "None");
 
@@ -1190,24 +1131,7 @@ namespace PubComp.Building.NuGetPack
         /// <param name="csProj"></param>
         /// <param name="xmlns"></param>
         /// <param name="proj"></param>
-        protected void LoadProject(
-            string projectPath, out XDocument csProj, out XNamespace xmlns, out XElement proj)
-        {
-            csProj = XDocument.Load(projectPath);
-
-            if (csProj == null)
-                throw new ApplicationException($"Could not load project file {projectPath}");
-
-            if (csProj.Root == null)
-                throw new ApplicationException($"Could find load namespace from project file {projectPath}");
-
-            xmlns = csProj.Root.GetDefaultNamespace();
-
-            proj = csProj.Element(xmlns + "Project");
-
-            if (proj == null)
-                throw new ApplicationException($"Could not project from project file {projectPath}");
-        }
+        
 
         #endregion
     }
