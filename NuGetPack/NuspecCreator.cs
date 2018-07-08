@@ -683,7 +683,7 @@ namespace PubComp.Building.NuGetPack
         public List<DependencyInfo> GetContentFiles(
             string nuspecFolder, string projectFolder, string projectPath,
             string srcFolder = @"content\", string destFolder = @"content\",
-            bool flattern = false, ElementType elementType = ElementType.ContentFile, bool isProjNetStandard = false)
+            bool flattern = false, ElementType elementType = ElementType.ContentFile)
         {
             DebugOut(() => $"\r\n\r\nGetContentFiles({nuspecFolder}, {projectFolder}, {projectPath})\r\n");
 
@@ -702,8 +702,9 @@ namespace PubComp.Building.NuGetPack
                         target = GetContentFileTarget(el,xmlns) ??
                                  el.Attribute("Include").Value
                     })
-                .Where(st => st.target.ToLower().StartsWith(srcFolder) && st.target.ToLower() != srcFolder);
-
+                .Where(st => st.target.ToLower().StartsWith(srcFolder) && st.target.ToLower() != srcFolder)
+                .Union(elementType == ElementType.ContentFile? GetConcreateContentElements(projectPath):new List<dynamic>());
+            
             var relativeProjectFolder = AbsolutePathToRelativePath(projectFolder, nuspecFolder + "\\");
 
             List<DependencyInfo> items;
@@ -734,6 +735,11 @@ namespace PubComp.Building.NuGetPack
             }
 
             return items;
+        }
+
+        protected virtual IEnumerable<dynamic> GetConcreateContentElements(string projectFolder)
+        {
+            return new List<dynamic>();
         }
 
         protected abstract string FormatFrameworkVersion(string targetFrameworkVersion);

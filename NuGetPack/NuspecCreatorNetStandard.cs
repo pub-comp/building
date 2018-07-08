@@ -76,6 +76,27 @@ namespace PubComp.Building.NuGetPack
         {
             return el.Attribute("Link")?.Value;
         }
+        /// <summary>
+        /// Add manually all files under content folder, as new csproj doesn't contain explicity all files as XML elements
+        /// </summary>
+        /// <param name="projectPath"></param>
+        /// <returns></returns>
+        protected override IEnumerable<dynamic> GetConcreateContentElements(string projectPath)
+        {
+            var dirName = Path.GetDirectoryName(projectPath);
+            var filenames = Directory.GetFiles( dirName+ @"\content", "*", SearchOption.AllDirectories);
+            var res = filenames.Select(f =>
+            {
+                var path = f.Replace($@"{dirName}\", "");
+                return new
+                {
+                    src = path,
+                    target = path
+                };
+            });
+                
+            return res;
+        }
 
         protected override string FormatFrameworkVersion(string targetFrameworkVersion)
         {

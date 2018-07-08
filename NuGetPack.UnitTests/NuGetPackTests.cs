@@ -199,7 +199,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             Assert.IsNotNull(dependenciesAttribute);
             Assert.AreEqual("targetFramework", dependenciesAttribute.Name);
-            Assert.AreEqual("netstandard20", dependenciesAttribute.Value);
+            Assert.AreEqual(".NETStandard2.0", dependenciesAttribute.Value);
         }
 
         [TestMethod]
@@ -419,12 +419,24 @@ namespace PubComp.Building.NuGetPack.UnitTests
                 "Found: " + results.First());
         }
 
+        //[TestMethod]
+        //public void test2()
+        //{
+        //    var nuspecPath = Path.ChangeExtension(proj4Dll, ".nuspec");
+        //    var nupkgPath = nuspecPath.Replace(".NuGet.nuspec", ".1.3.2" + (isDebugVariable ? "-Test" : string.Empty) + ".nupkg");
+        //    var creator = new NuspecCreatorNetFramework();
+        //    creator.CreatePackage(proj4Csproj, proj4Dll, isDebugVariable);
+            
+        //}
+
+
         [TestMethod]
         public void TestGetContentFilesNetStandard()
         {
-            var creator = new NuspecCreatorNetFramework();
+            //https://docs.microsoft.com/en-us/nuget/reference/nuspec#including-content-files
+            var creator = new NuspecCreatorNetStandard();
             var results = creator.GetContentFiles(
-                Path.GetDirectoryName(projNetStandard2Dll), @"..\..", projNetStandard2Csproj, isProjNetStandard: true);
+                Path.GetDirectoryName(projNetStandard2Dll), @"..\..", projNetStandard2Csproj);
 
             LinqAssert.Count(results, 3);
             var elements = results.Select(el => el.Element).ToList();
