@@ -20,8 +20,7 @@ namespace PubComp.Building.NuGetPack
         public override List<DependencyInfo> GetDependencies(
             string projectPath, out XAttribute dependenciesAttribute)
         {
-            var version = GetFrameworkVersion(projectPath);
-            var targetFramework = version !=null ? $".{version}".Replace("netstandard","NETStandard") : ".NETStandard2.0";
+            var targetFramework = GetTargetFramework(projectPath);
 
             dependenciesAttribute = new XAttribute("targetFramework", targetFramework);
 
@@ -31,6 +30,34 @@ namespace PubComp.Building.NuGetPack
             return result;
         }
 
+        private string GetTargetFramework(string projectPath)
+        {
+            var version = GetFrameworkVersion(projectPath);
+            var targetFramework = version != null ? $".{version}".Replace("netstandard", "NETStandard") : ".NETStandard2.0";
+            return targetFramework;
+        }
+
+        public override List<DependencyInfo> GetBinaryFiles(
+            string nuspecFolder, string projectFolder, string projectPath)
+        {
+            var files = Directory.GetFiles(nuspecFolder, "*.dll").ToList();
+            files.AddRange(Directory.GetFiles(nuspecFolder, "*.pdb"));
+
+            var framework = GetTargetFramework(projectPath);
+            framework = framework.TrimStart('.');
+
+            var items = files
+                .Select(Path.GetFileName)
+                .Select(s =>
+                    new DependencyInfo(
+                        ElementType.LibraryFile,
+                        new XElement("file",
+                            new XAttribute("src", s),
+                            new XAttribute("target", Path.Combine($"lib\\{framework}")))))
+                .ToList();
+
+            return items;
+        }
 
         protected override string GetOutputPath(XDocument csProj, bool isDebug, string projectFolder)
         {

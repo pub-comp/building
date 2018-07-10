@@ -37,6 +37,30 @@ namespace PubComp.Building.NuGetPack
             return GetDependencies(projectPath, packagesFiles, out dependenciesAttribute);
         }
 
+        public override List<DependencyInfo> GetBinaryFiles(
+            string nuspecFolder, string projectFolder, string projectPath)
+        {
+            var defaultVersionFolder = "net" + (GetFrameworkVersion(projectPath) ?? "45");
+
+            var items = GetContentFiles(nuspecFolder, projectFolder, projectPath,
+                srcFolder: @"lib\", destFolder: @"lib\",
+                flattern: false, elementType: ElementType.LibraryFile);
+
+            var itemsList = items.ToList();
+
+            foreach (var item in itemsList)
+            {
+                var target = item.Element.Attribute("target").Value;
+
+                if (target.StartsWith(@"lib\") && !target.StartsWith(@"lib\net"))
+                {
+                    item.Element.Attribute("target").Value = @"lib\" + defaultVersionFolder + target.Substring(3);
+                }
+            }
+
+            return itemsList;
+        }
+
         protected override string GetContentFileTarget(XElement el,XNamespace xmlns)
         {
             return el.Elements(xmlns + "Link").FirstOrDefault()?.Value;

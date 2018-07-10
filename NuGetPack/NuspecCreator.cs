@@ -360,7 +360,9 @@ namespace PubComp.Building.NuGetPack
 
         public abstract List<DependencyInfo> GetDependencies(string projectPath, out XAttribute dependenciesAttribute);
 
-        
+        public abstract List<DependencyInfo> GetBinaryFiles(
+            string nuspecFolder, string projectFolder, string projectPath);
+
 
         public List<DependencyInfo> GetDependencies(string packagesFile)
         {
@@ -693,17 +695,7 @@ namespace PubComp.Building.NuGetPack
 
             srcFolder = srcFolder.ToLower();
 
-            var contentElements = proj.Elements(xmlns + "ItemGroup").Elements()
-                .Where(el => el.Attribute("Include") != null)
-                .Select(el =>
-                    new
-                    {
-                        src = el.Attribute("Include").Value,
-                        target = GetContentFileTarget(el,xmlns) ??
-                                 el.Attribute("Include").Value
-                    })
-                .Where(st => st.target.ToLower().StartsWith(srcFolder) && st.target.ToLower() != srcFolder)
-                .Union(elementType == ElementType.ContentFile? GetConcreateContentElements(projectPath):new List<dynamic>());
+            var contentElements = GetContentElements(projectPath, srcFolder, elementType);
             
             var relativeProjectFolder = AbsolutePathToRelativePath(projectFolder, nuspecFolder + "\\");
 
@@ -737,6 +729,29 @@ namespace PubComp.Building.NuGetPack
             return items;
         }
 
+        private IEnumerable<dynamic> GetContentElements(string projectPath, string srcFolder, ElementType elementType = ElementType.ContentFile)
+        {
+            XNamespace xmlns;
+            XElement proj;
+            NuspecCreatorHelper.LoadProject(projectPath, out XDocument _, out xmlns, out proj);
+
+            srcFolder = srcFolder.ToLower();
+
+            var contentElements = proj.Elements(xmlns + "ItemGroup").Elements()
+                .Where(el => el.Attribute("Include") != null)
+                .Select(el =>
+                    new
+                    {
+                        src = el.Attribute("Include").Value,
+                        target = GetContentFileTarget(el, xmlns) ??
+                                 el.Attribute("Include").Value
+                    })
+                .Where(st => st.target.ToLower().StartsWith(srcFolder) && st.target.ToLower() != srcFolder)
+                .Union(elementType == ElementType.ContentFile ? GetConcreateContentElements(projectPath) : new List<dynamic>());
+
+            return contentElements;
+        }
+
         protected virtual IEnumerable<dynamic> GetConcreateContentElements(string projectFolder)
         {
             return new List<dynamic>();
@@ -760,29 +775,7 @@ namespace PubComp.Building.NuGetPack
             return FormatFrameworkVersion(targetFrameworkVersion);
         }
 
-        public List<DependencyInfo> GetBinaryFiles(
-            string nuspecFolder, string projectFolder, string projectPath)
-        {
-            var defaultVersionFolder = "net" + (GetFrameworkVersion(projectPath) ?? "45");
 
-            var items = GetContentFiles(nuspecFolder, projectFolder, projectPath,
-                srcFolder: @"lib\", destFolder: @"lib\",
-                flattern: false, elementType: ElementType.LibraryFile);
-
-            var itemsList = items.ToList();
-
-            foreach (var item in itemsList)
-            {
-                var target = item.Element.Attribute("target").Value;
-
-                if (target.StartsWith(@"lib\") && !target.StartsWith(@"lib\net"))
-                {
-                    item.Element.Attribute("target").Value = @"lib\" + defaultVersionFolder + target.Substring(3);
-                }
-            }
-
-            return itemsList;
-        }
 
         /// <summary>
         /// Gets the framework references for a given project file
