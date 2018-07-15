@@ -2,9 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>PubComp.Building.Demo.LibraryNetStandard</AssemblyName>
-    <RootNamespace>PubComp.Building.Demo.LibraryNetStandard</RootNamespace>
-    <Version>1.3.2</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
@@ -14,11 +11,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Demo.LibraryNetStandard2\Demo.LibraryNetStandard2.csproj" />
+    <ProjectReference Include="..\Demo.LibraryNetStandard\Demo.LibraryNetStandard.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Payoneer.ServicesInfra.FileTransfer">
-      <HintPath>..\..\infrastructure-communication\FileTransfer\bin\Debug\Payoneer.ServicesInfra.FileTransfer.dll</HintPath>
+    <Reference Include="Demo.Include1">
+      <HintPath>..\..\Learn\Demo.Include1\Demo.Include1\bin\Debug\netstandard2.0\Demo.Include1.dll</HintPath>
     </Reference>
   </ItemGroup>
 

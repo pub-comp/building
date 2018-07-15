@@ -323,16 +323,16 @@ namespace PubComp.Building.NuGetPack
                         new XElement("id", packageName),
                         new XElement("version", version),
                         new XElement("title", packageName),
-                        new XElement("authors", authors),
+                        new XElement("authors", string.IsNullOrWhiteSpace(authors) ? "Public" : authors),
                         new XElement("owners", owners),
-                        new XElement("description", longDescription),
+                        new XElement("description", string.IsNullOrWhiteSpace(longDescription) ? "Package Description" : longDescription),
                         new XElement("releaseNotes", releaseNotes),
                         new XElement("summary", shortSummary),
                         new XElement("language", "en-US"),
-                        new XElement("projectUrl", projectUrl),
+                        new XElement("projectUrl", string.IsNullOrWhiteSpace(projectUrl) ? "https://www.nuget.org/" : projectUrl),
                         new XElement("iconUrl", iconUrl),
                         new XElement("requireLicenseAcceptance", false),
-                        new XElement("licenseUrl", licenseUrl),
+                        new XElement("licenseUrl", string.IsNullOrWhiteSpace(licenseUrl) ? "https://www.nuget.org/" : licenseUrl),
                         new XElement("copyright", copyright),
                         new XElement("dependencies", dependencies),
                         new XElement("references", string.Empty),
@@ -348,6 +348,9 @@ namespace PubComp.Building.NuGetPack
                     frameworkReferences));
             }
 
+            var contentElements = GetContentElements(projectPath);
+            metadataElement.Add(ContentFilesSection(projectPath, contentElements));
+
             var doc = new XDocument(
                 new XElement("package",
                     metadataElement,
@@ -362,6 +365,11 @@ namespace PubComp.Building.NuGetPack
 
         public abstract List<DependencyInfo> GetBinaryFiles(
             string nuspecFolder, string projectFolder, string projectPath);
+
+        protected virtual XElement ContentFilesSection(string projectPath, IEnumerable<dynamic> contentElements)
+        {
+            return null;
+        }
 
 
         public List<DependencyInfo> GetDependencies(string packagesFile)
@@ -729,7 +737,7 @@ namespace PubComp.Building.NuGetPack
             return items;
         }
 
-        private IEnumerable<dynamic> GetContentElements(string projectPath, string srcFolder, ElementType elementType = ElementType.ContentFile)
+        private IEnumerable<dynamic> GetContentElements(string projectPath, string srcFolder = @"content\", ElementType elementType = ElementType.ContentFile)
         {
             XNamespace xmlns;
             XElement proj;
@@ -826,8 +834,7 @@ namespace PubComp.Building.NuGetPack
             XElement proj;
             NuspecCreatorHelper.LoadProject(projectPath, out XDocument csProj, out xmlns, out proj);
 
-            var elements = proj
-                .Elements(xmlns + "ItemGroup").Elements(xmlns + "ProjectReference");
+            var elements = GetProjectReference(proj, xmlns);
 
             var references = elements
                 .Select(r => r.Attribute("Include").Value)
@@ -852,7 +859,11 @@ namespace PubComp.Building.NuGetPack
             }
 
             return results;
-        }  
+        }
+
+
+        protected abstract IEnumerable<XElement> GetProjectReference(XElement proj, XNamespace xmlns);
+
 
         #endregion
 

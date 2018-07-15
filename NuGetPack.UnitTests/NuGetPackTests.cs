@@ -169,23 +169,42 @@ namespace PubComp.Building.NuGetPack.UnitTests
         }
 
         [TestMethod]
-        public void TestGetDependenciesOuterNetStandard()
+        public void TestGetPackageDependenciesNetStandard()
         {
             var creator = new NuspecCreatorNetStandard();
 
             var results = creator.GetDependencies(projNetStandardCsproj, out var dependenciesAttribute);
 
-            LinqAssert.Count(results, 1);
+            LinqAssert.Count(results, 2);
             var elements = results.Select(el => el.Element).ToList();
 
             Assert.IsNotNull(dependenciesAttribute);
             Assert.AreEqual("targetFramework", dependenciesAttribute.Name);
             Assert.AreEqual(".NETStandard2.0", dependenciesAttribute.Value);
 
-            var dependency = elements.Single();
-            Assert.AreEqual("dependency", dependency.Name);
+            var dependency = elements.First(el => el.Attribute("id").Value.StartsWith("Newton")); 
             Assert.AreEqual("Newtonsoft.Json", dependency.Attribute("id")?.Value);
             Assert.AreEqual("11.0.2", dependency.Attribute("version")?.Value);
+        }
+
+        [TestMethod]
+        public void TestGetProjectDependenciesNetStandard()
+        {
+            var creator = new NuspecCreatorNetStandard();
+
+            var results = creator.GetDependencies(projNetStandardCsproj, out var dependenciesAttribute);
+
+            LinqAssert.Count(results, 2);
+            var elements = results.Select(el => el.Element).ToList();
+
+            Assert.IsNotNull(dependenciesAttribute);
+            Assert.AreEqual("targetFramework", dependenciesAttribute.Name);
+            Assert.AreEqual(".NETStandard2.0", dependenciesAttribute.Value);
+
+            var dependency = elements.First(el => el.Attribute("id").Value.StartsWith("PubComp"));
+            Assert.AreEqual("dependency", dependency.Name);
+            Assert.AreEqual("PubComp.Building.Demo.LibraryNetStandard2", dependency.Attribute("id")?.Value);
+            Assert.AreEqual("1.3.2", dependency.Attribute("version")?.Value);
         }
 
         [TestMethod]
@@ -328,26 +347,6 @@ namespace PubComp.Building.NuGetPack.UnitTests
             LinqAssert.Count(dependencies.Where(r =>
                 r.Attribute("id").Value == "PubComp.Building.Demo.Library4"
                 && r.Attribute("version").Value == expectedVersion), 1);
-        }
-
-        [TestMethod]
-        public void TestGetInternalDependenciesNetStandard1()
-        {
-            var creator = new NuspecCreatorNetStandard();
-
-            var results = creator.GetInternalDependencies(
-                projNetStandardCsproj, isDebugVariable, Path.GetDirectoryName(projNetStandardDll), null);
-
-            var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
-                .Select(r => r.Element).ToList();
-
-            LinqAssert.Count(dependencies, 1);
-
-            var expectedVersion = "1.3.2";
-            var dependency = dependencies.Single();
-
-            Assert.AreEqual("PubComp.Building.Demo.LibraryNetStandard2", dependency.Attribute("id")?.Value);
-            Assert.AreEqual(expectedVersion, dependency.Attribute("version")?.Value);
         }
 
         [TestMethod]

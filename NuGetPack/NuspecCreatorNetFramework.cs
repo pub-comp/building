@@ -108,5 +108,12 @@ namespace PubComp.Building.NuGetPack
 
             return result;
         }
+
+        protected override IEnumerable<XElement> GetProjectReference(XElement proj, XNamespace xmlns)
+        {
+            var elements = proj
+                .Elements(xmlns + "ItemGroup").Elements(xmlns + "ProjectReference");
+            return elements;
+        }
     }
 }
