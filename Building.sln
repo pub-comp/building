@@ -77,6 +77,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.LibraryMultiFrameworks
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.NetStandardAndNet46", "Demo.NetStandardAndNet46\Demo.NetStandardAndNet46.csproj", "{3118B404-1D68-4FF9-891E-53CED50F381A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo.LibraryNetStandardNewAndLegacy", "Demo.LibraryNetStandardNewAndLegacy\Demo.LibraryNetStandardNewAndLegacy.csproj", "{552B60D5-16B2-4FF7-839A-CBD01C979DA0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -159,6 +161,10 @@ Global
 		{3118B404-1D68-4FF9-891E-53CED50F381A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3118B404-1D68-4FF9-891E-53CED50F381A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3118B404-1D68-4FF9-891E-53CED50F381A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{552B60D5-16B2-4FF7-839A-CBD01C979DA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{552B60D5-16B2-4FF7-839A-CBD01C979DA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{552B60D5-16B2-4FF7-839A-CBD01C979DA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{552B60D5-16B2-4FF7-839A-CBD01C979DA0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -183,6 +189,7 @@ Global
 		{1964522E-BB98-4EEF-A9DE-ACD0E1214EE8} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 		{99CE52B4-2DEE-4C48-92DD-3694A4E87967} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 		{3118B404-1D68-4FF9-891E-53CED50F381A} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
+		{552B60D5-16B2-4FF7-839A-CBD01C979DA0} = {D2BDB301-DA26-4025-ADC2-2AFBD077B93E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6A14DA10-5CA8-46FE-B6B6-8305B512B2F8}

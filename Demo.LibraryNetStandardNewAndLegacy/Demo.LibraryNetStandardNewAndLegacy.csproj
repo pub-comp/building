@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="content\MyContent1.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Demo.LibraryNetStandard2\Demo.LibraryNetStandard2.csproj" />
+    <ProjectReference Include="..\Demo.LibraryNetStandard\Demo.LibraryNetStandard.csproj" />
+  </ItemGroup>
+
+</Project>

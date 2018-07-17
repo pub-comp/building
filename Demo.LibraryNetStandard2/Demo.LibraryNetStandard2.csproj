@@ -8,9 +8,10 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
+
   <ItemGroup>
-    <Content Include="..\Data.txt" Link="content\Data.txt" />
-    <Content Include="content\Info.txt" />
+    <Content Include="contentFiles\Data.txt" />
+    <Content Include="contentFiles\Info.txt" />
   </ItemGroup>
 
 </Project>

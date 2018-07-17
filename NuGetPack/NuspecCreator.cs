@@ -323,16 +323,16 @@ namespace PubComp.Building.NuGetPack
                         new XElement("id", packageName),
                         new XElement("version", version),
                         new XElement("title", packageName),
-                        new XElement("authors", string.IsNullOrWhiteSpace(authors) ? "Public" : authors),
+                        new XElement("authors", authors),
                         new XElement("owners", owners),
-                        new XElement("description", string.IsNullOrWhiteSpace(longDescription) ? "Package Description" : longDescription),
+                        new XElement("description", longDescription),
                         new XElement("releaseNotes", releaseNotes),
                         new XElement("summary", shortSummary),
                         new XElement("language", "en-US"),
-                        new XElement("projectUrl", string.IsNullOrWhiteSpace(projectUrl) ? "https://www.nuget.org/" : projectUrl),
+                        new XElement("projectUrl", projectUrl),
                         new XElement("iconUrl", iconUrl),
                         new XElement("requireLicenseAcceptance", false),
-                        new XElement("licenseUrl", string.IsNullOrWhiteSpace(licenseUrl) ? "https://www.nuget.org/" : licenseUrl),
+                        new XElement("licenseUrl", licenseUrl),
                         new XElement("copyright", copyright),
                         new XElement("dependencies", dependencies),
                         new XElement("references", string.Empty),
@@ -349,7 +349,8 @@ namespace PubComp.Building.NuGetPack
             }
 
             var contentElements = GetContentElements(projectPath);
-            metadataElement.Add(ContentFilesSection(projectPath, contentElements));
+            if (projectPath.Length > 0)
+                metadataElement.Add(ContentFilesSection(projectPath, contentElements));
 
             var doc = new XDocument(
                 new XElement("package",
@@ -573,6 +574,8 @@ namespace PubComp.Building.NuGetPack
             return result;
         }
 
+        protected abstract IEnumerable<DependencyInfo> GetContentFilesForNetStandard(string projectPath, List<DependencyInfo> files);
+
         /// <summary>
         /// Get NuSpec elements from a given project and its references
         /// </summary>
@@ -621,6 +624,7 @@ namespace PubComp.Building.NuGetPack
 
 
             result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath));
+            result.AddRange(GetContentFilesForNetStandard(projectPath, result));
             result.AddRange(GetBinaryFiles(nuspecFolder, projectFolder, projectPath));
             result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath,
                 srcFolder: @"sln\", destFolder: @"sln\", flattern: false, elementType: ElementType.SolutionItemsFile));

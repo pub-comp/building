@@ -43,15 +43,23 @@ namespace PubComp.Building.NuGetPack
 
         protected override XElement ContentFilesSection(string projectPath, IEnumerable<dynamic> contentElements)
         {
-            var framework = GetTargetFramework(projectPath);
-            framework = framework.TrimStart('.');
+           const string content = "content\\";
+            var all = contentElements.Where(f => f.target.Contains(content) ?? false)
+                .Select(f => f.target.TrimStart(content.ToCharArray())).Cast<string>().ToList();
+            var files = all.Where(n => n.IndexOf("\\") < 0).ToList();
+            var folders = all.Where(n => n.IndexOf("\\") >= 0).Select(f => f.Remove(f.IndexOf("\\"))).Distinct().ToList();
 
-            var result = contentElements
-                .Select(s => Path.GetFileName(s.src))
+
+            var result = files
                 .Select(s =>
                     new XElement("files",
-                        new XAttribute("include", $"any/{framework}/" + s),
+                        new XAttribute("include", @"any/any/" + s),
                         new XAttribute("buildAction", "Content"))).ToList();
+            result.AddRange(folders
+                .Select(s =>
+                    new XElement("files",
+                        new XAttribute("include", $"**/{s}/*.*"),
+                        new XAttribute("buildAction", "EmbeddedResource"))).ToList());
 
             return new XElement("contentFiles", result);
         }
@@ -234,6 +242,43 @@ namespace PubComp.Building.NuGetPack
             return items;
         }
 
+
+        protected override IEnumerable<DependencyInfo> GetContentFilesForNetStandard(string projectPath, List<DependencyInfo> files)
+        {
+            const string content = "content\\";
+            const string targetDir = @"contentFiles\any\any\";
+
+            NuspecCreatorHelper.LoadProject(projectPath, out XDocument _, out var xmlns, out _);
+            var result = files.Where(f =>
+                    !f.Element.Attribute(xmlns + "target")?.Value?.TrimStart(content.ToCharArray())?.Contains("\\") ?? false)
+                .Select(f => new DependencyInfo(f.ElementType, new XElement(f.Element))).ToList();
+
+            foreach (var d in result)
+            {
+                var v = d.Element.Attribute(xmlns + "target").Value;
+                d.Element.Attribute(xmlns + "target").SetValue(targetDir + v.TrimStart(content.ToCharArray()));
+            }
+
+            var includedFolders = files.Where(f =>
+                f.Element.Attribute(xmlns + "target")?.Value?.Contains(content) ?? false)
+                .Select(f => f.Element.Attribute(xmlns + "target")?.Value?.TrimStart(content.ToCharArray()))
+                .Where(f => f.Contains("\\")).Select(f => f.Remove(f.IndexOf("\\"))).Distinct().ToList();
+
+            var srcDir = files.Where(f => f.Element.Attribute(xmlns + "target")?.Value?.Contains(content) ?? false)
+                              .Select(f => f.Element.Attribute(xmlns + "src")?.Value)
+                              .FirstOrDefault();
+            srcDir = srcDir.Substring(0, srcDir.IndexOf(content) + content.Length);
+
+            result.AddRange(includedFolders.Select(s =>
+                    new DependencyInfo(
+                        ElementType.ContentFile,
+                        new XElement("file",
+                            new XAttribute("src", srcDir + s + @"\**"),
+                            new XAttribute("target", targetDir + s))))
+                            .ToList());
+
+            return result;
+        }
 
         protected override IEnumerable<XElement> GetProjectReference(XElement proj, XNamespace xmlns)
         {

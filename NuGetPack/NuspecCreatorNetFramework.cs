@@ -50,9 +50,9 @@ namespace PubComp.Building.NuGetPack
 
             foreach (var item in itemsList)
             {
-                var target = item.Element.Attribute("target").Value;
+                var target = item.Element.Attribute("target")?.Value;
 
-                if (target.StartsWith(@"lib\") && !target.StartsWith(@"lib\net"))
+                if (target.StartsWith(@"lib\") && !target.StartsWith(@"lib\net") && (item.Element.Attribute("target") != null))
                 {
                     item.Element.Attribute("target").Value = @"lib\" + defaultVersionFolder + target.Substring(3);
                 }
@@ -115,5 +115,11 @@ namespace PubComp.Building.NuGetPack
                 .Elements(xmlns + "ItemGroup").Elements(xmlns + "ProjectReference");
             return elements;
         }
+
+        protected override IEnumerable<DependencyInfo> GetContentFilesForNetStandard(string projectPath, List<DependencyInfo> files)
+        {
+            return new List<DependencyInfo>();
+        }
+
     }
 }
