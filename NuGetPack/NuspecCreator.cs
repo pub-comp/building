@@ -335,7 +335,6 @@ namespace PubComp.Building.NuGetPack
                         new XElement("licenseUrl", licenseUrl),
                         new XElement("copyright", copyright),
                         new XElement("dependencies", dependencies),
-                        new XElement("references", string.Empty),
                         new XElement("tags", keywords));
 
             if (doAddFrameworkReferences)
@@ -347,6 +346,12 @@ namespace PubComp.Building.NuGetPack
                 metadataElement.Add(new XElement("frameworkAssemblies",
                     frameworkReferences));
             }
+
+            var referencesSection = GetReferencesFiles(projectPath);
+            if (referencesSection != null)
+                metadataElement.Add(referencesSection);
+            else
+                metadataElement.Add(new XElement("references", string.Empty));
 
             var contentElements = GetContentElements(projectPath);
             if (projectPath.Length > 0)
@@ -366,6 +371,9 @@ namespace PubComp.Building.NuGetPack
 
         public abstract List<DependencyInfo> GetBinaryFiles(
             string nuspecFolder, string projectFolder, string projectPath);
+
+        public abstract XElement GetReferencesFiles(string projectPath);
+
 
         protected virtual XElement ContentFilesSection(string projectPath, IEnumerable<dynamic> contentElements)
         {

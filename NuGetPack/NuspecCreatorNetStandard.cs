@@ -43,11 +43,11 @@ namespace PubComp.Building.NuGetPack
 
         protected override XElement ContentFilesSection(string projectPath, IEnumerable<dynamic> contentElements)
         {
-           const string content = "content\\";
+            const string content = "content\\";
             var all = contentElements.Where(f => f.target.Contains(content) ?? false)
                 .Select(f => f.target.TrimStart(content.ToCharArray())).Cast<string>().ToList();
             var files = all.Where(n => n.IndexOf("\\") < 0).ToList();
-            var folders = all.Where(n => n.IndexOf("\\") >= 0).Select(f => f.Remove(f.IndexOf("\\"))).Distinct().ToList();
+            var folders = all.Where(n => n.IndexOf("\\") >= 0).Select(f => Path.GetDirectoryName(f)?.Replace('\\', '/')).Distinct().ToList();
 
 
             var result = files
@@ -59,7 +59,7 @@ namespace PubComp.Building.NuGetPack
                 .Select(s =>
                     new XElement("files",
                         new XAttribute("include", $"**/{s}/*.*"),
-                        new XAttribute("buildAction", "EmbeddedResource"))).ToList());
+                        new XAttribute("buildAction", "Content"))).ToList());
 
             return new XElement("contentFiles", result);
         }
@@ -172,43 +172,63 @@ namespace PubComp.Building.NuGetPack
             if (!File.Exists(projectPath))
                 return result;
 
-            XNamespace xmlns;
-            XElement proj;
-            NuspecCreatorHelper.LoadProject(projectPath, out XDocument _, out xmlns, out proj);
-            //var projref = project.XPathSelectElements("//ItemGroup//ProjectReference").ToList();
-            var projref = proj?.Elements(xmlns + "ItemGroup")?.Elements(xmlns + "ProjectReference")?.ToList();
+            var projref = GetProjectIncludeFiles(projectPath, out var verList, out var xmlns, out var proj, true);
 
             if (projref == null || projref.Count == 0)
                 return result;
 
-            foreach (var pr in projref)
+            for (var i = 0; i < projref.Count; i++)
             {
-                var incProj = pr.Attribute(xmlns + "Include")?.Value ?? pr.LastAttribute.Value;
-                if (string.IsNullOrWhiteSpace(incProj))
-                    continue;
+                var dependantFile = projref[i];
+                var ver = verList[i];
 
-                incProj = Path.Combine(Path.GetDirectoryName(projectPath) ?? String.Empty, incProj);
-                NuspecCreatorHelper.LoadProject(incProj, out XDocument _, out xmlns, out proj);
-                var asem = proj?.Element(xmlns + "PropertyGroup")?.Element(xmlns + "AssemblyName")?.Value;
+                result.Add(
+                    new DependencyInfo(
+                        ElementType.NuGetDependency,
+                        new XElement("dependency",
+                            new XAttribute("id", dependantFile),
+                            new XAttribute("version", ver),
+                            new XAttribute("exclude", "Build,Analyzers"))));
+            }
+
+            return result;
+        }
+
+        private List<string> GetProjectIncludeFiles(string projectPath, out List<string> verList, out XNamespace xmlns, out XElement proj, bool isFileNuget)
+        {
+            verList = new List<string>();
+            NuspecCreatorHelper.LoadProject(projectPath, out XDocument _, out xmlns, out proj);
+            var x = xmlns;
+            var projref = proj?.Elements(xmlns + "ItemGroup")?.Elements(xmlns + "ProjectReference")?.Where(pr =>
+                {
+                    var file = pr.Attribute(x + "Include")?.Value ?? pr.LastAttribute.Value;
+                    file = Path.Combine(Path.GetDirectoryName(projectPath) ?? String.Empty, file);
+                    file = Path.Combine(Path.GetDirectoryName(file) ?? "", "NuGetPack.config");
+                    return (isFileNuget ? File.Exists(file) : !File.Exists(file));
+                })
+                .Select(f => f.Attribute(x + "Include")?.Value ?? f.LastAttribute.Value).ToList();
+
+            if (projref.Count == 0)
+                return projref;
+
+            for (var i = 0; i < projref.Count; i++)
+            {
+                var pr = projref[i];
+                var incProj = Path.Combine(Path.GetDirectoryName(projectPath) ?? String.Empty, pr);
+                NuspecCreatorHelper.LoadProject(incProj, out XDocument _, out x, out var prj);
+                var asem = prj?.Element(x + "PropertyGroup")?.Element(x + "AssemblyName")?.Value;
                 if (string.IsNullOrWhiteSpace(asem))
                 {
                     asem = Path.ChangeExtension(Path.GetFileName(projectPath), "");
                     asem = asem.TrimEnd('.');
                 }
 
-                //var ver = proj.XPathSelectElement("//PropertyGroup//Version")?.Value ?? "1.0.0"; ?? proj?.Element(xmlns + "PropertyGroup")?.LastAttribute?.Value 
-                var ver = proj?.Element(xmlns + "PropertyGroup")?.Element(xmlns + "Version")?.Value ?? "1.0.0";
-
-                result.Add(
-                    new DependencyInfo(
-                        ElementType.NuGetDependency,
-                        new XElement("dependency",
-                            new XAttribute("id", asem),
-                            new XAttribute("version", ver),
-                            new XAttribute("exclude", "Build,Analyzers"))));
+                projref[i] = asem;
+                var ver = prj?.Element(xmlns + "PropertyGroup")?.Element(xmlns + "Version")?.Value ?? "1.0.0";
+                verList.Add(ver);
             }
 
-            return result;
+            return projref;
         }
 
         public override List<DependencyInfo> GetBinaryFiles(
@@ -227,6 +247,10 @@ namespace PubComp.Building.NuGetPack
             files.Add(asem + ".DLL");
             files.Add(asem + ".PDB");
 
+            var includeFiles = GetProjectIncludeFiles(projectPath, out _, out _, out _, false);
+            files.AddRange(includeFiles.Select(pr => pr + ".DLL"));
+            files.AddRange(includeFiles.Select(pr => pr + ".PDB"));
+
             var framework = GetTargetFramework(projectPath);
             framework = framework.TrimStart('.');
 
@@ -242,11 +266,33 @@ namespace PubComp.Building.NuGetPack
             return items;
         }
 
+        public override XElement GetReferencesFiles(string projectPath)
+        {
+            var includeFiles = GetProjectIncludeFiles(projectPath, out _, out _, out _, false);
+            var files = (includeFiles.Select(pr => pr + ".DLL")).ToList();
+            //files.AddRange(includeFiles.Select(pr => pr + ".PDB"));
+
+            if (files.Count == 0)
+                return null;
+
+            var items = files
+                .Select(s =>
+                    new XElement("reference",
+                        new XAttribute("file", s)));
+
+            return 
+                new XElement("references", 
+                    new XElement("group", items));
+        }
+
 
         protected override IEnumerable<DependencyInfo> GetContentFilesForNetStandard(string projectPath, List<DependencyInfo> files)
         {
             const string content = "content\\";
             const string targetDir = @"contentFiles\any\any\";
+
+            if (files.Count == 0)
+                return new List<DependencyInfo>();
 
             NuspecCreatorHelper.LoadProject(projectPath, out XDocument _, out var xmlns, out _);
             var result = files.Where(f =>

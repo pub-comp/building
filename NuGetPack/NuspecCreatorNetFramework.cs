@@ -61,6 +61,11 @@ namespace PubComp.Building.NuGetPack
             return itemsList;
         }
 
+        public override XElement GetReferencesFiles(string projectPath)
+        {
+            return null;
+        }
+
         protected override string GetContentFileTarget(XElement el,XNamespace xmlns)
         {
             return el.Elements(xmlns + "Link").FirstOrDefault()?.Value;
@@ -95,7 +100,7 @@ namespace PubComp.Building.NuGetPack
             return outputPath;
         }
 
-        protected override bool DoesProjectContainFile(string projectPath,string file,IEnumerable<XElement> noneElements,IEnumerable<XElement> codeElements)
+        protected override bool DoesProjectContainFile(string projectPath, string file,IEnumerable<XElement> noneElements,IEnumerable<XElement> codeElements)
         {
             var result = codeElements
                 .Union(noneElements)
@@ -120,6 +125,5 @@ namespace PubComp.Building.NuGetPack
         {
             return new List<DependencyInfo>();
         }
-
     }
 }
