@@ -18,8 +18,6 @@ namespace PubComp.Building.NuGetPack
                 return;
             }
 
-            var creator = new NuspecCreatorNetFramework();
-
             if (cla.Mode != Mode.Solution)
             {
                 NusPecCreatorFactory.GetCreator(cla.ProjPath).CreatePackage(

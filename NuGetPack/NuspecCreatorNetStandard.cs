@@ -81,9 +81,24 @@ namespace PubComp.Building.NuGetPack
             if (outputPathElement == null)
             {
                 var targetFramework = propGroups.FirstOrDefault(pg => pg.Elements("TargetFramework").Any())
-                    .Element("TargetFramework");
+                    ?.Element("TargetFramework")?.Value;
+                targetFramework = targetFramework ?? propGroups
+                                      .FirstOrDefault(pg => pg.Elements("TargetFrameworks").Any())
+                                      ?.Element("TargetFrameworks")?.Value;
+                var semiColPos = targetFramework.IndexOf(";");
+                if (semiColPos > 0)
+                    targetFramework = targetFramework.Substring(0, semiColPos);
+
                 outputPath = Path.Combine(projectFolder,
-                    $"bin\\{(isDebug ? "debug" : "release")}\\{targetFramework.Value}");
+                    $"bin\\{(isDebug ? "debug" : "release")}\\{targetFramework}");
+
+                if (!Directory.Exists(outputPath) // netStandard Projects can omit the Condition Element or any other indication of build type!
+                    || !Directory.GetFiles(outputPath).Any(f =>
+                        f.ToLower().EndsWith(".dll") || f.ToLower().EndsWith(".exe")))
+                {
+                    outputPath = Path.Combine(projectFolder,
+                        $"bin\\{(!isDebug ? "debug" : "release")}\\{targetFramework}");
+                }
             }
             else
             {
@@ -216,54 +231,82 @@ namespace PubComp.Building.NuGetPack
                 var pr = projref[i];
                 var incProj = Path.Combine(Path.GetDirectoryName(projectPath) ?? String.Empty, pr);
                 NuspecCreatorHelper.LoadProject(incProj, out XDocument _, out x, out var prj);
-                var asem = prj?.Element(x + "PropertyGroup")?.Element(x + "AssemblyName")?.Value;
-                if (string.IsNullOrWhiteSpace(asem))
-                {
-                    asem = Path.ChangeExtension(Path.GetFileName(projectPath), "");
-                    asem = asem.TrimEnd('.');
-                }
-
-                projref[i] = asem;
                 var ver = prj?.Element(xmlns + "PropertyGroup")?.Element(xmlns + "Version")?.Value ?? "1.0.0";
                 verList.Add(ver);
+
+                var asem = GetAssemblyName(incProj);
+                projref[i] = asem;
             }
 
             return projref;
         }
 
         public override List<DependencyInfo> GetBinaryFiles(
-            string nuspecFolder, string projectFolder, string projectPath)
+            string nuspecFolder, string projectFolder, string projectPath, bool isDebug)
         {
-            var files = new List<string>();
+            //var files = new List<string>();
 
-            XNamespace xmlns;
-            XElement proj;
-            NuspecCreatorHelper.LoadProject(projectPath, out XDocument csProj, out xmlns, out proj);
+            //var asem = GetAssemblyName(projectPath);
+            //files.Add(asem + ".DLL");
+            //if (File.Exists(asem + ".PDB"))
+            //    files.Add(asem + ".PDB");
+            NuspecCreatorHelper.LoadProject(projectPath, out var csProj, out _, out _);
 
-            var asem = proj?.Element(xmlns + "PropertyGroup")?.Element(xmlns + "AssemblyName")?.Value;
+            var outputPath = GetOutputPath(csProj, isDebug, projectFolder);
 
-            if (string.IsNullOrWhiteSpace(asem))
-                asem = Path.GetFileName(projectPath)?.Replace(".csproj", String.Empty);
-            files.Add(asem + ".DLL");
-            files.Add(asem + ".PDB");
+            if (!Directory.Exists(outputPath)
+                || !Directory.GetFiles(outputPath).Any(f =>
+                    f.ToLower().EndsWith(".dll") || f.ToLower().EndsWith(".exe"))
+            )
+            {
+                outputPath = nuspecFolder;
+            }
 
             var includeFiles = GetProjectIncludeFiles(projectPath, out _, out _, out _, false);
-            files.AddRange(includeFiles.Select(pr => pr + ".DLL"));
-            files.AddRange(includeFiles.Select(pr => pr + ".PDB"));
+            var incFiles = includeFiles.Select(f => f + ".DLL").ToList();
+            incFiles.AddRange(includeFiles.Where(f => File.Exists(f + ".PDB")).Select(f => f + ".PDB"));
 
-            var framework = GetTargetFramework(projectPath);
-            framework = framework.TrimStart('.');
+            string[] frameworks;
+            var targetFrameworks = GetTargetFrameworks(projectPath);
+            if (string.IsNullOrEmpty(targetFrameworks))
+                frameworks = new[] {GetTargetFramework(projectPath)};
+            else frameworks = Directory.GetDirectories(outputPath);
 
-            var items = files
-                .Select(s =>
-                    new DependencyInfo(
-                        ElementType.LibraryFile,
-                        new XElement("file",
-                            new XAttribute("src", s),
-                            new XAttribute("target", Path.Combine($"lib\\{framework}")))))
-                .ToList();
+            var files = GetProjectBinaryFiles(projectPath, outputPath);
+            files = files.Select(Path.GetFileName).ToList();
+            var relativePath =string.Empty;
+            foreach (var framework in frameworks)
+            {
+                var lastFolder = outputPath.Substring(Path.GetDirectoryName(outputPath).Length + 1);
+                if (!lastFolder.EndsWith(framework.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                relativePath = @"..\" ;
+                break;
+            }
+
+            var items = CreateBinFilesDepInfoList(frameworks[0], incFiles);
+            foreach (var framework in frameworks)
+            {
+                items.AddRange(CreateBinFilesDepInfoList(framework, files));
+            }
 
             return items;
+        }
+
+        private static List<DependencyInfo> CreateBinFilesDepInfoList(string framework, List<string> files)
+        {
+           var result = new List<DependencyInfo>();
+                result.AddRange(files
+                    .Select(s =>
+                        new DependencyInfo(
+                            ElementType.LibraryFile,
+                            new XElement("file",
+                                new XAttribute("src", s),
+                                new XAttribute("target", Path.Combine($"lib\\{framework}")))))
+                    .ToList());
+
+            return result;
         }
 
         public override XElement GetReferencesFiles(string projectPath)
@@ -301,18 +344,21 @@ namespace PubComp.Building.NuGetPack
 
             foreach (var d in result)
             {
-                var v = d.Element.Attribute(xmlns + "target").Value;
-                d.Element.Attribute(xmlns + "target").SetValue(targetDir + v.TrimStart(content.ToCharArray()));
+                var v = d.Element.Attribute(xmlns + "target")?.Value;
+                d.Element.Attribute(xmlns + "target")?.SetValue(targetDir + v.TrimStart(content.ToCharArray()));
             }
 
             var includedFolders = files.Where(f =>
-                f.Element.Attribute(xmlns + "target")?.Value?.Contains(content) ?? false)
+                    f.Element.Attribute(xmlns + "target")?.Value?.Contains(content) ?? false)
                 .Select(f => f.Element.Attribute(xmlns + "target")?.Value?.TrimStart(content.ToCharArray()))
                 .Where(f => f.Contains("\\")).Select(f => f.Remove(f.IndexOf("\\"))).Distinct().ToList();
 
             var srcDir = files.Where(f => f.Element.Attribute(xmlns + "target")?.Value?.Contains(content) ?? false)
                               .Select(f => f.Element.Attribute(xmlns + "src")?.Value)
                               .FirstOrDefault();
+
+            if (string.IsNullOrEmpty(srcDir))
+                return result;
             srcDir = srcDir.Substring(0, srcDir.IndexOf(content) + content.Length);
 
             result.AddRange(includedFolders.Select(s =>
@@ -321,7 +367,7 @@ namespace PubComp.Building.NuGetPack
                         new XElement("file",
                             new XAttribute("src", srcDir + s + @"\**"),
                             new XAttribute("target", targetDir + s))))
-                            .ToList());
+                .ToList());
 
             return result;
         }
@@ -329,6 +375,57 @@ namespace PubComp.Building.NuGetPack
         protected override IEnumerable<XElement> GetProjectReference(XElement proj, XNamespace xmlns)
         {
             return new List<XElement>();
+        }
+
+        protected override void IncludeCurrentProject(string nuspecFolder, string projectPath, bool isDebug,
+            bool doIncludeSources, string preReleaseSuffixOverride, List<DependencyInfo> result, string projectFolder)
+        {
+        }
+
+        protected override XElement GetMultiFrameworkDependenciesGroups(string projectPath, XElement dependencies)
+        {
+            var result = new XElement("dependencies", dependencies);
+            var targetFrameworks = GetTargetFrameworks(projectPath);
+            if (string.IsNullOrEmpty(targetFrameworks))
+                return result;
+            var frameworks = targetFrameworks.Split(';');
+
+            var existingFramework = dependencies.Attribute("targetFramework")?.Value;
+            if (string.IsNullOrEmpty(existingFramework))
+                return result;
+
+            foreach (var frmwrk in frameworks)
+            {
+                var f = FormatTargetFremwork(frmwrk);
+                if (existingFramework == f)
+                    continue;
+                var grp = new XElement("group");
+                grp.Add(new XAttribute("targetFramework", f));
+                dependencies.AddBeforeSelf(grp);
+            }
+
+            return result;
+        }
+
+        private static string FormatTargetFremwork(string frmwrk)
+        {
+            var f = frmwrk;
+            if (f.StartsWith("nets", StringComparison.OrdinalIgnoreCase))
+                f = ".NETS" + f.Substring(4);
+            else if (f.StartsWith("net", StringComparison.OrdinalIgnoreCase))
+                f = ".NETFramework" + f.Substring(3, 1) + "." + f.Substring(4);
+            if (f.EndsWith("d2"))
+                f = f + ".0";
+            return f;
+        }
+
+        private static string GetTargetFrameworks(string projectPath)
+        {
+            NuspecCreatorHelper.LoadProject(projectPath, out _, out var xmlns, out var proj);
+            var propGroups = proj.Elements(xmlns + "PropertyGroup").ToList();
+            var targetFrameworks = propGroups.FirstOrDefault(pg => pg.Elements("TargetFrameworks").Any())
+                ?.Element("TargetFrameworks")?.Value;
+            return targetFrameworks;
         }
     }
 }

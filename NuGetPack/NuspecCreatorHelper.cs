@@ -10,7 +10,6 @@ namespace PubComp.Building.NuGetPack
 {
     public static class NuspecCreatorHelper
     {
-
         public static void CreatePackages(
             string binFolder, string solutionFolder, bool isDebug,
             bool doCreatePkg = true, bool doIncludeCurrentProj = false,
@@ -34,7 +33,6 @@ namespace PubComp.Building.NuGetPack
             }
         }
 
-        
 
         internal static void LoadProject(
             string projectPath, out XDocument csProj, out XNamespace xmlns, out XElement proj)

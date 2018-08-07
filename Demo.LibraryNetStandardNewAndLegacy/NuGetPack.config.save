@@ -1,0 +1,14 @@
+﻿<NuGetPack>
+  <AddFrameworkReferences>true</AddFrameworkReferences>
+  <DoIncludeSources>true</DoIncludeSources>
+  <DoIncludeCurrentProjectInNuSpec>true</DoIncludeCurrentProjectInNuSpec>
+  <IconUrl>http://www.codeplex.com/favicon.ico</IconUrl>
+  <ProjectUrl>https://pubcomp.codeplex.com/#</ProjectUrl>
+  <LicenseUrl>https://pubcomp.codeplex.com/license</LicenseUrl>
+  <Authors>Demo Author 123</Authors>
+  <Owners>Demo Owner</Owners>
+  <Copyright>Demo Copyright</Copyright>
+  <Description>Demo Description</Description>
+  <Summary>Demo Summary</Summary>
+  <Keywords>Demo, Key, Word</Keywords>
+</NuGetPack>

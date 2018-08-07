@@ -492,7 +492,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         {
             var creator = new NuspecCreatorNetFramework();
             var results = creator.GetBinaryFiles(
-                Path.GetDirectoryName(nuProj1Dll), @"..\..", nuProj1Csproj);
+                Path.GetDirectoryName(nuProj1Dll), @"..\..", nuProj1Csproj, false);
 
             var path = isLocal ? @"..\..\..\Dependencies\" : @"..\..\Dependencies\";
 
@@ -517,7 +517,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
         {
             var creator = new NuspecCreatorNetFramework();
             var results = creator.GetBinaryFiles(
-                Path.GetDirectoryName(nuProj2Dll), @"..\..", nuProj2Csproj);
+                Path.GetDirectoryName(nuProj2Dll), @"..\..", nuProj2Csproj, false);
 
             LinqAssert.Count(results, 0);
         }

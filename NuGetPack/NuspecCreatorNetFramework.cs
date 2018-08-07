@@ -38,7 +38,7 @@ namespace PubComp.Building.NuGetPack
         }
 
         public override List<DependencyInfo> GetBinaryFiles(
-            string nuspecFolder, string projectFolder, string projectPath)
+            string nuspecFolder, string projectFolder, string projectPath, bool isDebug)
         {
             var defaultVersionFolder = "net" + (GetFrameworkVersion(projectPath) ?? "45");
 
@@ -124,6 +124,25 @@ namespace PubComp.Building.NuGetPack
         protected override IEnumerable<DependencyInfo> GetContentFilesForNetStandard(string projectPath, List<DependencyInfo> files)
         {
             return new List<DependencyInfo>();
+        }
+
+        protected override void IncludeCurrentProject(string nuspecFolder, string projectPath, bool isDebug,
+            bool doIncludeSources, string preReleaseSuffixOverride, List<DependencyInfo> result, string projectFolder)
+        {
+            result.AddRange(GetInternalDependencies(projectPath, isDebug, nuspecFolder, preReleaseSuffixOverride));
+
+            result.AddRange(GetBinaryReferences(nuspecFolder, projectFolder, projectPath, isDebug, nuspecFolder));
+
+            if (doIncludeSources)
+                result.AddRange(GetSourceFiles(nuspecFolder, projectFolder, projectPath));
+
+            result.AddRange(GetDependenciesFromProject(projectFolder, projectPath));
+        }
+
+        protected override XElement GetMultiFrameworkDependenciesGroups(string projectPath, XElement dependencies)
+        {
+            var result = new XElement("dependencies", dependencies);
+            return result;
         }
     }
 }

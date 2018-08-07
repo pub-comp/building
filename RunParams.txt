@@ -1,0 +1,3 @@
+solution bin=c:\Users\amitaita\Documents\Dev\Learn\infrastructure-general\Output\netstandard2\       src=c:\Users\amitaita\Documents\Dev\Learn\infrastructure-general\
+
+project "c:\Users\amitaita\Documents\Dev\building\Demo.LibraryNetStandardNewAndLegacy\Demo.LibraryNetStandardNewAndLegacy.csproj"        "c:\Users\amitaita\Documents\Dev\building\Demo.LibraryNetStandardNewAndLegacy\bin\Debug\netstandard2.0\PubComp.Building.Demo.LibraryNetStandardNewAndLegacy.dll"

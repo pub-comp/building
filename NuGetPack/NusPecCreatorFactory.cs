@@ -17,7 +17,9 @@ namespace PubComp.Building.NuGetPack
         private static bool IsProjNetStandard(string projectPath)
         {
             NuspecCreatorHelper.LoadProject(projectPath, out _, out _, out var csproj);
-            return csproj.Elements("PropertyGroup").Any(e => e.Elements("TargetFramework").Any());
+            return 
+                csproj.Elements("PropertyGroup").Any(e => e.Elements("TargetFramework").Any()) ||
+                csproj.Elements("PropertyGroup").Any(e => e.Elements("TargetFrameworks").Any());
         }
     }
 }
