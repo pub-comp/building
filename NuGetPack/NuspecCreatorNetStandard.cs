@@ -244,15 +244,9 @@ namespace PubComp.Building.NuGetPack
         public override List<DependencyInfo> GetBinaryFiles(
             string nuspecFolder, string projectFolder, string projectPath, bool isDebug)
         {
-            //var files = new List<string>();
-
-            //var asem = GetAssemblyName(projectPath);
-            //files.Add(asem + ".DLL");
-            //if (File.Exists(asem + ".PDB"))
-            //    files.Add(asem + ".PDB");
             NuspecCreatorHelper.LoadProject(projectPath, out var csProj, out _, out _);
 
-            var outputPath = GetOutputPath(csProj, isDebug, projectFolder);
+            var outputPath =  GetOutputPath(csProj, isDebug, projectFolder);
 
             if (!Directory.Exists(outputPath)
                 || !Directory.GetFiles(outputPath).Any(f =>
@@ -262,41 +256,85 @@ namespace PubComp.Building.NuGetPack
                 outputPath = nuspecFolder;
             }
 
+            outputPath = SlnOutputFolder ?? outputPath;
+
             var includeFiles = GetProjectIncludeFiles(projectPath, out _, out _, out _, false);
-            var incFiles = includeFiles.Select(f => f + ".DLL").ToList();
-            incFiles.AddRange(includeFiles.Where(f => File.Exists(f + ".PDB")).Select(f => f + ".PDB"));
+            var files = includeFiles.Select(f => f + ".DLL").ToList();
+            files.AddRange(includeFiles.Where(f => File.Exists(f + ".PDB")).Select(f => f + ".PDB"));
+
 
             string[] frameworks;
+            var pathHeader = string.Empty;
             var targetFrameworks = GetTargetFrameworks(projectPath);
             if (string.IsNullOrEmpty(targetFrameworks))
-                frameworks = new[] {GetTargetFramework(projectPath)};
-            else frameworks = Directory.GetDirectories(outputPath);
-
-            var files = GetProjectBinaryFiles(projectPath, outputPath);
-            files = files.Select(Path.GetFileName).ToList();
-            var relativePath =string.Empty;
-            foreach (var framework in frameworks)
+                frameworks = new[] {GetTargetFramework(projectPath).TrimStart('.')};
+            else
             {
-                var lastFolder = outputPath.Substring(Path.GetDirectoryName(outputPath).Length + 1);
-                if (!lastFolder.EndsWith(framework.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
-                    continue;
+                frameworks = Directory.GetDirectories(outputPath);
+                if (!frameworks.Any())
+                {
+                    frameworks = targetFrameworks.Split(';');
+                    pathHeader = @"..\";
+                }
 
-                relativePath = @"..\" ;
-                break;
+                for (var i = 0; i < frameworks.Length; i++)
+                {
+                    var sep = frameworks[i].LastIndexOf('\\');
+                    if (sep > 0)
+                        frameworks[i] = frameworks[i].Substring(sep + 1);
+                }
             }
 
-            var items = CreateBinFilesDepInfoList(frameworks[0], incFiles);
-            foreach (var framework in frameworks)
+            var items = CreateBinFilesDepInfoList(frameworks, files);
+            files.Clear();
+
+            if (Directory.GetFiles(Path.Combine(outputPath, pathHeader)).Any(f =>
+                f.ToLower().EndsWith(".dll") || f.ToLower().EndsWith(".exe")))
             {
-                items.AddRange(CreateBinFilesDepInfoList(framework, files));
+                files = GetProjectBinaryFiles(projectPath, outputPath)
+                    .Select(Path.GetFileName).ToList();
+                items.AddRange(CreateBinFilesDepInfoList(frameworks, files));
+            }
+            else
+            {
+                foreach (var framework in frameworks)
+                {
+                    files.AddRange(GetProjectBinaryFiles(projectPath,
+                            Path.Combine(outputPath, SlnOutputFolder == null ? $"..\\{framework}" : framework))
+                        .Select(f =>
+                        {
+                            var frmwrk = f.Substring(Path.GetDirectoryName(Path.GetDirectoryName(f)).Length).TrimStart('\\');
+                            var prevDir = !string.IsNullOrEmpty(SlnOutputFolder) ? string.Empty : @"..\";
+                            return prevDir + frmwrk;
+                        }).ToList());
+                }
+
+                items.AddRange(files
+                    .Select(s =>
+                        new DependencyInfo(
+                            ElementType.LibraryFile,
+                            new XElement("file",
+                                new XAttribute("src", s),
+                                new XAttribute("target", Path.Combine($"lib\\{ExtractFramework(s)}")))))
+                    .ToList());
             }
 
             return items;
         }
 
-        private static List<DependencyInfo> CreateBinFilesDepInfoList(string framework, List<string> files)
+        private string ExtractFramework(string file)
         {
-           var result = new List<DependencyInfo>();
+            if(string.IsNullOrEmpty(SlnOutputFolder))
+                file = file.Substring(3);
+            var result = file.Substring(0, file.LastIndexOf('\\'));
+            return result;
+        }
+
+        private static List<DependencyInfo> CreateBinFilesDepInfoList(string[] frameworks, List<string> files)
+        {
+            var result = new List<DependencyInfo>();
+            foreach (var framework in frameworks)
+            {
                 result.AddRange(files
                     .Select(s =>
                         new DependencyInfo(
@@ -305,6 +343,7 @@ namespace PubComp.Building.NuGetPack
                                 new XAttribute("src", s),
                                 new XAttribute("target", Path.Combine($"lib\\{framework}")))))
                     .ToList());
+            }
 
             return result;
         }

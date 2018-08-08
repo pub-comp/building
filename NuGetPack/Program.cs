@@ -25,6 +25,8 @@ namespace PubComp.Building.NuGetPack
             }
             else
             {
+                NuspecCreatorBase.SlnOutputFolder = cla.BinFolder;
+
                 NuspecCreatorHelper.CreatePackages(
                     cla.BinFolder, cla.SolutionFolder, cla.IsDebug, cla.DoCreateNuPkg, cla.DoIncludeCurrentProj, cla.PreReleaseSuffixOverride);
             }

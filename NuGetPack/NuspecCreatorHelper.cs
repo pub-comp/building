@@ -58,13 +58,13 @@ namespace PubComp.Building.NuGetPack
             if (!Directory.Exists(parentFolder))
                 return;
 
-            var configFiles = Directory.GetFiles(parentFolder).Where(f =>
+            var configFiles = Directory.GetFiles(parentFolder).Where(f => 
                     Path.GetFileName(f).ToLower() == "nugetpack.config")
                 .ToList();
 
             if (configFiles.Any())
             {
-                var projectFiles = Directory.GetFiles(parentFolder).Where(f =>
+                var projectFiles = Directory.GetFiles(parentFolder).Where(f => 
                         Path.GetExtension(f) == ".csproj" || Path.GetExtension(f) == ".vbproj")
                     .ToList();
 

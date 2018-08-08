@@ -12,6 +12,7 @@ namespace PubComp.Building.NuGetPack
     public abstract partial class NuspecCreatorBase
     {
         protected string TargetFrameworkElement { get; set; }
+        public static string SlnOutputFolder;
 
 
         public void CreatePackage(
@@ -26,6 +27,8 @@ namespace PubComp.Building.NuGetPack
                 projectPath, assemblyPath, isDebug, doIncludeCurrentProj, preReleaseSuffixOverride,
                 out config);
             var nuspecPath = Path.ChangeExtension(assemblyPath, ".nuspec");
+
+            nuspecPath = SlnOutputFolder == null ? nuspecPath : Path.Combine(SlnOutputFolder, Path.GetFileName(nuspecPath));
 
             DebugOut(() => "nuspecPath = " + nuspecPath);
 
@@ -62,6 +65,7 @@ namespace PubComp.Building.NuGetPack
             {
                 // ReSharper disable once AssignNullToNotNullAttribute
                 Environment.CurrentDirectory = Path.GetDirectoryName(nuspecPath);
+                nuspecPath = SlnOutputFolder  == null? nuspecPath : Path.Combine(SlnOutputFolder, Path.GetFileName(nuspecPath));
 
                 DebugOut(() => "CurrentDirectory = " + Environment.CurrentDirectory);
 
@@ -194,6 +198,8 @@ namespace PubComp.Building.NuGetPack
                     if (config != null)
                     {
                         doAddFrameworkReferences = config.AddFrameworkReferences;
+                        if (!doAddFrameworkReferences && this is NuspecCreatorNetFramework)
+                            throw new NotSupportedException("doAddFrameworkReferences is not Supported for Dot NetStandard projects! ");
 
                         doIncludeSources = config.DoIncludeSources;
 
@@ -226,6 +232,8 @@ namespace PubComp.Building.NuGetPack
 
                         if (config.DoIncludeCurrentProjectInNuSpec.HasValue)
                             doIncludeCurrentProj = config.DoIncludeCurrentProjectInNuSpec.Value;
+                        if (!doIncludeCurrentProj && this is NuspecCreatorNetFramework)
+                            throw new NotSupportedException("Dot NetStandard projects must include Current Project");
                     }
                 }
             }
@@ -374,7 +382,7 @@ namespace PubComp.Building.NuGetPack
         public abstract List<DependencyInfo> GetDependencies(string projectPath, out XAttribute dependenciesAttribute);
 
         public abstract List<DependencyInfo> GetBinaryFiles(
-            string nuspecFolder, string projectFolder, string projectPath, bool isdebug);
+            string nuspecFolder, string projectFolder, string projectPath, bool isDebug);
 
         public abstract XElement GetReferencesFiles(string projectPath);
 
@@ -465,7 +473,7 @@ namespace PubComp.Building.NuGetPack
             var absolutePath = Path.GetFullPath(filePath);
 
             var fileUri = new Uri(absolutePath);
-            var referenceUri = new Uri(referencePath);
+            var referenceUri = new Uri(SlnOutputFolder ?? referencePath);
             return referenceUri.MakeRelativeUri(fileUri).ToString().Replace('/', '\\');
         }
 
