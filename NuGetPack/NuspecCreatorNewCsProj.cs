@@ -11,9 +11,9 @@ using System.Xml.XPath;
 
 namespace PubComp.Building.NuGetPack
 {
-    public class NuspecCreatorNetStandard : NuspecCreatorBase
+    public class NuspecCreatorNewCsProj : NuspecCreatorBase
     {
-        public NuspecCreatorNetStandard()
+        public NuspecCreatorNewCsProj()
         {
             TargetFrameworkElement = "TargetFramework";
         }

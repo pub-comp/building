@@ -10,7 +10,7 @@ namespace PubComp.Building.NuGetPack
     {
         internal static NuspecCreatorBase GetCreator(string projectPath)
         {
-            var creator = IsProjNetStandard(projectPath) ? new NuspecCreatorNetStandard(): (NuspecCreatorBase) new NuspecCreatorNetFramework();
+            var creator = IsProjNetStandard(projectPath) ? new NuspecCreatorNewCsProj(): (NuspecCreatorBase) new NuspecCreatorOldCsProj();
             return creator;
         }
 

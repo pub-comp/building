@@ -198,7 +198,7 @@ namespace PubComp.Building.NuGetPack
                     if (config != null)
                     {
                         doAddFrameworkReferences = config.AddFrameworkReferences;
-                        if (!doAddFrameworkReferences && this is NuspecCreatorNetFramework)
+                        if (!doAddFrameworkReferences && this is NuspecCreatorOldCsProj)
                             throw new NotSupportedException("doAddFrameworkReferences is not Supported for Dot NetStandard projects! ");
 
                         doIncludeSources = config.DoIncludeSources;
@@ -232,7 +232,7 @@ namespace PubComp.Building.NuGetPack
 
                         if (config.DoIncludeCurrentProjectInNuSpec.HasValue)
                             doIncludeCurrentProj = config.DoIncludeCurrentProjectInNuSpec.Value;
-                        if (!doIncludeCurrentProj && this is NuspecCreatorNetFramework)
+                        if (!doIncludeCurrentProj && this is NuspecCreatorOldCsProj)
                             throw new NotSupportedException("Dot NetStandard projects must include Current Project");
                     }
                 }

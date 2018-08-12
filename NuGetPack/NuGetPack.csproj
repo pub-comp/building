@@ -55,8 +55,8 @@
     <Compile Include="NuspecCreatorBase.cs" />
     <Compile Include="NusPecCreatorFactory.cs" />
     <Compile Include="NuspecCreatorHelper.cs" />
-    <Compile Include="NuspecCreatorNetFramework.cs" />
-    <Compile Include="NuspecCreatorNetStandard.cs" />
+    <Compile Include="NuspecCreatorOldCsProj.cs" />
+    <Compile Include="NuspecCreatorNewCsProj.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

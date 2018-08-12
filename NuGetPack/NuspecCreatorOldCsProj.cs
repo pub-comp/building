@@ -8,9 +8,9 @@ using System.Xml.Linq;
 
 namespace PubComp.Building.NuGetPack
 {
-    public class NuspecCreatorNetFramework : NuspecCreatorBase
+    public class NuspecCreatorOldCsProj : NuspecCreatorBase
     {
-        public NuspecCreatorNetFramework()
+        public NuspecCreatorOldCsProj()
         {
             TargetFrameworkElement = "TargetFrameworkVersion";
         }
