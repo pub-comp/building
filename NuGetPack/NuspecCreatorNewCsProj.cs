@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 using System.Xml.XPath;
 
 namespace PubComp.Building.NuGetPack
@@ -26,9 +27,6 @@ namespace PubComp.Building.NuGetPack
             dependenciesAttribute = new XAttribute("targetFramework", targetFramework);
 
             var result = new List<DependencyInfo>();
-            result.AddRange(GetProjectDependenciesNetStandard(projectPath));
-            result.AddRange(GetPackageDependenciesNetStandard(projectPath));
-
 
             return result;
         }
@@ -121,11 +119,6 @@ namespace PubComp.Building.NuGetPack
             return (directoryContainsFile && !projIgnoresFile) || projIncludesFile;
         }
 
-        protected override string GetContentFileTarget(XElement el, XNamespace xmlns)
-        {
-            return el.Attribute("Link")?.Value;
-        }
-
         /// <summary>
         /// Add manually all files under content folder, as new csproj doesn't contain explicity all files as XML elements
         /// </summary>
@@ -155,34 +148,67 @@ namespace PubComp.Building.NuGetPack
             return targetFrameworkVersion;
         }
 
-        private List<DependencyInfo> GetPackageDependenciesNetStandard(string projectPath)
+        private XElement GetPackageDependenciesNetStandard(string projectPath, List<XElement> projDependencies)
         {
-            var result = new List<DependencyInfo>();
-
-            if (!File.Exists(projectPath))
-                return result;
-
-            var project = XDocument.Load(projectPath);
-
-            var packages = project.XPathSelectElements("//ItemGroup//PackageReference").ToList();
-
-            foreach (var package in packages)
+            var targetFramework = GetTargetFramework(projectPath);
+            var result = new XElement("group",
+                             new XAttribute("targetFramework", targetFramework));
+            foreach (var dep in projDependencies)
             {
-                result.Add(
-                    new DependencyInfo(
-                        ElementType.NuGetDependency,
-                        new XElement("dependency",
-                            new XAttribute("id", package.Attribute("Include")?.Value ?? String.Empty),
-                            new XAttribute("version", package.Attribute("Version")?.Value ?? String.Empty),
-                            new XAttribute("exclude", "Build,Analyzers"))));
+                result.Add(dep);
             }
 
+            if (!File.Exists(projectPath))
+                return null;
+
+            NuspecCreatorHelper.LoadProject(projectPath, out XDocument _, out var xmlns, out var project);
+
+            var condPackRef = project.Elements(xmlns + "ItemGroup").Where(e => e.Attribute(xmlns + "Condition") != null).ToList();
+            var nonCondPackRef = project.Elements(xmlns + "ItemGroup").Where(e => e.Attribute(xmlns + "Condition") == null).Elements(xmlns + "PackageReference").ToList();
+
+            foreach (var package in nonCondPackRef)
+            {
+                result.Add(
+                    new XElement("dependency",
+                            new XAttribute("id", package.Attribute("Include")?.Value ?? String.Empty),
+                            new XAttribute("version", package.Attribute("Version")?.Value ?? String.Empty),
+                            new XAttribute("exclude", "Build,Analyzers")));
+            }
+
+            result = GetMultiFrameworkDependenciesGroups(projectPath, result);
+            AddConditionalPackages(condPackRef, result);
+
             return result;
+
+            void AddConditionalPackages(List<XElement> conditionalPackages, XElement res)
+            {
+                foreach (var cond in conditionalPackages)
+                {
+                    var frmwrk = cond.Attribute(xmlns + "Condition").Value;
+                    frmwrk = frmwrk.Substring(frmwrk.LastIndexOf(" ") + 2).Trim('\'');
+                    frmwrk = FormatTargetFremwork(frmwrk);
+                    var grp = res.Elements(xmlns + "group").First(g => g.Attribute(xmlns + "targetFramework")?.Value == frmwrk);
+                    var packages = cond.Elements().ToList();
+                    foreach (var pck in packages)
+                    {
+                        var toDelete = grp.Elements(xmlns + "dependency")
+                                    .FirstOrDefault(d => d.Attribute(xmlns + "id")?.Value == pck.Attribute(xmlns + "Include")?.Value);
+                        if (toDelete != null)
+                            toDelete.Remove();
+
+                        grp.Add(
+                            new XElement("dependency",
+                                new XAttribute("id", pck.Attribute("Include")?.Value ?? String.Empty),
+                                new XAttribute("version", pck.Element("Version")?.Value ?? "0.0.0"),
+                                new XAttribute("exclude", "Build,Analyzers")));
+                    }
+                }
+            }
         }
 
-        private IEnumerable<DependencyInfo> GetProjectDependenciesNetStandard(string projectPath)
+        private List<XElement> GetProjectDependenciesNetStandard(string projectPath)
         {
-            var result = new List<DependencyInfo>();
+            var result = new List<XElement>();
 
             if (!File.Exists(projectPath))
                 return result;
@@ -198,12 +224,45 @@ namespace PubComp.Building.NuGetPack
                 var ver = verList[i];
 
                 result.Add(
-                    new DependencyInfo(
-                        ElementType.NuGetDependency,
-                        new XElement("dependency",
+                    new XElement("dependency",
                             new XAttribute("id", dependantFile),
                             new XAttribute("version", ver),
-                            new XAttribute("exclude", "Build,Analyzers"))));
+                            new XAttribute("exclude", "Build,Analyzers")));
+            }
+
+            return result;
+        }
+
+        protected override XElement GetDependenciesForNewCsProj(string projectPath, XElement dependencies)
+        {
+            var projDependencies = GetProjectDependenciesNetStandard(projectPath);
+            var result = GetPackageDependenciesNetStandard(projectPath, projDependencies); 
+
+            return result;
+        }
+
+        private XElement GetMultiFrameworkDependenciesGroups(string projectPath, XElement dependencies)
+        {
+            var result = new XElement("dependencies", dependencies);
+            var targetFrameworks = GetTargetFrameworks(projectPath);
+            if (string.IsNullOrEmpty(targetFrameworks))
+                return result;
+            var frameworks = targetFrameworks.Split(';');
+
+            var existingFramework = dependencies.Attribute("targetFramework")?.Value;
+            if (string.IsNullOrEmpty(existingFramework))
+                return result;
+
+            var children = new XElement(dependencies);
+            foreach (var frmwrk in frameworks)
+            {
+                var f = FormatTargetFremwork(frmwrk);
+                if (existingFramework == f)
+                    continue;
+                var grp = new XElement("group");
+                grp.Add(new XAttribute("targetFramework", f));
+                grp.Add(children.Elements().Select(x => new XElement(x)));
+                dependencies.AddBeforeSelf(grp);
             }
 
             return result;
@@ -288,10 +347,13 @@ namespace PubComp.Building.NuGetPack
             var items = CreateBinFilesDepInfoList(frameworks, files);
             files.Clear();
 
-            if (Directory.GetFiles(Path.Combine(outputPath, pathHeader)).Any(f =>
+            var outPath = SlnOutputFolder != null ? Path.Combine(outputPath, frameworks.First()) : outputPath;
+
+            if (frameworks.Length < 2 &&
+                Directory.GetFiles(Path.Combine(outPath, pathHeader)).Any(f =>
                 f.ToLower().EndsWith(".dll") || f.ToLower().EndsWith(".exe")))
             {
-                files = GetProjectBinaryFiles(projectPath, outputPath)
+                files = GetProjectBinaryFiles(projectPath, outPath)
                     .Select(Path.GetFileName).ToList();
                 items.AddRange(CreateBinFilesDepInfoList(frameworks, files));
             }
@@ -367,6 +429,10 @@ namespace PubComp.Building.NuGetPack
                     new XElement("group", items));
         }
 
+        protected override string GetContentFileTarget(XElement el, XNamespace xmlns)
+        {
+            return el.Attribute("Link")?.Value;
+        }
 
         protected override IEnumerable<DependencyInfo> GetContentFilesForNetStandard(string projectPath, List<DependencyInfo> files)
         {
@@ -419,31 +485,6 @@ namespace PubComp.Building.NuGetPack
         protected override void IncludeCurrentProject(string nuspecFolder, string projectPath, bool isDebug,
             bool doIncludeSources, string preReleaseSuffixOverride, List<DependencyInfo> result, string projectFolder)
         {
-        }
-
-        protected override XElement GetMultiFrameworkDependenciesGroups(string projectPath, XElement dependencies)
-        {
-            var result = new XElement("dependencies", dependencies);
-            var targetFrameworks = GetTargetFrameworks(projectPath);
-            if (string.IsNullOrEmpty(targetFrameworks))
-                return result;
-            var frameworks = targetFrameworks.Split(';');
-
-            var existingFramework = dependencies.Attribute("targetFramework")?.Value;
-            if (string.IsNullOrEmpty(existingFramework))
-                return result;
-
-            foreach (var frmwrk in frameworks)
-            {
-                var f = FormatTargetFremwork(frmwrk);
-                if (existingFramework == f)
-                    continue;
-                var grp = new XElement("group");
-                grp.Add(new XAttribute("targetFramework", f));
-                dependencies.AddBeforeSelf(grp);
-            }
-
-            return result;
         }
 
         private static string FormatTargetFremwork(string frmwrk)

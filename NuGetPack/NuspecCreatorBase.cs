@@ -198,7 +198,7 @@ namespace PubComp.Building.NuGetPack
                     if (config != null)
                     {
                         doAddFrameworkReferences = config.AddFrameworkReferences;
-                        if (!doAddFrameworkReferences && this is NuspecCreatorOldCsProj)
+                        if (doAddFrameworkReferences && this is NuspecCreatorNewCsProj)
                             throw new NotSupportedException("doAddFrameworkReferences is not Supported for Dot NetStandard projects! ");
 
                         doIncludeSources = config.DoIncludeSources;
@@ -232,7 +232,7 @@ namespace PubComp.Building.NuGetPack
 
                         if (config.DoIncludeCurrentProjectInNuSpec.HasValue)
                             doIncludeCurrentProj = config.DoIncludeCurrentProjectInNuSpec.Value;
-                        if (!doIncludeCurrentProj && this is NuspecCreatorOldCsProj)
+                        if (!doIncludeCurrentProj && this is NuspecCreatorNewCsProj)
                             throw new NotSupportedException("Dot NetStandard projects must include Current Project");
                     }
                 }
@@ -304,12 +304,16 @@ namespace PubComp.Building.NuGetPack
         {
             var nuspecFolder = Path.GetDirectoryName(nuspecPath);
 
-            XAttribute dependenciesAttribute;
-
             var elements = GetElements(
                 nuspecFolder, projectPath, isDebug, doIncludeSources, doIncludeCurrentProj,
                 preReleaseSuffixOverride,
-                out dependenciesAttribute);
+                out var dependenciesAttribute);
+        
+
+            var files = elements.Where(el =>
+                el.ElementType != ElementType.NuGetDependency
+                && el.ElementType != ElementType.FrameworkReference)
+                .Select(el => el.Element).ToList();
 
             var dependencies = new XElement("group");
             dependencies.Add(dependenciesAttribute);
@@ -322,12 +326,7 @@ namespace PubComp.Building.NuGetPack
                     dependencies.Add(d);
             }
 
-            var files = elements.Where(el =>
-                el.ElementType != ElementType.NuGetDependency
-                && el.ElementType != ElementType.FrameworkReference)
-                .Select(el => el.Element).ToList();
-
-            var depElemnt = GetMultiFrameworkDependenciesGroups(projectPath, dependencies);
+            var dependenciesElemnt = GetDependenciesForNewCsProj(projectPath, dependencies);
 
             var metadataElement = new XElement("metadata",
                         new XElement("id", packageName),
@@ -344,7 +343,7 @@ namespace PubComp.Building.NuGetPack
                         new XElement("requireLicenseAcceptance", false),
                         new XElement("licenseUrl", licenseUrl),
                         new XElement("copyright", copyright),
-                        depElemnt,
+                        dependenciesElemnt,
                         new XElement("tags", keywords));
 
             if (doAddFrameworkReferences)
@@ -377,7 +376,7 @@ namespace PubComp.Building.NuGetPack
             return doc;
         }
 
-        protected abstract XElement GetMultiFrameworkDependenciesGroups(string projectPath, XElement dependenciesAttribute);
+        protected abstract XElement GetDependenciesForNewCsProj(string projectPath, XElement dependencies);
 
         public abstract List<DependencyInfo> GetDependencies(string projectPath, out XAttribute dependenciesAttribute);
 
@@ -465,7 +464,7 @@ namespace PubComp.Building.NuGetPack
 
         
 
-        public static string AbsolutePathToRelativePath(string filePath, string referencePath)
+        public  string AbsolutePathToRelativePath(string filePath, string referencePath)
         {
             if (!Path.IsPathRooted(filePath))
                 return filePath;
@@ -474,7 +473,12 @@ namespace PubComp.Building.NuGetPack
 
             var fileUri = new Uri(absolutePath);
             var referenceUri = new Uri(SlnOutputFolder ?? referencePath);
-            return referenceUri.MakeRelativeUri(fileUri).ToString().Replace('/', '\\');
+            var relpath = referenceUri.MakeRelativeUri(fileUri).ToString().Replace('/', '\\');
+
+            DebugOut(() => "filePath = " + filePath);
+            DebugOut(() => "referencePath = " + referencePath);
+            DebugOut(() => "Relative Path = " + relpath);
+            return relpath;
         }
 
         // ReSharper disable once PartialMethodWithSinglePart

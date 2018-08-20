@@ -139,7 +139,7 @@ namespace PubComp.Building.NuGetPack
             result.AddRange(GetDependenciesFromProject(projectFolder, projectPath));
         }
 
-        protected override XElement GetMultiFrameworkDependenciesGroups(string projectPath, XElement dependencies)
+        protected override XElement GetDependenciesForNewCsProj(string projectPath, XElement dependencies)
         {
             var result = new XElement("dependencies", dependencies);
             return result;

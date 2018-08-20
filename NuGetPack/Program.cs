@@ -168,6 +168,15 @@ namespace PubComp.Building.NuGetPack
             mode = modeVar ?? Mode.Project;
             isDebug = (config ?? string.Empty).ToLower() == "debug";
 
+            //if (projPath != null)
+            //    projPath = projPath.EndsWith("\\") ? projPath : projPath + "\\";
+            //if (dllPath != null)
+            //    dllPath = dllPath.EndsWith("\\") ? dllPath : dllPath + "\\";
+            if (binFolder != null)
+                binFolder = binFolder.EndsWith("\\") ? binFolder : binFolder + "\\";
+            if (solutionFolder != null)
+                solutionFolder = solutionFolder.EndsWith("\\") ? solutionFolder : solutionFolder + "\\";
+
             commandLineArguments = new CommandLineArguments
             {
                 Mode = mode,
@@ -176,6 +185,7 @@ namespace PubComp.Building.NuGetPack
                 BinFolder = binFolder,
                 SolutionFolder = solutionFolder,
                 IsDebug = isDebug,
+
                 DoCreateNuPkg = doCreateNuPkg,
                 DoIncludeCurrentProj = doIncludeCurrentProj,
                 PreReleaseSuffixOverride = preReleaseSuffixOverride,
