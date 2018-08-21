@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>Demo.NetStandardAndNet46</id>
+    <version>1.0.0</version>
+    <title>Demo.NetStandardAndNet46</title>
+    <authors>Demo.NetStandardAndNet46</authors>
+    <owners>Demo.NetStandardAndNet46</owners>
+    <description>Package Description</description>
+    <releaseNotes></releaseNotes>
+    <summary></summary>
+    <language>en-US</language>
+    <projectUrl>https://www.nuget.org/</projectUrl>
+    <iconUrl>https://nuget.org/Content/Images/packageDefaultIcon-50x50.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://www.nuget.org/</licenseUrl>
+    <copyright> </copyright>
+    <dependencies>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="PubComp.Building.Demo.LibraryNetStandard2" version="1.3.2" exclude="Build,Analyzers" />
+        <dependency id="PubComp.Building.Demo.LibraryNetStandard" version="1.3.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+    <references></references>
+    <tags>Demo.NetStandardAndNet46</tags>
+    <contentFiles />
+  </metadata>
+  <files>
+    <file src="Demo.NetStandardAndNet46.DLL" target="lib\NETStandard2.0" />
+    <file src="Demo.NetStandardAndNet46.PDB" target="lib\NETStandard2.0" />
+  </files>
+</package>

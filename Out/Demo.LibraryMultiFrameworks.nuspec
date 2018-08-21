@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>Demo.LibraryMultiFrameworks</id>
+    <version>1.7.5</version>
+    <title>Demo.LibraryMultiFrameworks</title>
+    <authors>Infrastructure</authors>
+    <owners>Payoneer Inc.</owners>
+    <description>Various Aspects</description>
+    <releaseNotes></releaseNotes>
+    <summary>Various Aspects</summary>
+    <language>en-US</language>
+    <projectUrl>http://tfs:8090/tfs/DefaultCollection/Payoneer/_git/infrastructure-general</projectUrl>
+    <iconUrl>http://tfs-nugetserver.payoneer.com/Images/PayoneerIcon.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>http://portal.payoneer.com/</licenseUrl>
+    <copyright>Copyright © Payoneer Inc 2015+</copyright>
+    <dependencies>
+      <group targetFramework=".NETFramework4.61">
+        <dependency id="PubComp.Building.Demo.LibraryNetStandard2" version="1.4.0" exclude="Build,Analyzers" />
+        <dependency id="PubComp.Building.Demo.LibraryNetStandardNewAndLegacy" version="1.4.4" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Azure.DocumentDB" version="1.12.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="PubComp.Building.Demo.LibraryNetStandard2" version="1.4.0" exclude="Build,Analyzers" />
+        <dependency id="PubComp.Building.Demo.LibraryNetStandardNewAndLegacy" version="1.4.4" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Azure.DocumentDB" version="1.22.0" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Azure.DocumentDB.Core" version="1.9.1" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+    <tags>infra, infrastructure, aspects, aop</tags>
+    <references>
+      <group>
+        <reference file="PubComp.Building.Demo.Binary1.DLL" />
+        <reference file="PubComp.Building.Demo.Library1.DLL" />
+        <reference file="PubComp.Building.Demo.LibraryNet40.DLL" />
+        <reference file="PubComp.Building.Demo.LibraryNetStandard.DLL" />
+      </group>
+    </references>
+    <contentFiles />
+  </metadata>
+  <files>
+    <file src="net461\PubComp.Building.Demo.Binary1.DLL" target="lib\net461" />
+    <file src="net461\PubComp.Building.Demo.Library1.DLL" target="lib\net461" />
+    <file src="net461\PubComp.Building.Demo.LibraryNet40.DLL" target="lib\net461" />
+    <file src="net461\PubComp.Building.Demo.LibraryNetStandard.DLL" target="lib\net461" />
+    <file src="net461\PubComp.Building.Demo.Binary1.PDB" target="lib\net461" />
+    <file src="net461\PubComp.Building.Demo.Library1.PDB" target="lib\net461" />
+    <file src="net461\PubComp.Building.Demo.LibraryNet40.PDB" target="lib\net461" />
+    <file src="net461\PubComp.Building.Demo.LibraryNetStandard.PDB" target="lib\net461" />
+    <file src="netstandard2\PubComp.Building.Demo.Binary1.DLL" target="lib\netstandard2" />
+    <file src="netstandard2\PubComp.Building.Demo.Library1.DLL" target="lib\netstandard2" />
+    <file src="netstandard2\PubComp.Building.Demo.LibraryNet40.DLL" target="lib\netstandard2" />
+    <file src="netstandard2\PubComp.Building.Demo.LibraryNetStandard.DLL" target="lib\netstandard2" />
+    <file src="netstandard2\PubComp.Building.Demo.Binary1.PDB" target="lib\netstandard2" />
+    <file src="netstandard2\PubComp.Building.Demo.Library1.PDB" target="lib\netstandard2" />
+    <file src="netstandard2\PubComp.Building.Demo.LibraryNet40.PDB" target="lib\netstandard2" />
+    <file src="netstandard2\PubComp.Building.Demo.LibraryNetStandard.PDB" target="lib\netstandard2" />
+    <file src="netstandard2.0\PubComp.Building.Demo.LibraryNet40.DLL" target="lib\netstandard2.0" />
+    <file src="netstandard2.0\PubComp.Building.Demo.LibraryNetStandard.DLL" target="lib\netstandard2.0" />
+    <file src="netstandard2.0\PubComp.Building.Demo.LibraryNet40.PDB" target="lib\netstandard2.0" />
+    <file src="netstandard2.0\PubComp.Building.Demo.LibraryNetStandard.PDB" target="lib\netstandard2.0" />
+    <file src="net461\Demo.LibraryMultiFrameworks.dll" target="lib\net461" />
+    <file src="net461\Demo.LibraryMultiFrameworks.pdb" target="lib\net461" />
+    <file src="netstandard2\Demo.LibraryMultiFrameworks.dll" target="lib\netstandard2" />
+    <file src="netstandard2\Demo.LibraryMultiFrameworks.pdb" target="lib\netstandard2" />
+  </files>
+</package>

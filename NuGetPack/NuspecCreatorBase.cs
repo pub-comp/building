@@ -8,7 +8,6 @@ using System.Xml.XPath;
 
 namespace PubComp.Building.NuGetPack
 {
-    // ReSharper disable once PartialTypeWithSinglePart
     public abstract partial class NuspecCreatorBase
     {
         protected string TargetFrameworkElement { get; set; }
@@ -36,16 +35,18 @@ namespace PubComp.Building.NuGetPack
 
             Console.WriteLine("Saving nuspec file");
 
-            // ReSharper disable once AssignNullToNotNullAttribute
-            doc.Save(nuspecPath);
+            if (nuspecPath != null)
+            {
+                doc.Save(nuspecPath);
 
-            if (!doCreatePkg)
-                return;
+                if (!doCreatePkg)
+                    return;
 
-            DebugOut(() => "CreatingPackage");
+                DebugOut(() => "CreatingPackage");
 
-            var doSeparateSymbols = config?.DoSeparateSymbols ?? false;
-            CreatePackage(nuspecPath, doSeparateSymbols);
+                var doSeparateSymbols = config?.DoSeparateSymbols ?? false;
+                CreatePackage(nuspecPath, doSeparateSymbols);
+            }
         }
 
         public void CreatePackage(string nuspecPath, bool doSeparateSymbols)
@@ -490,114 +491,6 @@ namespace PubComp.Building.NuGetPack
             Console.WriteLine(getText());
         }
 #endif
-/*
-        /// <summary>
-        /// Get NuSpec elements from a given project and its references
-        /// </summary>
-        /// <param name="nuspecFolder">Output folder</param>
-        /// <param name="projectPath">Path to project file to process</param>
-        /// <param name="isDebug">For local builds, if true looks in Debug folder under bin folders, if false looks under release folders</param>
-        /// <param name="doIncludeSources">If true, includes source files in NuSpec</param>
-        /// <param name="doIncludeCurrentProj">
-        /// <param name="preReleaseSuffixOverride"></param>
-        /// <param name="dependenciesAttribute"></param>
-        /// If true, treats given project as regular project,
-        ///  if not treats it as a NuGet definition project only - does not take binaries or source from project
-        /// </param>
-        /// <param name="preReleaseSuffixOverride"></param>
-        /// <param name="dependenciesAttribute"></param>
-        /// <returns>Elements for NuSpec</returns>
-        public List<DependencyInfo> GetElementsNetStandard(
-            string nuspecFolder, string projectPath, bool isDebug, bool doIncludeSources,
-            bool doIncludeCurrentProj, string preReleaseSuffixOverride,
-            out XAttribute dependenciesAttribute)
-        {
-            if (nuspecFolder == null)
-                throw new ArgumentNullException(nameof(nuspecFolder));
-
-            if (projectPath == null)
-                throw new ArgumentNullException(nameof(projectPath));
-
-            DebugOut(() => $"\r\n\r\nGetFiles({nuspecFolder}, {projectPath}, {isDebug})\r\n");
-
-            var projectFolder = Path.GetDirectoryName(projectPath);
-
-            DebugOut(() => "nuspecToProject = " + Path.GetDirectoryName(
-                AbsolutePathToRelativePath(Path.GetDirectoryName(projectPath), nuspecFolder + "\\")));
-
-            DebugOut(() => "ProjectFolder = " + projectFolder);
-
-            var result = new List<DependencyInfo>();
-
-            result.AddRange(GetDependencies(projectPath, out dependenciesAttribute));
-            
-            result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath));
-            result.AddRange(GetBinaryFiles(nuspecFolder, projectFolder, projectPath));
-            result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath,
-                srcFolder: @"sln\", destFolder: @"sln\", flattern: false, elementType: ElementType.SolutionItemsFile));
-            result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath,
-                srcFolder: @"tools\", destFolder: @"tools\", flattern: false, elementType: ElementType.ToolsFile));
-            result.AddRange(GetContentFiles(nuspecFolder, projectFolder, projectPath,
-                srcFolder: @"build\", destFolder: @"build\", flattern: false, elementType: ElementType.BuildFile));
-
-            if (doIncludeCurrentProj)
-            {
-                result.AddRange(GetInternalDependencies(projectPath, isDebug, nuspecFolder, preReleaseSuffixOverride));
-
-                result.AddRange(GetBinaryReferences(nuspecFolder, projectFolder, projectPath, isDebug, nuspecFolder));
-
-                if (doIncludeSources)
-                    result.AddRange(GetSourceFiles(nuspecFolder, projectFolder, projectPath));
-
-                result.AddRange(GetDependenciesFromProject(projectFolder, projectPath));
-            }
-
-            bool? referencesContainNuGetPackConfig =
-                (doIncludeCurrentProj ? false : (bool?)null);
-
-            var references = GetReferences(projectPath, referencesContainNuGetPackConfig);
-
-            foreach (var reference in references)
-            {
-                var refFolder = Path.GetDirectoryName(reference);
-
-                DebugOut(() => "refFolder = " + refFolder);
-
-                if (refFolder == null)
-                    throw new NullReferenceException(nameof(refFolder));
-
-                // ReSharper disable once AssignNullToNotNullAttribute
-                var refProjFolder = Path.Combine(projectFolder, refFolder);
-                // ReSharper disable once AssignNullToNotNullAttribute
-                var refProjPath = Path.Combine(projectFolder, reference);
-
-                DebugOut(() => "projFolder = " + refProjFolder);
-                DebugOut(() => "projPath = " + refProjPath);
-
-                result.AddRange(GetBinaryReferences(nuspecFolder, refProjFolder, refProjPath, isDebug, nuspecFolder));
-                
-                if (doIncludeSources)
-                    result.AddRange(GetSourceFiles(nuspecFolder, refProjFolder, refProjPath));
-                
-                result.AddRange(GetDependenciesFromProject(refProjFolder, refProjPath));
-            }
-
-            var exclude = result.Where(r =>
-                r.Element.Attribute("target") != null
-                && !string.IsNullOrEmpty(r.Element.Attribute("target").Value)
-                &&
-                (
-                    r.Element.Attribute("target").Value.ToLower().EndsWith(@"\packages.config")
-                    || r.Element.Attribute("target").Value.ToLower().EndsWith(@"\internalpackages.config")
-                    || r.Element.Attribute("target").Value.ToLower().EndsWith(@"\nugetpack.config")
-                )).ToList();
-
-            result = result.Except(exclude).ToList();
-
-            return result;
-        }
-*/
-
         protected abstract IEnumerable<DependencyInfo> GetContentFilesForNetStandard(string projectPath, List<DependencyInfo> files);
 
         /// <summary>
@@ -635,10 +528,6 @@ namespace PubComp.Building.NuGetPack
                                AbsolutePathToRelativePath(Path.GetDirectoryName(projectPath), nuspecFolder + "\\")));
 
             DebugOut(() => "ProjectFolder = " + projectFolder);
-
-            //var isProjNetStandard = IsProjNetStandard(projectPath);
-            //var packagesFile = Path.Combine(projectPath, "packages.config");
-            //var internalPackagesFile = Path.Combine(projectPath, "internalPackages.config");
 
             var result = new List<DependencyInfo>();
 
@@ -1151,15 +1040,6 @@ namespace PubComp.Building.NuGetPack
 
             return dependencies;
         }
-
-        /// <summary>
-        /// Loads the XML of a given project by file path
-        /// </summary>
-        /// <param name="projectPath"></param>
-        /// <param name="csProj"></param>
-        /// <param name="xmlns"></param>
-        /// <param name="proj"></param>
-        
 
         #endregion
     }

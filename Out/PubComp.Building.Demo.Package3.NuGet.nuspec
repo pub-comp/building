@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>PubComp.Building.Demo.Package3</id>
+    <version>1.3.2-Test</version>
+    <title>PubComp.Building.Demo.Package3</title>
+    <authors>Demo Author</authors>
+    <owners>Demo Owner</owners>
+    <description>Demo Description</description>
+    <releaseNotes></releaseNotes>
+    <summary>Demo Summary</summary>
+    <language>en-US</language>
+    <projectUrl>https://pubcomp.codeplex.com/</projectUrl>
+    <iconUrl>http://www.nuget.org/favicon.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://pubcomp.codeplex.com/license</licenseUrl>
+    <copyright>Demo Copyright</copyright>
+    <dependencies>
+      <group targetFramework="net451" />
+    </dependencies>
+    <tags>Demo, Key, Word</tags>
+    <frameworkAssemblies />
+    <references></references>
+  </metadata>
+  <files>
+    <file src="..\Demo.Package3.NuGet\..\.nuget\NuGet.exe" target="lib\net451\NuGet.exe" />
+    <file src="..\Demo.Package3.NuGet\..\Dependencies\PubComp.Building.Demo.Binary1.dll" target="lib\net40\PubComp.Building.Demo.Binary1.dll" />
+    <file src="..\Demo.Package3.NuGet\..\Dependencies\PubComp.Building.Demo.Binary1.pdb" target="lib\net40\PubComp.Building.Demo.Binary1.pdb" />
+    <file src="..\Demo.Package3.NuGet\lib\net45\PubComp.Building.Demo.Binary1.dll" target="lib\net45\PubComp.Building.Demo.Binary1.dll" />
+    <file src="..\Demo.Package3.NuGet\lib\net45\PubComp.Building.Demo.Binary1.pdb" target="lib\net45\PubComp.Building.Demo.Binary1.pdb" />
+    <file src="..\Out\PubComp.Building.Demo.LibraryNet40.dll" target="lib\net40\PubComp.Building.Demo.LibraryNet40.dll" />
+    <file src="..\Out\PubComp.Building.Demo.LibraryNet40.pdb" target="lib\net40\PubComp.Building.Demo.LibraryNet40.pdb" />
+    <file src="..\Demo.LibraryNet40\Class40.cs" target="src\Demo.LibraryNet40\Class40.cs" />
+    <file src="..\Demo.LibraryNet40\Properties\AssemblyInfo.cs" target="src\Demo.LibraryNet40\Properties\AssemblyInfo.cs" />
+    <file src="..\Out\PubComp.Building.Demo.LibraryNet451.dll" target="lib\net451\PubComp.Building.Demo.LibraryNet451.dll" />
+    <file src="..\Out\PubComp.Building.Demo.LibraryNet451.pdb" target="lib\net451\PubComp.Building.Demo.LibraryNet451.pdb" />
+    <file src="..\Demo.LibraryNet451\Class451.cs" target="src\Demo.LibraryNet451\Class451.cs" />
+    <file src="..\Demo.LibraryNet451\Properties\AssemblyInfo.cs" target="src\Demo.LibraryNet451\Properties\AssemblyInfo.cs" />
+  </files>
+</package>

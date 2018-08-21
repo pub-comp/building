@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>PubComp.Building.Demo.LibraryNet40</id>
+    <version>1.0.0</version>
+    <title>PubComp.Building.Demo.LibraryNet40</title>
+    <authors></authors>
+    <owners></owners>
+    <description></description>
+    <releaseNotes></releaseNotes>
+    <summary></summary>
+    <language>en-US</language>
+    <projectUrl></projectUrl>
+    <iconUrl>https://nuget.org/Content/Images/packageDefaultIcon-50x50.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl></licenseUrl>
+    <copyright></copyright>
+    <dependencies>
+      <group targetFramework="net40" />
+    </dependencies>
+    <references></references>
+    <tags>Demo.LibraryNet40</tags>
+  </metadata>
+  <files />
+</package>

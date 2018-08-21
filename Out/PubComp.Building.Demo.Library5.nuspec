@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>PubComp.Building.Demo.Library5</id>
+    <version>1.3.2-Test</version>
+    <title>PubComp.Building.Demo.Library5</title>
+    <authors>Demo Author</authors>
+    <owners>Demo Owner</owners>
+    <description>Demo Description</description>
+    <releaseNotes></releaseNotes>
+    <summary>Demo Summary</summary>
+    <language>en-US</language>
+    <projectUrl>https://pubcomp.codeplex.com/</projectUrl>
+    <iconUrl>http://www.nuget.org/favicon.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://pubcomp.codeplex.com/license</licenseUrl>
+    <copyright>Demo Copyright</copyright>
+    <dependencies>
+      <group targetFramework="net45">
+        <dependency id="PubComp.Building.Demo.Library4" version="1.3.2-Test" />
+        <dependency id="Common.Logging.DV" version="2.2.0" />
+        <dependency id="Common.Logging.NLog.DV" version="2.2.0" />
+        <dependency id="mongocsharpdriver" version="1.9.2" />
+        <dependency id="NLog" version="2.1.0" />
+        <dependency id="PubComp.NoSql.Core" version="2.0.0" />
+        <dependency id="PubComp.NoSql.MongoDbDriver" version="2.0.0" />
+      </group>
+    </dependencies>
+    <tags>Demo, Key, Word</tags>
+    <references></references>
+  </metadata>
+  <files>
+    <file src="..\Out\PubComp.Building.Demo.Library5.dll" target="lib\net45\PubComp.Building.Demo.Library5.dll" />
+    <file src="..\Out\PubComp.Building.Demo.Library5.pdb" target="lib\net45\PubComp.Building.Demo.Library5.pdb" />
+    <file src="..\Out\PubComp.Building.Demo.Library2.dll" target="lib\net45\PubComp.Building.Demo.Library2.dll" />
+    <file src="..\Out\PubComp.Building.Demo.Library2.pdb" target="lib\net45\PubComp.Building.Demo.Library2.pdb" />
+  </files>
+</package>

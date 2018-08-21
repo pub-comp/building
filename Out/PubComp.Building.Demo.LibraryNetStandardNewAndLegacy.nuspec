@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>PubComp.Building.Demo.LibraryNetStandardNewAndLegacy</id>
+    <version>1.4.4</version>
+    <title>PubComp.Building.Demo.LibraryNetStandardNewAndLegacy</title>
+    <authors>Infrastructure</authors>
+    <owners>Payoneer Inc.</owners>
+    <description>Various Aspects</description>
+    <releaseNotes></releaseNotes>
+    <summary>Various Aspects</summary>
+    <language>en-US</language>
+    <projectUrl>http://tfs:8090/tfs/DefaultCollection/Payoneer/_git/infrastructure-general</projectUrl>
+    <iconUrl>http://tfs-nugetserver.payoneer.com/Images/PayoneerIcon.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>http://portal.payoneer.com/</licenseUrl>
+    <copyright>Copyright © Payoneer Inc 2015+</copyright>
+    <dependencies>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="PubComp.Building.Demo.LibraryNetStandard2" version="1.4.0" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="11.0.2" exclude="Build,Analyzers" />
+        <dependency id="NUnit" version="3.10.1" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+    <tags>infra, infrastructure, aspects, aop</tags>
+    <references>
+      <group>
+        <reference file="PubComp.Building.Demo.LibraryNet40.DLL" />
+        <reference file="PubComp.Building.Demo.LibraryNet451.DLL" />
+        <reference file="PubComp.Building.Demo.LibraryNetStandard.DLL" />
+      </group>
+    </references>
+    <contentFiles>
+      <files include="any/any/MyContent1.txt" buildAction="Content" />
+      <files include="any/any/Data.txt" buildAction="Content" />
+      <files include="any/any/MyContent2.txt" buildAction="Content" />
+      <files include="**/Images/*.*" buildAction="Content" />
+      <files include="**/Images/Dogs/*.*" buildAction="Content" />
+      <files include="**/SubContent/*.*" buildAction="Content" />
+    </contentFiles>
+  </metadata>
+  <files>
+    <file src="..\Demo.LibraryNetStandardNewAndLegacy\content\MyContent1.txt" target="content\MyContent1.txt" />
+    <file src="..\Demo.LibraryNetStandardNewAndLegacy\content\Data.txt" target="content\Data.txt" />
+    <file src="..\Demo.LibraryNetStandardNewAndLegacy\content\MyContent2.txt" target="content\MyContent2.txt" />
+    <file src="..\Demo.LibraryNetStandardNewAndLegacy\content\Images\4-cats.jpg" target="content\Images\4-cats.jpg" />
+    <file src="..\Demo.LibraryNetStandardNewAndLegacy\content\Images\catInGrass.jpg" target="content\Images\catInGrass.jpg" />
+    <file src="..\Demo.LibraryNetStandardNewAndLegacy\content\Images\Dogs\chocolate-toxic-dogs.jpg" target="content\Images\Dogs\chocolate-toxic-dogs.jpg" />
+    <file src="..\Demo.LibraryNetStandardNewAndLegacy\content\Images\Dogs\pupy.jfif" target="content\Images\Dogs\pupy.jfif" />
+    <file src="..\Demo.LibraryNetStandardNewAndLegacy\content\SubContent\Other.txt" target="content\SubContent\Other.txt" />
+    <file src="..\Demo.LibraryNetStandardNewAndLegacy\content\MyContent1.txt" target="contentFiles\any\any\MyContent1.txt" />
+    <file src="..\Demo.LibraryNetStandardNewAndLegacy\content\Data.txt" target="contentFiles\any\any\Data.txt" />
+    <file src="..\Demo.LibraryNetStandardNewAndLegacy\content\MyContent2.txt" target="contentFiles\any\any\MyContent2.txt" />
+    <file src="..\Demo.LibraryNetStandardNewAndLegacy\content\Images\**" target="contentFiles\any\any\Images" />
+    <file src="..\Demo.LibraryNetStandardNewAndLegacy\content\SubContent\**" target="contentFiles\any\any\SubContent" />
+    <file src="NETStandard2.0\PubComp.Building.Demo.LibraryNet40.DLL" target="lib\NETStandard2.0" />
+    <file src="NETStandard2.0\PubComp.Building.Demo.LibraryNet451.DLL" target="lib\NETStandard2.0" />
+    <file src="NETStandard2.0\PubComp.Building.Demo.LibraryNetStandard.DLL" target="lib\NETStandard2.0" />
+    <file src="NETStandard2.0\PubComp.Building.Demo.LibraryNet40.PDB" target="lib\NETStandard2.0" />
+    <file src="NETStandard2.0\PubComp.Building.Demo.LibraryNet451.PDB" target="lib\NETStandard2.0" />
+    <file src="NETStandard2.0\PubComp.Building.Demo.LibraryNetStandard.PDB" target="lib\NETStandard2.0" />
+    <file src="NETStandard2.0\PubComp.Building.Demo.LibraryNetStandardNewAndLegacy.dll" target="lib\NETStandard2.0" />
+    <file src="NETStandard2.0\PubComp.Building.Demo.LibraryNetStandardNewAndLegacy.pdb" target="lib\NETStandard2.0" />
+  </files>
+</package>

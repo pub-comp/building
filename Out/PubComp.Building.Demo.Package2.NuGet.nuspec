@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>PubComp.Building.Demo.Package2</id>
+    <version>1.3.2-Test</version>
+    <title>PubComp.Building.Demo.Package2</title>
+    <authors>Demo Author</authors>
+    <owners>Demo Owner</owners>
+    <description>Demo Description</description>
+    <releaseNotes></releaseNotes>
+    <summary>Demo Summary</summary>
+    <language>en-US</language>
+    <projectUrl>https://pubcomp.codeplex.com/#</projectUrl>
+    <iconUrl>http://www.codeplex.com/favicon.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://pubcomp.codeplex.com/license</licenseUrl>
+    <copyright>Demo Copyright</copyright>
+    <dependencies>
+      <group targetFramework="net45">
+        <dependency id="FakeItEasy" version="1.24.0" />
+        <dependency id="PubComp.Building.Demo.Package1" version="1.4.1" />
+      </group>
+    </dependencies>
+    <tags>Demo, Key, Word</tags>
+    <frameworkAssemblies>
+      <frameworkAssembly assemblyName="System.Xaml" />
+    </frameworkAssemblies>
+    <references></references>
+  </metadata>
+  <files>
+    <file src="..\Out\PubComp.Building.Demo.Library3.dll" target="lib\net45\PubComp.Building.Demo.Library3.dll" />
+    <file src="..\Out\PubComp.Building.Demo.Library3.pdb" target="lib\net45\PubComp.Building.Demo.Library3.pdb" />
+  </files>
+</package>
