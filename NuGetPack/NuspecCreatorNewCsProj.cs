@@ -319,7 +319,6 @@ namespace PubComp.Building.NuGetPack
                 : outputPath;
             foreach (var framework in frameworks)
             {
-                var fnm = "";
                 files.AddRange(includeFiles
                     .Where(f => File.Exists(Path.Combine(outPath, Path.Combine(framework, f + ".DLL"))))
                     .Select(f => outputPath != outPath
