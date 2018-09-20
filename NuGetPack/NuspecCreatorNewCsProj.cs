@@ -60,8 +60,11 @@ namespace PubComp.Building.NuGetPack
         protected override string GetOutputPath(XDocument csProj, bool isDebug, string projectFolder)
         {
             var xmlns = csProj.Root.GetDefaultNamespace();
+            DebugOut(() => $"xmlns={xmlns}");
             var proj = csProj.Element(xmlns + "Project");
+            DebugOut(() => $"proj={proj}");
             var propGroups = proj.Elements(xmlns + "PropertyGroup").ToList();
+            DebugOut(() => $"propGrp={propGroups.Count}");
 
             var config = isDebug ? "Debug|AnyCPU" : "Release|AnyCPU";
 
@@ -69,6 +72,8 @@ namespace PubComp.Building.NuGetPack
                 .Where(el => el.Attribute("Condition") != null
                              && el.Attribute("Condition").Value.Contains(config))
                 .Elements(xmlns + "OutputPath").FirstOrDefault();
+
+            DebugOut(() => $"outputPathElement={outputPathElement}");
 
             string outputPath;
             if (outputPathElement == null)
@@ -198,7 +203,7 @@ namespace PubComp.Building.NuGetPack
             }
         }
 
-        private List<XElement> GetProjectDependenciesNetStandard(string projectPath)
+        private List<XElement> GetProjectDependenciesNetStandard(string projectPath, string preReleaseSuffixOverride)
         {
             var result = new List<XElement>();
 
@@ -213,7 +218,7 @@ namespace PubComp.Building.NuGetPack
             for (var i = 0; i < projref.Count; i++)
             {
                 var dependantFile = projref[i];
-                var ver = verList[i];
+                var ver = verList[i] + (string.IsNullOrEmpty(preReleaseSuffixOverride) ? string.Empty : $"-{preReleaseSuffixOverride}");
 
                 result.Add(
                     new XElement("dependency",
@@ -225,9 +230,9 @@ namespace PubComp.Building.NuGetPack
             return result;
         }
 
-        protected override XElement GetDependenciesForNewCsProj(string projectPath, XElement dependencies)
+        protected override XElement GetDependenciesForNewCsProj(string projectPath, XElement dependencies, string preReleaseSuffixOverride)
         {
-            var projDependencies = GetProjectDependenciesNetStandard(projectPath);
+            var projDependencies = GetProjectDependenciesNetStandard(projectPath, preReleaseSuffixOverride);
             var result = GetPackageDependenciesNetStandard(projectPath, projDependencies);
 
             return result;

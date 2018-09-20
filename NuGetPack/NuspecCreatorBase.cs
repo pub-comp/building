@@ -327,7 +327,7 @@ namespace PubComp.Building.NuGetPack
                     dependencies.Add(d);
             }
 
-            var dependenciesElemnt = GetDependenciesForNewCsProj(projectPath, dependencies);
+            var dependenciesElemnt = GetDependenciesForNewCsProj(projectPath, dependencies, preReleaseSuffixOverride);
 
             var metadataElement = new XElement("metadata",
                         new XElement("id", packageName),
@@ -377,7 +377,7 @@ namespace PubComp.Building.NuGetPack
             return doc;
         }
 
-        protected abstract XElement GetDependenciesForNewCsProj(string projectPath, XElement dependencies);
+        protected abstract XElement GetDependenciesForNewCsProj(string projectPath, XElement dependencies, string preReleaseSuffixOverride);
 
         public abstract List<DependencyInfo> GetDependencies(string projectPath, out XAttribute dependenciesAttribute);
 
@@ -483,13 +483,14 @@ namespace PubComp.Building.NuGetPack
         }
 
         // ReSharper disable once PartialMethodWithSinglePart
-        partial void DebugOut(Func<string> getText);
 
 #if DEBUG
-        partial void DebugOut(Func<string> getText)
+        protected void DebugOut(Func<string> getText)
         {
             Console.WriteLine(getText());
         }
+#else
+        protected void DebugOut(Func<string> getText){}
 #endif
         protected abstract IEnumerable<DependencyInfo> GetContentFilesForNetStandard(string projectPath, List<DependencyInfo> files);
 
