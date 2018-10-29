@@ -408,8 +408,14 @@ namespace PubComp.Building.NuGetPack
 
         private string ExtractFramework(string file)
         {
-            var result = file.Substring(0, file.LastIndexOf('\\'));
-            return result;
+            var lastBSlesh = file.LastIndexOf('\\');
+            if (lastBSlesh < 1)
+                return file;
+
+            var result = file.Substring(0, lastBSlesh);
+            lastBSlesh = result.LastIndexOf('\\');
+
+            return lastBSlesh < 0 ? result : result.Substring(lastBSlesh + 1);
         }
 
         private List<DependencyInfo> CreateBinFilesDepInfoList(string[] frameworks, List<string> files)
