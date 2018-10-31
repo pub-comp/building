@@ -1,0 +1,134 @@
+{
+  "runtimeTarget": {
+    "name": ".NETStandard,Version=v2.0/",
+    "signature": "471c072009b41c25c0e8e9d4ae481d21c1b8c643"
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETStandard,Version=v2.0": {},
+    ".NETStandard,Version=v2.0/": {
+      "Demo.NetStandardAndNet46/1.0.0": {
+        "dependencies": {
+          "Demo.LibraryNet40": "1.0.0",
+          "Demo.LibraryNet451": "1.0.0",
+          "NETStandard.Library": "2.0.3",
+          "NUnit": "3.10.1",
+          "Newtonsoft.Json": "11.0.2",
+          "PubComp.Building.Demo.LibraryNetStandard": "1.3.2",
+          "PubComp.Building.Demo.LibraryNetStandard2": "1.4.0",
+          "Demo.Include1": "1.0.0.0"
+        },
+        "runtime": {
+          "Demo.NetStandardAndNet46.dll": {}
+        }
+      },
+      "Microsoft.NETCore.Platforms/1.1.0": {},
+      "NETStandard.Library/2.0.3": {
+        "dependencies": {
+          "Microsoft.NETCore.Platforms": "1.1.0"
+        }
+      },
+      "Newtonsoft.Json/11.0.2": {
+        "runtime": {
+          "lib/netstandard2.0/Newtonsoft.Json.dll": {}
+        }
+      },
+      "NUnit/3.10.1": {
+        "dependencies": {
+          "NETStandard.Library": "2.0.3"
+        },
+        "runtime": {
+          "lib/netstandard2.0/nunit.framework.dll": {}
+        }
+      },
+      "Demo.LibraryNet40/1.0.0": {
+        "runtime": {
+          "PubComp.Building.Demo.LibraryNet40.dll": {}
+        }
+      },
+      "Demo.LibraryNet451/1.0.0": {
+        "runtime": {
+          "PubComp.Building.Demo.LibraryNet451.dll": {}
+        }
+      },
+      "PubComp.Building.Demo.LibraryNetStandard/1.3.2": {
+        "dependencies": {
+          "Newtonsoft.Json": "11.0.2"
+        },
+        "runtime": {
+          "PubComp.Building.Demo.LibraryNetStandard.dll": {}
+        }
+      },
+      "PubComp.Building.Demo.LibraryNetStandard2/1.4.0": {
+        "runtime": {
+          "PubComp.Building.Demo.LibraryNetStandard2.dll": {}
+        }
+      },
+      "Demo.Include1/1.0.0.0": {
+        "runtime": {
+          "Demo.Include1.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Demo.NetStandardAndNet46/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.NETCore.Platforms/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-kz0PEW2lhqygehI/d6XsPCQzD7ff7gUJaVGPVETX611eadGsA3A877GdSlU0LRVMCTH/+P3o2iDTak+S08V2+A==",
+      "path": "microsoft.netcore.platforms/1.1.0",
+      "hashPath": "microsoft.netcore.platforms.1.1.0.nupkg.sha512"
+    },
+    "NETStandard.Library/2.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-st47PosZSHrjECdjeIzZQbzivYBJFv6P2nv4cj2ypdI204DO+vZ7l5raGMiX4eXMJ53RfOIg+/s4DHVZ54Nu2A==",
+      "path": "netstandard.library/2.0.3",
+      "hashPath": "netstandard.library.2.0.3.nupkg.sha512"
+    },
+    "Newtonsoft.Json/11.0.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-IvJe1pj7JHEsP8B8J8DwlMEx8UInrs/x+9oVY+oCD13jpLu4JbJU2WCIsMRn5C4yW9+DgkaO8uiVE5VHKjpmdQ==",
+      "path": "newtonsoft.json/11.0.2",
+      "hashPath": "newtonsoft.json.11.0.2.nupkg.sha512"
+    },
+    "NUnit/3.10.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-E3ii6+VLdeIxTQ5gPjk/7g/xl+aCifbfcIkiGayZCuos+22FEdtKGrxMe6SzoXCQCcL7gdqhfNIFTaZ1+dS18g==",
+      "path": "nunit/3.10.1",
+      "hashPath": "nunit.3.10.1.nupkg.sha512"
+    },
+    "Demo.LibraryNet40/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Demo.LibraryNet451/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "PubComp.Building.Demo.LibraryNetStandard/1.3.2": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "PubComp.Building.Demo.LibraryNetStandard2/1.4.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Demo.Include1/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

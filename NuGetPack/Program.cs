@@ -18,18 +18,20 @@ namespace PubComp.Building.NuGetPack
                 return;
             }
 
-            var creator = new NuspecCreator();
-
             if (cla.Mode != Mode.Solution)
             {
-                creator.CreatePackage(
+                NusPecCreatorFactory.GetCreator(cla.ProjPath).CreatePackage(
                     cla.ProjPath, cla.DllPath, cla.IsDebug, cla.DoCreateNuPkg, cla.DoIncludeCurrentProj, cla.PreReleaseSuffixOverride);
             }
             else
             {
-                creator.CreatePackages(
+                NuspecCreatorBase.SlnOutputFolder = cla.BinFolder;
+
+                NuspecCreatorHelper.CreatePackages(
                     cla.BinFolder, cla.SolutionFolder, cla.IsDebug, cla.DoCreateNuPkg, cla.DoIncludeCurrentProj, cla.PreReleaseSuffixOverride);
             }
+
+            //Console.ReadKey();
         }
 
         public enum Mode { Solution, Project };
@@ -166,6 +168,12 @@ namespace PubComp.Building.NuGetPack
             mode = modeVar ?? Mode.Project;
             isDebug = (config ?? string.Empty).ToLower() == "debug";
 
+
+            if (binFolder != null)
+                binFolder = binFolder.EndsWith("\\") ? binFolder : binFolder + "\\";
+            if (solutionFolder != null)
+                solutionFolder = solutionFolder.EndsWith("\\") ? solutionFolder : solutionFolder + "\\";
+
             commandLineArguments = new CommandLineArguments
             {
                 Mode = mode,
@@ -174,6 +182,7 @@ namespace PubComp.Building.NuGetPack
                 BinFolder = binFolder,
                 SolutionFolder = solutionFolder,
                 IsDebug = isDebug,
+
                 DoCreateNuPkg = doCreateNuPkg,
                 DoIncludeCurrentProj = doIncludeCurrentProj,
                 PreReleaseSuffixOverride = preReleaseSuffixOverride,

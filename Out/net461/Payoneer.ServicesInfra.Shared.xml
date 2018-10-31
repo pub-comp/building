@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Payoneer.ServicesInfra.Shared</name>
+    </assembly>
+    <members>
+        <member name="M:Payoneer.ServicesInfra.Shared.AuthorizationHelper.IsUserInGroup(System.String,System.String)">
+            <summary>
+            Checks if the specified domain user is a member of the specified domain security group.
+            </summary>
+        </member>
+        <member name="M:Payoneer.ServicesInfra.Shared.IAuthorizationHelper.IsUserInGroup(System.String,System.String)">
+            <summary>
+            Checks if the specified domain user is a member of the specified domain security group.
+            </summary>
+        </member>
+        <member name="M:Payoneer.ServicesInfra.Shared.SharedExtensions.ToGuid(System.String)">
+            <summary>
+            Creates a GUID from a given string. Keep in mind that the string is hashed using MD5, so there is a 2^20.96 chance of collision.
+            </summary>
+            <param name="str"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Payoneer.ServicesInfra.Shared.SpinMonitor">
+            <summary>
+            
+            </summary>
+            <remarks>This class is thread safe</remarks>
+        </member>
+        <member name="M:Payoneer.ServicesInfra.Shared.SpinMonitor.Enter">
+            <summary>
+            Enter the monitor
+            </summary>
+            <remarks>This method is thread safe. Exit() must be called, preferably in a finally statement</remarks>
+        </member>
+        <member name="M:Payoneer.ServicesInfra.Shared.SpinMonitor.Exit">
+            <summary>
+            Exit the monitor
+            </summary>
+            <remarks>This method is thread safe</remarks>
+        </member>
+        <member name="M:Payoneer.ServicesInfra.Shared.SpinMonitor.InMonitor(System.Action)">
+            <summary>
+            Performs an action within the monitor
+            </summary>
+            <param name="action"></param>
+            <remarks>This method is thread safe</remarks>
+        </member>
+        <member name="M:Payoneer.ServicesInfra.Shared.SpinMonitor.InMonitor``1(System.Func{``0})">
+            <summary>
+            Performs a function within the monitor
+            </summary>
+            <typeparam name="TResult"></typeparam>
+            <param name="func"></param>
+            <returns>The result of the function</returns>
+            <remarks>This method is thread safe</remarks>
+        </member>
+    </members>
+</doc>

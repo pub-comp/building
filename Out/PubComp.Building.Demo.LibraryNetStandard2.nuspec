@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>PubComp.Building.Demo.LibraryNetStandard2</id>
+    <version>1.4.0</version>
+    <title>PubComp.Building.Demo.LibraryNetStandard2</title>
+    <authors>Demo Author</authors>
+    <owners>Demo Owner</owners>
+    <description>Demo Description</description>
+    <releaseNotes></releaseNotes>
+    <summary>Demo Summary</summary>
+    <language>en-US</language>
+    <projectUrl>https://pubcomp.codeplex.com/#</projectUrl>
+    <iconUrl>http://www.codeplex.com/favicon.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://pubcomp.codeplex.com/license</licenseUrl>
+    <copyright>Demo Copyright</copyright>
+    <dependencies>
+      <group targetFramework=".NETStandard2.0" />
+    </dependencies>
+    <tags>Demo, Key, Word</tags>
+    <references></references>
+    <contentFiles />
+  </metadata>
+  <files>
+    <file src="NETStandard2.0\PubComp.Building.Demo.LibraryNetStandard2.dll" target="lib\NETStandard2.0" />
+    <file src="NETStandard2.0\PubComp.Building.Demo.LibraryNetStandard2.pdb" target="lib\NETStandard2.0" />
+  </files>
+</package>

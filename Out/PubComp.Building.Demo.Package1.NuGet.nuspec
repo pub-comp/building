@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>PubComp.Building.Demo.Package1</id>
+    <version>1.3.2-Test</version>
+    <title>PubComp.Building.Demo.Package1</title>
+    <authors>Public Components by Danny Varod</authors>
+    <owners>Public Components by Danny Varod</owners>
+    <description>Description goes here</description>
+    <releaseNotes></releaseNotes>
+    <summary>Description goes here</summary>
+    <language>en-US</language>
+    <projectUrl>https://pubcomp.codeplex.com/</projectUrl>
+    <iconUrl>https://nuget.org/Content/Images/packageDefaultIcon-50x50.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://pubcomp.codeplex.com/</licenseUrl>
+    <copyright>Copyright © 2014</copyright>
+    <dependencies>
+      <group targetFramework="net45">
+        <dependency id="Common.Logging.DV" version="2.2.0" />
+        <dependency id="PubComp.NoSql.Core" version="2.0.0" />
+        <dependency id="Common.Logging.NLog.DV" version="2.2.0" />
+        <dependency id="mongocsharpdriver" version="1.9.2" />
+        <dependency id="NLog" version="2.1.0" />
+        <dependency id="PubComp.NoSql.MongoDbDriver" version="2.0.0" />
+      </group>
+    </dependencies>
+    <references></references>
+    <tags>Keywords, go, here</tags>
+  </metadata>
+  <files>
+    <file src="..\..\..\Demo.Package1.NuGet\..\Data.txt" target="content\Data.txt" />
+    <file src="..\..\..\Demo.Package1.NuGet\content\Info.txt" target="content\Info.txt" />
+    <file src="..\..\..\Demo.Package1.NuGet\content\SubContent\Other.txt" target="content\SubContent\Other.txt" />
+    <file src="..\..\..\Demo.Package1.NuGet\..\Dependencies\PubComp.Building.Demo.Binary1.dll" target="lib\net45\PubComp.Building.Demo.Binary1.dll" />
+    <file src="..\..\..\Demo.Package1.NuGet\..\Dependencies\PubComp.Building.Demo.Binary1.pdb" target="lib\net45\PubComp.Building.Demo.Binary1.pdb" />
+    <file src="..\..\..\Demo.Package1.NuGet\..\Text.txt" target="sln\Text.txt" />
+    <file src="..\..\..\Demo.Library1\bin\Debug\PubComp.Building.Demo.Library1.dll" target="lib\net45\PubComp.Building.Demo.Library1.dll" />
+    <file src="..\..\..\Demo.Library1\bin\Debug\PubComp.Building.Demo.Library1.pdb" target="lib\net45\PubComp.Building.Demo.Library1.pdb" />
+    <file src="..\..\..\Demo.Library1\DemoClass1.cs" target="src\Demo.Library1\DemoClass1.cs" />
+    <file src="..\..\..\Demo.Library1\Properties\AssemblyInfo.cs" target="src\Demo.Library1\Properties\AssemblyInfo.cs" />
+    <file src="..\..\..\Demo.Library2\bin\Debug\PubComp.Building.Demo.Library2.dll" target="lib\net45\PubComp.Building.Demo.Library2.dll" />
+    <file src="..\..\..\Demo.Library2\bin\Debug\PubComp.Building.Demo.Library2.pdb" target="lib\net45\PubComp.Building.Demo.Library2.pdb" />
+    <file src="..\..\..\Demo.Library2\DemoClass2.cs" target="src\Demo.Library2\DemoClass2.cs" />
+    <file src="..\..\..\Demo.Library2\Properties\AssemblyInfo.cs" target="src\Demo.Library2\Properties\AssemblyInfo.cs" />
+  </files>
+</package>

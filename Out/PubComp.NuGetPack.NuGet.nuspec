@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>PubComp.NuGetPack</id>
+    <version>2.14.0</version>
+    <title>PubComp.NuGetPack</title>
+    <authors>Danny Varod</authors>
+    <owners>Danny Varod</owners>
+    <description>Create NuGet packages during your build. Adds NuGetPack.exe to your solution</description>
+    <releaseNotes></releaseNotes>
+    <summary>Create NuGet packages during your build. Adds NuGetPack.exe to your solution</summary>
+    <language>en-US</language>
+    <projectUrl>https://github.com/pub-comp/building</projectUrl>
+    <iconUrl>https://nuget.org/Content/Images/packageDefaultIcon-50x50.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://github.com/pub-comp/building/blob/master/License.txt</licenseUrl>
+    <copyright> </copyright>
+    <dependencies>
+      <group targetFramework="net45" />
+    </dependencies>
+    <tags>NuGet, NuGetPack, NuGetPack.exe, Package, Packages, Build, PubComp</tags>
+    <references></references>
+  </metadata>
+  <files>
+    <file src="..\NuGetPack.NuGet\sln\NuGet.exe" target="sln\NuGet.exe" />
+    <file src="..\NuGetPack.NuGet\sln\NuGetPack.exe" target="sln\NuGetPack.exe" />
+    <file src="..\NuGetPack.NuGet\tools\Init.ps1" target="tools\Init.ps1" />
+  </files>
+</package>

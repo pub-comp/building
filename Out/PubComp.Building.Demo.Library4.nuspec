@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>PubComp.Building.Demo.Library4</id>
+    <version>1.3.2-Test</version>
+    <title>PubComp.Building.Demo.Library4</title>
+    <authors>Demo Author</authors>
+    <owners>Demo Owner</owners>
+    <description>Demo Description</description>
+    <releaseNotes></releaseNotes>
+    <summary>Demo Summary</summary>
+    <language>en-US</language>
+    <projectUrl>https://pubcomp.codeplex.com/</projectUrl>
+    <iconUrl>http://www.nuget.org/favicon.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://pubcomp.codeplex.com/license</licenseUrl>
+    <copyright>Demo Copyright</copyright>
+    <dependencies>
+      <group targetFramework="net45">
+        <dependency id="NLog" version="2.1.0" />
+        <dependency id="Common.Logging.DV" version="2.2.0" />
+        <dependency id="PubComp.NoSql.Core" version="2.0.0" />
+      </group>
+    </dependencies>
+    <tags>Demo, Key, Word</tags>
+    <frameworkAssemblies>
+      <frameworkAssembly assemblyName="System" />
+      <frameworkAssembly assemblyName="System.Core" />
+      <frameworkAssembly assemblyName="Microsoft.CSharp" />
+      <frameworkAssembly assemblyName="System.Xml" />
+    </frameworkAssemblies>
+    <references></references>
+  </metadata>
+  <files>
+    <file src="..\Demo.Library4\..\Data.txt" target="content\Data.txt" />
+    <file src="..\Demo.Library4\content\Info.txt" target="content\Info.txt" />
+    <file src="..\Demo.Library4\content\SubContent\Other.txt" target="content\SubContent\Other.txt" />
+    <file src="..\Demo.Library4\..\dependencies\PubComp.Building.Demo.Binary1.dll" target="lib\net45\PubComp.Building.Demo.Binary1.dll" />
+    <file src="..\Demo.Library4\..\dependencies\PubComp.Building.Demo.Binary1.pdb" target="lib\net45\PubComp.Building.Demo.Binary1.pdb" />
+    <file src="..\Demo.Library4\..\Text.txt" target="sln\Text.txt" />
+    <file src="..\Out\PubComp.Building.Demo.Library4.dll" target="lib\net45\PubComp.Building.Demo.Library4.dll" />
+    <file src="..\Out\PubComp.Building.Demo.Library4.pdb" target="lib\net45\PubComp.Building.Demo.Library4.pdb" />
+    <file src="..\Demo.Library4\DemoClass4.cs" target="src\Demo.Library4\DemoClass4.cs" />
+    <file src="..\Demo.Library4\Properties\AssemblyInfo.cs" target="src\Demo.Library4\Properties\AssemblyInfo.cs" />
+    <file src="..\Out\PubComp.Building.Demo.Library1.dll" target="lib\net45\PubComp.Building.Demo.Library1.dll" />
+    <file src="..\Out\PubComp.Building.Demo.Library1.pdb" target="lib\net45\PubComp.Building.Demo.Library1.pdb" />
+    <file src="..\Demo.Library1\DemoClass1.cs" target="src\Demo.Library1\DemoClass1.cs" />
+    <file src="..\Demo.Library1\Properties\AssemblyInfo.cs" target="src\Demo.Library1\Properties\AssemblyInfo.cs" />
+  </files>
+</package>

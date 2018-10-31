@@ -22,9 +22,9 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <WarningLevel>3</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -52,7 +52,11 @@
     <Compile Include="DependencyInfo.cs" />
     <Compile Include="ElementType.cs" />
     <Compile Include="NuGetPackConfig.cs" />
-    <Compile Include="NuspecCreator.cs" />
+    <Compile Include="NuspecCreatorBase.cs" />
+    <Compile Include="NusPecCreatorFactory.cs" />
+    <Compile Include="NuspecCreatorHelper.cs" />
+    <Compile Include="NuspecCreatorOldCsProj.cs" />
+    <Compile Include="NuspecCreatorNewCsProj.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
