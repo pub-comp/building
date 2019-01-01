@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyVersion>1.0.0.2</AssemblyVersion>
+    <FileVersion>1.0.0.2</FileVersion>
+    <!--<TargetFramework>netstandard2.0</TargetFramework>-->
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <Version>1.0.0.2</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="IncludeNugetFramework461" Version="1.0.0" />
+    <PackageReference Include="IncludeNugetNetStandard" Version="1.0.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\IncludeNet461NoNuget\IncludeNet461NoNuget.csproj" />
+    <ProjectReference Include="..\IncludeNetStandardNotNuget\IncludeNetStandardNotNuget.csproj" />
+  </ItemGroup>
+
+</Project>

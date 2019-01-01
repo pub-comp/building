@@ -689,6 +689,17 @@ namespace PubComp.Building.NuGetPack
                 .FirstOrDefault();
 
             if (string.IsNullOrEmpty(targetFrameworkVersion))
+            {
+                var targetFrameworksVersion = proj
+                    .Elements(xmlns + "PropertyGroup")
+                    .Elements(xmlns + "TargetFrameworks")
+                    .Select(el => el.Value)
+                    .FirstOrDefault();
+
+                targetFrameworkVersion = targetFrameworksVersion.Split(';').FirstOrDefault();
+            }
+
+            if (string.IsNullOrEmpty(targetFrameworkVersion))
                 return null;
             
             return FormatFrameworkVersion(targetFrameworkVersion);

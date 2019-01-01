@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Linq;
 
 namespace PubComp.Building.NuGetPack
@@ -288,7 +290,19 @@ namespace PubComp.Building.NuGetPack
                 var pr = projref[i];
                 var incProj = Path.Combine(Path.GetDirectoryName(projectPath) ?? string.Empty, pr);
                 NuspecCreatorHelper.LoadProject(incProj, out _, out x, out var prj);
-                var ver = prj?.Element(xmlns + "PropertyGroup")?.Element(xmlns + "Version")?.Value ?? "1.0.0";
+                var ver = prj?.Element(xmlns + "PropertyGroup")?.Element(xmlns + "Version")?.Value;
+                ver = ver ?? prj?.Element(xmlns + "PropertyGroup")?.Element(xmlns + "FileVersion")?.Value;
+                ver = ver ?? prj?.Element(xmlns + "PropertyGroup")?.Element(xmlns + "AssemblyVersion")?.Value;
+                if (string.IsNullOrEmpty(ver))
+                {
+                    var dllFile = GetDllNameFromProjectName(incProj);
+                    if (!string.IsNullOrEmpty(dllFile))
+                    {
+                        ver = ver ?? FileVersionInfo.GetVersionInfo(dllFile).FileVersion;
+                        ver = ver ?? FileVersionInfo.GetVersionInfo(dllFile).ProductVersion;
+                    }
+                }
+                ver = ver ?? "1.0.0";
                 verList.Add(ver);
 
                 var asem = GetAssemblyName(incProj);
@@ -296,6 +310,14 @@ namespace PubComp.Building.NuGetPack
             }
 
             return projref;
+        }
+
+        private static string GetDllNameFromProjectName(string projFile)
+        {
+            var path = Path.GetDirectoryName(projFile);
+            var fileName = $"*{Path.GetFileNameWithoutExtension(projFile)}.DLL";
+            fileName = Directory.EnumerateFiles(path, fileName, SearchOption.AllDirectories).FirstOrDefault();
+            return fileName;
         }
 
         public override List<DependencyInfo> GetBinaryFiles(
@@ -441,7 +463,11 @@ namespace PubComp.Building.NuGetPack
             if (files.Count == 0)
                 return null;
 
-            var items = files
+            var projDllFile = GetDllNameFromProjectName(projectPath);
+            projDllFile = Path.GetFileName(projDllFile);
+            files.Add(projDllFile);
+
+             var items = files
                 .Select(s =>
                     new XElement("reference",
                         new XAttribute("file", s)));
