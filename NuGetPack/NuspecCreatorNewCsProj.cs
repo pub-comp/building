@@ -151,10 +151,23 @@ namespace PubComp.Building.NuGetPack
 
         private XElement GetPackageDependenciesNetStandard(string projectPath, List<XElement> projDependencies)
         {
-            var targetFramework = GetTargetFramework(projectPath);
-            var result = new XElement("group",
-                new XAttribute("targetFramework", targetFramework));
-            foreach (var dep in projDependencies) result.Add(dep);
+            var targetFrameworks = GetTargetFrameworks(projectPath);
+            if(string.IsNullOrEmpty(targetFrameworks)) targetFrameworks = GetTargetFramework(projectPath);
+
+            var frameworksArr = targetFrameworks.Split(';');
+
+            var result = new XElement("dependencies");
+            
+            foreach (var frmw in frameworksArr)
+            {
+                var formattedFramework = FormatTargetFremwork(frmw);
+                var group = new XElement("group",
+                    new XAttribute("targetFramework", formattedFramework));
+                foreach (var dep in projDependencies) group.Add(dep);
+                result.Add(group);
+            }
+            
+            //if(result == null) throw new Exception("GetPackageDependenciesNetStandard failed! Couldn't find target frameworks");            
 
             if (!File.Exists(projectPath))
                 return null;
@@ -167,13 +180,18 @@ namespace PubComp.Building.NuGetPack
                 .Where(e => e.Attribute(xmlns + "Condition") == null).Elements(xmlns + "PackageReference").ToList();
 
             foreach (var package in nonCondPackRef)
-                result.Add(
-                    new XElement("dependency",
+            {
+                foreach (var group in result.Elements("group"))
+                {
+                    var dep = new XElement("dependency",
                         new XAttribute("id", package.Attribute("Include")?.Value ?? string.Empty),
                         new XAttribute("version", package.Attribute("Version")?.Value ?? string.Empty),
-                        new XAttribute("exclude", "Build,Analyzers")));
-
-            result = GetMultiFrameworkDependenciesGroups(projectPath, result);
+                        new XAttribute("exclude", "Build,Analyzers"));
+                    group.Add(dep);    
+                }
+            }
+                
+            //result = GetMultiFrameworkDependenciesGroups(projectPath, result);
             AddConditionalPackages(condPackRef, result);
 
             return result;
@@ -198,7 +216,7 @@ namespace PubComp.Building.NuGetPack
                         grp.Add(
                             new XElement("dependency",
                                 new XAttribute("id", pck.Attribute("Include")?.Value ?? string.Empty),
-                                new XAttribute("version", pck.Element("Version")?.Value ?? "0.0.0"),
+                                new XAttribute("version", pck.Attribute("Version")?.Value ?? "0.0.0"),
                                 new XAttribute("exclude", "Build,Analyzers")));
                     }
                 }
