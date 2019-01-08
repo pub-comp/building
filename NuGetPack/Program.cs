@@ -31,7 +31,7 @@ namespace PubComp.Building.NuGetPack
                     cla.BinFolder, cla.SolutionFolder, cla.IsDebug, cla.DoCreateNuPkg, cla.DoIncludeCurrentProj, cla.PreReleaseSuffixOverride);
             }
 
-            Console.ReadKey();
+            //Console.ReadKey();
         }
 
         public enum Mode { Solution, Project };
