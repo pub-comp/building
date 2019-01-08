@@ -213,11 +213,16 @@ namespace PubComp.Building.NuGetPack
                                 d.Attribute(xmlns + "id")?.Value == pck.Attribute(xmlns + "Include")?.Value);
                         toDelete?.Remove();
 
-                        grp.Add(
-                            new XElement("dependency",
-                                new XAttribute("id", pck.Attribute("Include")?.Value ?? string.Empty),
-                                new XAttribute("version", pck.Attribute("Version")?.Value ?? "0.0.0"),
-                                new XAttribute("exclude", "Build,Analyzers")));
+                        var version = pck.Attribute("Version")?.Value;
+                        if (version!=null)
+                        {
+                            grp.Add(
+                                new XElement("dependency",
+                                    new XAttribute("id", pck.Attribute("Include")?.Value ?? string.Empty),
+                                    new XAttribute("version", version),
+                                    new XAttribute("exclude", "Build,Analyzers")));
+                        }
+                        
                     }
                 }
             }
@@ -258,32 +263,6 @@ namespace PubComp.Building.NuGetPack
             return result;
         }
 
-        private XElement GetMultiFrameworkDependenciesGroups(string projectPath, XElement dependencies)
-        {
-            var result = new XElement("dependencies", dependencies);
-            var targetFrameworks = GetTargetFrameworks(projectPath);
-            if (string.IsNullOrEmpty(targetFrameworks))
-                return result;
-            var frameworks = targetFrameworks.Split(';');
-
-            var existingFramework = dependencies.Attribute("targetFramework")?.Value;
-            if (string.IsNullOrEmpty(existingFramework))
-                return result;
-
-            var children = new XElement(dependencies);
-            foreach (var frmwrk in frameworks)
-            {
-                var f = FormatTargetFremwork(frmwrk);
-                if (existingFramework == f)
-                    continue;
-                var grp = new XElement("group");
-                grp.Add(new XAttribute("targetFramework", f));
-                grp.Add(children.Elements().Select(x => new XElement(x)));
-                dependencies.AddBeforeSelf(grp);
-            }
-
-            return result;
-        }
 
         private List<string> GetProjectIncludeFiles(string projectPath, out List<string> verList, out XNamespace xmlns,
             out XElement proj, bool isFileNuget)
@@ -561,7 +540,16 @@ namespace PubComp.Building.NuGetPack
             if (f.StartsWith("nets", StringComparison.OrdinalIgnoreCase))
                 f = ".NETS" + f.Substring(4);
             else if (f.StartsWith("net", StringComparison.OrdinalIgnoreCase))
-                f = ".NETFramework" + f.Substring(3, 1) + "." + f.Substring(4);
+            {
+                var versionString = f.Substring(3);
+                f = ".NETFramework";
+                foreach (var digitStr in versionString)
+                {
+                    f +=  $"{digitStr}.";    
+                }
+                f = f.Remove(f.Length - 1);
+            }
+                
             if (f.EndsWith("d2"))
                 f = f + ".0";
             return f;
