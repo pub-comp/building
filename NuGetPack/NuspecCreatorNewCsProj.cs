@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Linq;
 
 namespace PubComp.Building.NuGetPack
@@ -149,10 +151,23 @@ namespace PubComp.Building.NuGetPack
 
         private XElement GetPackageDependenciesNetStandard(string projectPath, List<XElement> projDependencies)
         {
-            var targetFramework = GetTargetFramework(projectPath);
-            var result = new XElement("group",
-                new XAttribute("targetFramework", targetFramework));
-            foreach (var dep in projDependencies) result.Add(dep);
+            var targetFrameworks = GetTargetFrameworks(projectPath);
+            if(string.IsNullOrEmpty(targetFrameworks)) targetFrameworks = GetTargetFramework(projectPath);
+
+            var frameworksArr = targetFrameworks.Split(';');
+
+            var result = new XElement("dependencies");
+            
+            foreach (var frmw in frameworksArr)
+            {
+                var formattedFramework = FormatTargetFremwork(frmw);
+                var group = new XElement("group",
+                    new XAttribute("targetFramework", formattedFramework));
+                foreach (var dep in projDependencies) group.Add(dep);
+                result.Add(group);
+            }
+            
+            //if(result == null) throw new Exception("GetPackageDependenciesNetStandard failed! Couldn't find target frameworks");            
 
             if (!File.Exists(projectPath))
                 return null;
@@ -165,13 +180,18 @@ namespace PubComp.Building.NuGetPack
                 .Where(e => e.Attribute(xmlns + "Condition") == null).Elements(xmlns + "PackageReference").ToList();
 
             foreach (var package in nonCondPackRef)
-                result.Add(
-                    new XElement("dependency",
+            {
+                foreach (var group in result.Elements("group"))
+                {
+                    var dep = new XElement("dependency",
                         new XAttribute("id", package.Attribute("Include")?.Value ?? string.Empty),
                         new XAttribute("version", package.Attribute("Version")?.Value ?? string.Empty),
-                        new XAttribute("exclude", "Build,Analyzers")));
-
-            result = GetMultiFrameworkDependenciesGroups(projectPath, result);
+                        new XAttribute("exclude", "Build,Analyzers"));
+                    group.Add(dep);    
+                }
+            }
+                
+            //result = GetMultiFrameworkDependenciesGroups(projectPath, result);
             AddConditionalPackages(condPackRef, result);
 
             return result;
@@ -193,11 +213,16 @@ namespace PubComp.Building.NuGetPack
                                 d.Attribute(xmlns + "id")?.Value == pck.Attribute(xmlns + "Include")?.Value);
                         toDelete?.Remove();
 
-                        grp.Add(
-                            new XElement("dependency",
-                                new XAttribute("id", pck.Attribute("Include")?.Value ?? string.Empty),
-                                new XAttribute("version", pck.Element("Version")?.Value ?? "0.0.0"),
-                                new XAttribute("exclude", "Build,Analyzers")));
+                        var version = pck.Attribute("Version")?.Value;
+                        if (version!=null)
+                        {
+                            grp.Add(
+                                new XElement("dependency",
+                                    new XAttribute("id", pck.Attribute("Include")?.Value ?? string.Empty),
+                                    new XAttribute("version", version),
+                                    new XAttribute("exclude", "Build,Analyzers")));
+                        }
+                        
                     }
                 }
             }
@@ -238,32 +263,6 @@ namespace PubComp.Building.NuGetPack
             return result;
         }
 
-        private XElement GetMultiFrameworkDependenciesGroups(string projectPath, XElement dependencies)
-        {
-            var result = new XElement("dependencies", dependencies);
-            var targetFrameworks = GetTargetFrameworks(projectPath);
-            if (string.IsNullOrEmpty(targetFrameworks))
-                return result;
-            var frameworks = targetFrameworks.Split(';');
-
-            var existingFramework = dependencies.Attribute("targetFramework")?.Value;
-            if (string.IsNullOrEmpty(existingFramework))
-                return result;
-
-            var children = new XElement(dependencies);
-            foreach (var frmwrk in frameworks)
-            {
-                var f = FormatTargetFremwork(frmwrk);
-                if (existingFramework == f)
-                    continue;
-                var grp = new XElement("group");
-                grp.Add(new XAttribute("targetFramework", f));
-                grp.Add(children.Elements().Select(x => new XElement(x)));
-                dependencies.AddBeforeSelf(grp);
-            }
-
-            return result;
-        }
 
         private List<string> GetProjectIncludeFiles(string projectPath, out List<string> verList, out XNamespace xmlns,
             out XElement proj, bool isFileNuget)
@@ -288,7 +287,19 @@ namespace PubComp.Building.NuGetPack
                 var pr = projref[i];
                 var incProj = Path.Combine(Path.GetDirectoryName(projectPath) ?? string.Empty, pr);
                 NuspecCreatorHelper.LoadProject(incProj, out _, out x, out var prj);
-                var ver = prj?.Element(xmlns + "PropertyGroup")?.Element(xmlns + "Version")?.Value ?? "1.0.0";
+                var ver = prj?.Element(xmlns + "PropertyGroup")?.Element(xmlns + "Version")?.Value;
+                ver = ver ?? prj?.Element(xmlns + "PropertyGroup")?.Element(xmlns + "FileVersion")?.Value;
+                ver = ver ?? prj?.Element(xmlns + "PropertyGroup")?.Element(xmlns + "AssemblyVersion")?.Value;
+                if (string.IsNullOrEmpty(ver))
+                {
+                    var dllFile = GetDllNameFromProjectName(incProj);
+                    if (!string.IsNullOrEmpty(dllFile))
+                    {
+                        ver = ver ?? FileVersionInfo.GetVersionInfo(dllFile).FileVersion;
+                        ver = ver ?? FileVersionInfo.GetVersionInfo(dllFile).ProductVersion;
+                    }
+                }
+                ver = ver ?? "1.0.0";
                 verList.Add(ver);
 
                 var asem = GetAssemblyName(incProj);
@@ -296,6 +307,14 @@ namespace PubComp.Building.NuGetPack
             }
 
             return projref;
+        }
+
+        private static string GetDllNameFromProjectName(string projFile)
+        {
+            var path = Path.GetDirectoryName(projFile);
+            var fileName = $"*{Path.GetFileNameWithoutExtension(projFile)}.DLL";
+            fileName = Directory.EnumerateFiles(path, fileName, SearchOption.AllDirectories).FirstOrDefault();
+            return fileName;
         }
 
         public override List<DependencyInfo> GetBinaryFiles(
@@ -441,7 +460,11 @@ namespace PubComp.Building.NuGetPack
             if (files.Count == 0)
                 return null;
 
-            var items = files
+            var projDllFile = GetDllNameFromProjectName(projectPath);
+            projDllFile = Path.GetFileName(projDllFile);
+            files.Add(projDllFile);
+
+             var items = files
                 .Select(s =>
                     new XElement("reference",
                         new XAttribute("file", s)));
@@ -517,7 +540,16 @@ namespace PubComp.Building.NuGetPack
             if (f.StartsWith("nets", StringComparison.OrdinalIgnoreCase))
                 f = ".NETS" + f.Substring(4);
             else if (f.StartsWith("net", StringComparison.OrdinalIgnoreCase))
-                f = ".NETFramework" + f.Substring(3, 1) + "." + f.Substring(4);
+            {
+                var versionString = f.Substring(3);
+                f = ".NETFramework";
+                foreach (var digitStr in versionString)
+                {
+                    f +=  $"{digitStr}.";    
+                }
+                f = f.Remove(f.Length - 1);
+            }
+                
             if (f.EndsWith("d2"))
                 f = f + ".0";
             return f;
