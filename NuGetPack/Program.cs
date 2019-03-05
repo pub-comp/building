@@ -21,14 +21,14 @@ namespace PubComp.Building.NuGetPack
             if (cla.Mode != Mode.Solution)
             {
                 NusPecCreatorFactory.GetCreator(cla.ProjPath).CreatePackage(
-                    cla.ProjPath, cla.DllPath, cla.IsDebug, cla.DoCreateNuPkg, cla.DoIncludeCurrentProj, cla.PreReleaseSuffixOverride);
+                    cla.ProjPath, cla.DllPath, cla.IsDebug, cla.DoCreateNuPkg, cla.DoIncludeCurrentProj, cla.PreReleaseSuffixOverride, cla.FinalVersion);
             }
             else
             {
                 NuspecCreatorBase.SlnOutputFolder = cla.BinFolder;
 
                 NuspecCreatorHelper.CreatePackages(
-                    cla.BinFolder, cla.SolutionFolder, cla.IsDebug, cla.DoCreateNuPkg, cla.DoIncludeCurrentProj, cla.PreReleaseSuffixOverride);
+                    cla.BinFolder, cla.SolutionFolder, cla.IsDebug, cla.DoCreateNuPkg, cla.DoIncludeCurrentProj, cla.PreReleaseSuffixOverride, cla.FinalVersion);
             }
 
             //Console.ReadKey();
@@ -47,6 +47,7 @@ namespace PubComp.Building.NuGetPack
             public bool DoCreateNuPkg { get; set; }
             public bool DoIncludeCurrentProj { get; set; }
             public string PreReleaseSuffixOverride { get; set; }
+            public string FinalVersion { get; set; }
         }
 
         public static bool TryParseArguments(
@@ -63,6 +64,7 @@ namespace PubComp.Building.NuGetPack
             string binFolder = null;
             string solutionFolder = null;
             string preReleaseSuffixOverride = null;
+            string FinalVersion = null;
             commandLineArguments = null;
 
             string config = null;
@@ -142,6 +144,13 @@ namespace PubComp.Building.NuGetPack
                     if (preReleaseSuffixOverride.StartsWith("-"))
                         preReleaseSuffixOverride = preReleaseSuffixOverride.Substring(1);
                 }
+                else if (arg.ToLower().StartsWith("version=") || arg.ToLower().StartsWith("finalversion="))
+                {
+                    if (FinalVersion != null)
+                        return false;
+
+                    FinalVersion = arg.Substring(arg.IndexOf('=') + 1);
+                }
                 else
                 {
                     return false;
@@ -186,6 +195,7 @@ namespace PubComp.Building.NuGetPack
                 DoCreateNuPkg = doCreateNuPkg,
                 DoIncludeCurrentProj = doIncludeCurrentProj,
                 PreReleaseSuffixOverride = preReleaseSuffixOverride,
+                FinalVersion = FinalVersion
             };
 
             return true;
@@ -194,7 +204,7 @@ namespace PubComp.Building.NuGetPack
         private static void WriteError()
         {
             Console.WriteLine(
-                @"Correct usage: NuGetPack.exe [project] <pathToCsProj> <pathToDll> [<Debug|Release>] [nopkg] [pre=|preReleaseSuffixOverride=<suffixForPreRelease>]");
+                @"Correct usage: NuGetPack.exe [project] <pathToCsProj> <pathToDll> [<Debug|Release>] [nopkg] [pre=|preReleaseSuffixOverride=<suffixForPreRelease>] [version=|FinalVersion=<FinalVersion>]");
             Console.WriteLine(
                 @"Via post build event: NuGetPack.exe [project] ""$(ProjectPath)"" ""$(TargetPath)"" $(ConfigurationName)");
             Console.WriteLine(

@@ -17,13 +17,13 @@ namespace PubComp.Building.NuGetPack
         public void CreatePackage(
             string projectPath, string assemblyPath, bool isDebug,
             bool doCreatePkg = true, bool doIncludeCurrentProj = false,
-            string preReleaseSuffixOverride = null)
+            string preReleaseSuffixOverride = null, string FinalVersion = null)
         {
             Console.WriteLine("Creating nuspec file");
 
             NuGetPackConfig config;
             var doc = CreateNuspec(
-                projectPath, assemblyPath, isDebug, doIncludeCurrentProj, preReleaseSuffixOverride,
+                projectPath, assemblyPath, isDebug, doIncludeCurrentProj, preReleaseSuffixOverride,FinalVersion,
                 out config);
             var nuspecPath = Path.ChangeExtension(assemblyPath, ".nuspec");
 
@@ -135,16 +135,16 @@ namespace PubComp.Building.NuGetPack
 
         public XDocument CreateNuspec(
             string projectPath, string assemblyPath, bool isDebug, bool doIncludeCurrentProj = false,
-            string preReleaseSuffixOverride = null)
+            string preReleaseSuffixOverride = null, string FinalVersion = null)
         {
             return CreateNuspec(
-                projectPath, assemblyPath, isDebug, doIncludeCurrentProj, preReleaseSuffixOverride,
+                projectPath, assemblyPath, isDebug, doIncludeCurrentProj, preReleaseSuffixOverride,FinalVersion,
                 out NuGetPackConfig config);
         }
 
         public XDocument CreateNuspec(
             string projectPath, string assemblyPath, bool isDebug, bool doIncludeCurrentProj,
-            string preReleaseSuffixOverride,
+            string preReleaseSuffixOverride,string FinalVersion,
             out NuGetPackConfig config)
         {
             if (projectPath == null)
@@ -162,7 +162,7 @@ namespace PubComp.Building.NuGetPack
                 packageName = packageName.Substring(0, packageName.Length - nugetExtension.Length);
 
             var fileVersion = FileVersionInfo.GetVersionInfo(assemblyPath);
-            var version = GetVersion(fileVersion, preReleaseSuffixOverride);
+            var version = GetVersion(fileVersion, preReleaseSuffixOverride,FinalVersion);
 
             var owners = fileVersion.CompanyName;
 
@@ -243,7 +243,7 @@ namespace PubComp.Building.NuGetPack
                 packageName, version, owners, authors, shortSummary,
                 longDescription, releaseNotes, licenseUrl, projectUrl, iconUrl, copyright, keywords, nuspecPath, projectPath,
                 isDebug, doAddFrameworkReferences, doIncludeSources,
-                doIncludeCurrentProj, preReleaseSuffixOverride);
+                doIncludeCurrentProj, preReleaseSuffixOverride,FinalVersion);
 
             return doc;
         }
@@ -253,33 +253,40 @@ namespace PubComp.Building.NuGetPack
         /// </summary>
         /// <param name="fileVersion"></param>
         /// <param name="preReleaseSuffixOverride"></param>
+        /// <param name="FinalVersion"></param>
         /// <returns></returns>
-        private string GetVersion(FileVersionInfo fileVersion, string preReleaseSuffixOverride)
+        private string GetVersion(FileVersionInfo fileVersion, string preReleaseSuffixOverride, string FinalVersion)
         {
-            var version = fileVersion.FileMajorPart + "." + fileVersion.FileMinorPart + "." + fileVersion.FileBuildPart;
-
-            if (fileVersion.FilePrivatePart != 0)
-                version += "." + fileVersion.FilePrivatePart;
-
-            if (preReleaseSuffixOverride == null)
+            if(FinalVersion == null)
             {
-                var fileVersionParts = fileVersion.ProductVersion.Split(new[] { '-' }, StringSplitOptions.None);
-                if (fileVersionParts.Length > 1)
+                var version = fileVersion.FileMajorPart + "." + fileVersion.FileMinorPart + "." + fileVersion.FileBuildPart;
+
+                if (fileVersion.FilePrivatePart != 0)
+                    version += "." + fileVersion.FilePrivatePart;
+
+                if (preReleaseSuffixOverride == null)
                 {
-                    var preReleaseName = string.Join("-", fileVersionParts.Skip(1));
+                    var fileVersionParts = fileVersion.ProductVersion.Split(new[] { '-' }, StringSplitOptions.None);
+                    if (fileVersionParts.Length > 1)
+                    {
+                        var preReleaseName = string.Join("-", fileVersionParts.Skip(1));
 
-                    if (string.IsNullOrWhiteSpace(preReleaseName))
-                        preReleaseName = "PreRelease";
+                        if (string.IsNullOrWhiteSpace(preReleaseName))
+                            preReleaseName = "PreRelease";
 
-                    version += "-" + preReleaseName;
+                        version += "-" + preReleaseName;
+                    }
                 }
-            }
-            else if (preReleaseSuffixOverride != string.Empty)
-            {
-                version += "-" + preReleaseSuffixOverride;
-            }
+                else if (preReleaseSuffixOverride != string.Empty)
+                {
+                    version += "-" + preReleaseSuffixOverride;
+                }
 
-            return version;
+                return version;
+            }
+            else{
+                return FinalVersion;
+            }
         }
 
         public XDocument CreateNuspec(
@@ -301,13 +308,14 @@ namespace PubComp.Building.NuGetPack
             bool doAddFrameworkReferences,
             bool doIncludeSources,
             bool doIncludeCurrentProj,
-            string preReleaseSuffixOverride)
+            string preReleaseSuffixOverride,
+            string FinalVersion)
         {
             var nuspecFolder = Path.GetDirectoryName(nuspecPath);
 
             var elements = GetElements(
                 nuspecFolder, projectPath, isDebug, doIncludeSources, doIncludeCurrentProj,
-                preReleaseSuffixOverride,
+                preReleaseSuffixOverride,FinalVersion,
                 out var dependenciesAttribute);
         
 
@@ -327,7 +335,7 @@ namespace PubComp.Building.NuGetPack
                     dependencies.Add(d);
             }
 
-            var dependenciesElemnt = GetDependenciesForNewCsProj(projectPath, dependencies, preReleaseSuffixOverride);
+            var dependenciesElemnt = GetDependenciesForNewCsProj(projectPath, dependencies, preReleaseSuffixOverride,FinalVersion);
 
             var metadataElement = new XElement("metadata",
                         new XElement("id", packageName),
@@ -377,7 +385,7 @@ namespace PubComp.Building.NuGetPack
             return doc;
         }
 
-        protected abstract XElement GetDependenciesForNewCsProj(string projectPath, XElement dependencies, string preReleaseSuffixOverride);
+        protected abstract XElement GetDependenciesForNewCsProj(string projectPath, XElement dependencies, string preReleaseSuffixOverride,string FinalVersion);
 
         public abstract List<DependencyInfo> GetDependencies(string projectPath, out XAttribute dependenciesAttribute);
 
@@ -426,11 +434,12 @@ namespace PubComp.Building.NuGetPack
         /// <param name="isDebug"></param>
         /// <param name="buildMachineBinFolder"></param>
         /// <param name="preReleaseSuffixOverride"></param>
+        /// <param name="FinalVersion"></param>
         /// <param name="isProjNetStandard"></param>
         /// <returns></returns>
         public List<DependencyInfo> GetInternalDependencies(
             string projectPath, bool isDebug, string buildMachineBinFolder,
-            string preReleaseSuffixOverride)
+            string preReleaseSuffixOverride, string FinalVersion)
         {
             var references = GetReferences(projectPath, true);
             var projectFolder = Path.GetDirectoryName(projectPath);
@@ -450,7 +459,7 @@ namespace PubComp.Building.NuGetPack
                 DebugOut(() => "assemblyPath = " + assemblyPath);
 
                 var fileVersion = FileVersionInfo.GetVersionInfo(assemblyPath);
-                var referenceVersion = GetVersion(fileVersion, preReleaseSuffixOverride);
+                var referenceVersion = GetVersion(fileVersion, preReleaseSuffixOverride,FinalVersion);
 
                 results.Add(
                     new DependencyInfo(
@@ -503,16 +512,18 @@ namespace PubComp.Building.NuGetPack
         /// <param name="doIncludeSources">If true, includes source files in NuSpec</param>
         /// <param name="doIncludeCurrentProj">
         /// <param name="preReleaseSuffixOverride"></param>
+        /// <param name="FinalVersion"></param>
         /// <param name="dependenciesAttribute"></param>
         /// If true, treats given project as regular project,
         ///  if not treats it as a NuGet definition project only - does not take binaries or source from project
         /// </param>
         /// <param name="preReleaseSuffixOverride"></param>
+        /// <param name="FinalVersion"></param>
         /// <param name="dependenciesAttribute"></param>
         /// <returns>Elements for NuSpec</returns>
         public List<DependencyInfo> GetElements(
             string nuspecFolder, string projectPath, bool isDebug, bool doIncludeSources,
-            bool doIncludeCurrentProj, string preReleaseSuffixOverride,
+            bool doIncludeCurrentProj, string preReleaseSuffixOverride,string FinalVersion,
             out XAttribute dependenciesAttribute)
         {
             if (nuspecFolder == null)
@@ -548,7 +559,7 @@ namespace PubComp.Building.NuGetPack
 
             if (doIncludeCurrentProj)
             {
-                IncludeCurrentProject(nuspecFolder, projectPath, isDebug, doIncludeSources, preReleaseSuffixOverride, result, projectFolder);
+                IncludeCurrentProject(nuspecFolder, projectPath, isDebug, doIncludeSources, preReleaseSuffixOverride,FinalVersion, result, projectFolder);
             }
 
             bool? referencesContainNuGetPackConfig =
@@ -595,7 +606,7 @@ namespace PubComp.Building.NuGetPack
         }
 
         protected abstract void IncludeCurrentProject(string nuspecFolder, string projectPath, bool isDebug,
-            bool doIncludeSources, string preReleaseSuffixOverride, List<DependencyInfo> result, string projectFolder);
+            bool doIncludeSources, string preReleaseSuffixOverride,string FinalVersion, List<DependencyInfo> result, string projectFolder);
 
         #region NuGet Project Parsing
 
