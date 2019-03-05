@@ -228,7 +228,7 @@ namespace PubComp.Building.NuGetPack
             }
         }
 
-        private List<XElement> GetProjectDependenciesNetStandard(string projectPath, string preReleaseSuffixOverride)
+        private List<XElement> GetProjectDependenciesNetStandard(string projectPath, string preReleaseSuffixOverride, string FinalVersion)
         {
             var result = new List<XElement>();
 
@@ -255,9 +255,9 @@ namespace PubComp.Building.NuGetPack
             return result;
         }
 
-        protected override XElement GetDependenciesForNewCsProj(string projectPath, XElement dependencies, string preReleaseSuffixOverride)
+        protected override XElement GetDependenciesForNewCsProj(string projectPath, XElement dependencies, string preReleaseSuffixOverride,string FinalVersion)
         {
-            var projDependencies = GetProjectDependenciesNetStandard(projectPath, preReleaseSuffixOverride);
+            var projDependencies = GetProjectDependenciesNetStandard(projectPath, preReleaseSuffixOverride,FinalVersion);
             var result = GetPackageDependenciesNetStandard(projectPath, projDependencies);
 
             return result;
@@ -530,7 +530,7 @@ namespace PubComp.Building.NuGetPack
         }
 
         protected override void IncludeCurrentProject(string nuspecFolder, string projectPath, bool isDebug,
-            bool doIncludeSources, string preReleaseSuffixOverride, List<DependencyInfo> result, string projectFolder)
+            bool doIncludeSources, string preReleaseSuffixOverride,string FinalVersion, List<DependencyInfo> result, string projectFolder)
         {
         }
 

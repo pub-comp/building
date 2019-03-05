@@ -127,9 +127,9 @@ namespace PubComp.Building.NuGetPack
         }
 
         protected override void IncludeCurrentProject(string nuspecFolder, string projectPath, bool isDebug,
-            bool doIncludeSources, string preReleaseSuffixOverride, List<DependencyInfo> result, string projectFolder)
+            bool doIncludeSources, string preReleaseSuffixOverride,string FinalVersion, List<DependencyInfo> result, string projectFolder)
         {
-            result.AddRange(GetInternalDependencies(projectPath, isDebug, nuspecFolder, preReleaseSuffixOverride));
+            result.AddRange(GetInternalDependencies(projectPath, isDebug, nuspecFolder, preReleaseSuffixOverride, FinalVersion));
 
             result.AddRange(GetBinaryReferences(nuspecFolder, projectFolder, projectPath, isDebug, nuspecFolder));
 
@@ -139,7 +139,7 @@ namespace PubComp.Building.NuGetPack
             result.AddRange(GetDependenciesFromProject(projectFolder, projectPath));
         }
 
-        protected override XElement GetDependenciesForNewCsProj(string projectPath, XElement dependencies, string preReleaseSuffixOverride)
+        protected override XElement GetDependenciesForNewCsProj(string projectPath, XElement dependencies, string preReleaseSuffixOverride,string FinalVersion)
         {
             var result = new XElement("dependencies", dependencies);
             return result;

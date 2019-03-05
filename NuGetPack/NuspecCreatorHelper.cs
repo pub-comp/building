@@ -13,7 +13,7 @@ namespace PubComp.Building.NuGetPack
         public static void CreatePackages(
             string binFolder, string solutionFolder, bool isDebug,
             bool doCreatePkg = true, bool doIncludeCurrentProj = false,
-            string preReleaseSuffixOverride = null)
+            string preReleaseSuffixOverride = null, string FinalVersion = null)
         {
             var projects = new LinkedList<string>();
             FindProjects(solutionFolder, projects);
@@ -29,7 +29,7 @@ namespace PubComp.Building.NuGetPack
 
                 creator.CreatePackage(
                     projectPath, assemblyPath, isDebug, doCreatePkg, doIncludeCurrentProj,
-                    preReleaseSuffixOverride);
+                    preReleaseSuffixOverride,FinalVersion);
             }
         }
 

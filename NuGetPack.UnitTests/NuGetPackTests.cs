@@ -297,7 +297,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                nuspecFolder, nuProj1Csproj, isDebugVariable, true, false, null, out attribute);
+                nuspecFolder, nuProj1Csproj, isDebugVariable, true, false, null,null, out attribute);
 
             var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
                 .Select(r => r.Element).ToList();
@@ -321,7 +321,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                nuspecFolder, nuProj2Csproj, isDebugVariable, true, false, null, out attribute);
+                nuspecFolder, nuProj2Csproj, isDebugVariable, true, false, null,null, out attribute);
 
             var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
                 .Select(r => r.Element).ToList();
@@ -335,7 +335,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var creator = new NuspecCreatorOldCsProj();
 
             var results = creator.GetInternalDependencies(
-                proj5Csproj, isDebugVariable, Path.GetDirectoryName(proj5Dll), null);
+                proj5Csproj, isDebugVariable, Path.GetDirectoryName(proj5Dll), null,null);
 
             var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
                 .Select(r => r.Element).ToList();
@@ -355,7 +355,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var creator = new NuspecCreatorOldCsProj();
 
             var results = creator.GetInternalDependencies(
-                proj5Csproj, isDebugVariable, Path.GetDirectoryName(proj5Dll), String.Empty);
+                proj5Csproj, isDebugVariable, Path.GetDirectoryName(proj5Dll), String.Empty, String.Empty);
 
             var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
                 .Select(r => r.Element).ToList();
@@ -373,7 +373,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
             var creator = new NuspecCreatorOldCsProj();
 
             var results = creator.GetInternalDependencies(
-                proj5Csproj, isDebugVariable, Path.GetDirectoryName(proj5Dll), "alpha102");
+                proj5Csproj, isDebugVariable, Path.GetDirectoryName(proj5Dll), "alpha102",null);
 
             var dependencies = results.Where(r => r.ElementType == ElementType.NuGetDependency)
                 .Select(r => r.Element).ToList();
@@ -542,7 +542,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                Path.GetDirectoryName(nuProj1Dll), nuProj1Csproj, isDebugVariable, true, false, null, out attribute);
+                Path.GetDirectoryName(nuProj1Dll), nuProj1Csproj, isDebugVariable, true, false, null,null, out attribute);
 
             LinqAssert.Count(results, 22);
 
@@ -609,7 +609,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                Path.GetDirectoryName(nuProj2Dll), nuProj2Csproj, isDebugVariable, true, false, null, out attribute);
+                Path.GetDirectoryName(nuProj2Dll), nuProj2Csproj, isDebugVariable, true, false, null,null, out attribute);
 
             LinqAssert.Count(results, 6);
 
@@ -642,7 +642,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                Path.GetDirectoryName(nuProj2Dll), nuProj2Csproj, isDebugVariable, false, false, null, out attribute);
+                Path.GetDirectoryName(nuProj2Dll), nuProj2Csproj, isDebugVariable, false, false, null,null, out attribute);
 
             LinqAssert.Count(results, 4);
 
@@ -670,7 +670,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                Path.GetDirectoryName(nuProj3Dll), nuProj3Csproj, isDebugVariable, true, false, null, out attribute);
+                Path.GetDirectoryName(nuProj3Dll), nuProj3Csproj, isDebugVariable, true, false, null,null, out attribute);
 
             LinqAssert.Count(results, 13);
 
@@ -721,7 +721,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                testRunDir, proj4Csproj, isDebugVariable, true, true, null, out attribute);
+                testRunDir, proj4Csproj, isDebugVariable, true, true, null,null, out attribute);
 
             LinqAssert.Count(results, 18);
 
@@ -781,7 +781,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                testRunDir, proj5Csproj, isDebugVariable, true, true, null, out attribute);
+                testRunDir, proj5Csproj, isDebugVariable, true, true, null,null, out attribute);
 
             LinqAssert.Count(results, 15);
 
@@ -980,7 +980,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                nuspecFolder, nuProj1Csproj, isDebugVariable, true, false, null, out attribute);
+                nuspecFolder, nuProj1Csproj, isDebugVariable, true, false, null,null, out attribute);
 
             Assert.AreNotEqual(0, results.Count());
             var files = results.Where(el =>
@@ -1001,7 +1001,7 @@ namespace PubComp.Building.NuGetPack.UnitTests
 
             XAttribute attribute;
             var results = creator.GetElements(
-                nuspecFolder, nuProj3Csproj, isDebugVariable, true, false, null, out attribute);
+                nuspecFolder, nuProj3Csproj, isDebugVariable, true, false, null,null, out attribute);
 
             Assert.AreNotEqual(0, results.Count);
 
